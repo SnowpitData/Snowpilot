@@ -1,0 +1,9 @@
+name = Snowpilot
+description = Custom modifications for the snowpilot webapp.
+core = 7.x
+
+;files[] = snowpilot.module
+
+version = "7.x-0.01"
+core = "7.x"
+project = "snowpilot"

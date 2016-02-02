@@ -1,0 +1,32 @@
+<?php
+/*
+
+
+*/
+
+function snowpilot_form_alter(){
+	// fields that will need to have the suffix changed according to the users prefs. 
+	//
+	depth from 0 starting from: top, bottom
+		Depth Units: cm, inches
+		Temp Units: C, F
+		Default	State/Province: from taxonomy
+		Coord Type: Lat / Long,  UTM
+		elev units: m, ft
+		Default Logintude: W, E
+		Latitude: N, S
+		Density Units: kg/cubic m , lbs / cubic ft
+		Fracture category: Shear Quality , Fracture character
+		Hardness scale: linear, exponential
+	
+			Affiliation - this can be chosen from a taxonomy on the user page
+				
+				// use a 'favorite locations' to store fields that should be prepopulated on the snowpit profile form.
+}
+
+
+
+
+
+
+?>
