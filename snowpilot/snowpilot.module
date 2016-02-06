@@ -7,10 +7,16 @@
 function snowpilot_form_alter(){
 	// fields that will need to have the suffix changed according to the users prefs. 
 	//
-	depth from 0 starting from: top, bottom
-		Depth Units: cm, inches
-		Temp Units: C, F
-		Default	State/Province: from taxonomy
+	if ($node->type == 'snowpit_profile' && $node->nid == ''){ // this is a new snowpit profile
+		
+		
+		return;
+		
+	}/*
+	depth 0 from: top, bottom ;  field_depth_0_from
+		Depth Units: cm, inches ; field_depth_units
+		Temp Units: C, F ; field_temp_units
+		Default	State/Province: from taxonomy 
 		Coord Type: Lat / Long,  UTM
 		elev units: m, ft
 		Default Logintude: W, E
@@ -18,10 +24,87 @@ function snowpilot_form_alter(){
 		Density Units: kg/cubic m , lbs / cubic ft
 		Fracture category: Shear Quality , Fracture character
 		Hardness scale: linear, exponential
-	
-			Affiliation - this can be chosen from a taxonomy on the user page
-				
-				// use a 'favorite locations' to store fields that should be prepopulated on the snowpit profile form.
+			
+			
+			Also:
+		prof
+		Affiliation - this can be chosen from a taxonomy on the user page
+		first
+		last
+		phone
+		email
+				*/			
+		
+				// use a 'favorite locations' node type to store fields that should be prepopulated on the snowpit profile form.
+}
+
+// snowpilot_user_unit_prefs_get will return unit prefs, an array, or FALSE if one is unset.
+//input is user object
+// $ouput_format = 'drupal' (default): 'avsic' or 'drupal' - indicates the keys of the array, which format to follow inteh return array 
+// return is $unit_prefs = array('hardnessScaling' => 'linear|exponential', 'rhoUnits' =>'kgsper' etc.)
+// or is array( 'field_temp_units' => 'C' , 'field_depth_units' => 'in', 'field_depth_0_from' => 'top' )  
+
+function snowpilot_user_unit_prefs_get($uid){
+	$account = user_load($uid);
+	$unit_prefs = array( 
+		'field_depth_0_from' => $account['field_depth_0_from']['und]'][0]['value'], 
+		'measureFrom' => $account['field_depth_0_from']['und]'][0]['value'],
+		
+		'field_depth_units' => $account['field_depth_units']['und]'][0]['value'], 
+		'depthUnits'  => $account['field_depth_units']['und]'][0]['value'], 
+			
+		'field_temp_units' => $account['field_temp_units']['und]'][0]['value'], 
+		'tempUnits'  => $account['field_temp_units']['und]'][0]['value'], 
+			
+		'field_coordinate_type' => $account['field_coordinate_type']['und]'][0]['value'],
+		'coordType' => $account['field_coordinate_type']['und]'][0]['value'],
+		
+		'field_elevation_units' => $account['field_elevation_units']['und]'][0]['value'],
+		'elvUnits'  => $account['field_elevation_units']['und]'][0]['value'],
+			
+		'field_longitude_type' => $account['field_longitude_type']['und'][0]['value'],
+		'longType'=> $account['field_longitude_type']['und'][0]['value'],
+			
+		'field_latitude_type' => $account['field_latitude_type']['und'][0]['value'],
+		'latType' => $account['field_latitude_type']['und'][0]['value'],
+		
+		'field_density_units' => $account['field_density_units']['und'][0]['value'] ,
+		'rhoUnits' => $account['field_density_units']['und'][0]['value'] ,
+		
+		'field_fracture_category' => $account['field_fracture_category']['und'][0]['value'],
+		'fractureCat' => $account['field_fracture_category']['und'][0]['value'],
+		
+		'field_hardness_scale' => $account['field_hardness_scale']['und'][0]['value'],
+		'hardnessScaling' =>  $account['field_hardness_scale']['und'][0]['value'],
+		///////
+		'field_loaction_0' => $account['field_loaction']['und'][0]['value'],
+		'state' => $account['field_loaction']['und'][0]['value'], // this needs a conversion function to the state/province name
+		
+		'field_loaction_1' => $account['field_loaction']['und'][0]['value'],
+		'range' =>  $account['field_loaction']['und'][1]['value'],  // this will need a conversion function to the name of the range
+		
+		'field_first_name' =>$account['field_first_name']['und'][0]['value'],
+		'first' =>$account['field_first_name']['und'][0]['value'],
+		
+		'field_last_name' =>$account['field_last_name']['und'][0]['value'],
+		'last' =>$account['field_last_name']['und'][0]['value'],
+		
+		'field_phone' =>$account['field_phone']['und'][0]['value'],
+		'phone' =>$account['field_phone']['und'][0]['value'],
+		
+		'field_professional' => $account['field_professional']['und'][0]['value'],
+		'prof' => $account['field_professional']['und'][0]['value'],
+			
+		'field_professional_affiliation' => $account['field_professional_affiliation']['und'][0]['value'],
+		'affil'  => $account['field_professional_affiliation']['und'][0]['value'],// tid needs to be converted to name
+		
+		'name' => $account['name']['und'][0]['value'], // hey, this is the same value in both core drupal and avscience db!
+		
+		
+		);
+		foreach($unit_prefs as $value){
+			if ($value == '' ){ return FALSE; }	
+		}else	return $unit_prefs;
 }
 
 
