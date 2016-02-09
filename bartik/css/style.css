@@ -195,8 +195,13 @@ a.button {
 	padding: 0 5px;
 }
 
+body.page-user .profile .field-label{
+	width: 150px;
+}
 
-
+body.page-user .profile h3.field-label{
+	width: 280px;
+}
 /*
 
    This is all part of styling the 'grain types' drop down on the snowpit profile form
