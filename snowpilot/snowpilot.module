@@ -4,8 +4,6 @@
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
 	//	
-	//global $user;
-	//var_dump($user);
 	switch($form_id ){
 		case 'snowpit_profile_node_form':
 		$node = $form_state['node'];
@@ -22,10 +20,68 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');  
 			}
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
-				//drupal_set_message("<pre>". var_export($form['field_loaction']['und'], TRUE )."</pre>");
+			
+			snowpilot_snowpit_set_layer_titles($form);
+			
+			$form['#after_build'][] = 'snowpilot_set_layer_title_after_build';
+			
+
+			
+			//dsm();
+		//}
 		} // end if node->type == snowpit prof
 	} // end switch
 	return;
+}
+
+function snowpilot_snowpit_set_layer_titles(&$form){
+	// Start with the overall title of the group
+	$form['field_layer']['und']['#title'] = "Snowpack layers"; // 
+	$x=0;
+
+	while(isset($form['field_layer']['und'][$x] )){
+		$next_layer = $x+1 ; 
+	
+		$collapsed = '';
+		if (isset($form['field_layer']['und'][$next_layer])) {
+	
+			$form['field_layer']['und'][$next_layer]['field_height']['und'][0]['value']['#default_value'] = 
+				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'];
+			$collapsed = ' collapsed';
+		}
+		if (isset($form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0])){ 
+			$this_hardness = $form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0];
+		}
+		if ( isset($form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'])){
+			$layer_info = 	$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'].' cm - ' . 
+				$form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value']. " cm; ". $this_hardness;
+		}else $layer_info = '';
+	
+		$form['field_layer']['und'][$x]['#prefix'] ="<div class='collapsible-container layer_num_". $x ." '>".
+			"<h3 class='collapsible-handle layer-title'>Layer " . $next_layer . ": ". $layer_info . "</h3>".
+				'<div class="collapsible-content'. $collapsed .'" >';
+
+		$form['field_layer']['und'][$x]['#suffix'] ="</div> </div>";
+		//dsm($form['field_layer']['und'][$x]);
+		$x++;
+	}
+	dsm($form['field_layer']['und']);
+}
+
+function snowpilot_set_layer_title_after_build(&$form, &$form_state){
+	//$form['field_layer']['und'][0]['#groups']['group_layer_inner']->format_settings['instance_settings']['description'] = "Layer 1";
+	//$form['field_layer']['und'][1]['#groups']['group_layer_inner']->format_settings['instance_settings']['description'] = "Layer 2";
+	
+			
+	//$form['field_layer']['und'][0]['field_height']['und'][0]['value']['#field_prefix'] = "<h3> Hey this is big and in front</h3>"; //
+	//$form['field_layer']['und'][1]['field_height']['und'][0]['value']['#field_prefix'] = "<h3> Hey this is big and in front, and this is second</h3>"; //
+	
+	drupal_add_js('/sites/all/modules/snowpilot/js/snowpilot.js');
+	
+
+	
+	return $form;
+	
 }
 
 
@@ -231,18 +287,44 @@ function snowpilot_snopit_prof_unit_prefs_set(&$form,$snowpit_unit_prefs){
 	return $form;
 }
 
+
+
 function snowpilot_snopit_prof_set_suffices(&$form, $snowpit_unit_prefs){
-	
+	//dsm($form['field_elevation']['und'][0]);
 	$form['field_air_temp']['und'][0]['value']['#field_suffix'] = 'º'.$snowpit_unit_prefs['field_temp_units'];
-	
-	$form['field_layer']['und'][0]['field_height']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
-	$form['field_layer']['und'][0]['field_bottom_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
-	$form['field_layer']['und'][0]['field_density_top']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_density_units'];
-	$form['field_layer']['und'][0]['field_density_bottom']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_density_units'];
-	$form['field_test']['und'][0]['field_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+	$form['field_elevation']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_elevation_units'];
+	$form['field_slope_angle']['und'][0]['value']['#field_suffix'] = " degrees";
+	$form['field_surface_penetration']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+	$form['field_boot_penetration_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+	$form['field_ski_penetration']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
   $form['field_total_height_of_snowpack']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
-	//field_elevation
+	
+	// Repeated per layer
+	$x = 0; //count($form['field_layer']['und'] );
+	while ( isset($form['field_layer']['und'][$x]) ){
+				
+				
+		$form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units']; //
+		$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+		$form['field_layer']['und'][$x]['field_density_top']['und'][0]['value']['#field_suffix'] = _density_unit_fix($snowpit_unit_prefs['field_density_units']);
+		$form['field_layer']['und'][$x]['field_density_bottom']['und'][0]['value']['#field_suffix'] = _density_unit_fix($snowpit_unit_prefs['field_density_units']);
+		$form['field_layer']['und'][$x]['field_grain_size']['und'][0]['value']['#field_suffix'] = 'mm';
+		$x++;
+	}
+
+	// Repeated per test
+	$x = 0; //count($form['field_layer']['und'] );
+	while ( isset($form['field_test']['und'][$x]) ){
+		$form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+		$form['field_test']['und'][$x]['field_length_of_saw_cut']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+		$form['field_test']['und'][$x]['field_length_of_isolated_col_pst']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+		$x++;
+	}
+	return;
 }
 
+function _density_unit_fix($units){
+	return ($units == 'kg_cubic_m' ? 'kg/m&#xb3' : 'lb/ft&#xb3');
+}
 
 ?>
