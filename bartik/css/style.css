@@ -203,10 +203,25 @@ body.page-user .profile h3.field-label{
 	width: 280px;
 }
 
-.group-layers #field-layer-values td.field-multiple-drag{
+.group-snowpit td.field-multiple-drag{
 	display: none;
 }
-/*
+
+.group-snopit .tabledrag-toggle-weight-wrapper{
+	display: none;
+}
+
+form.node-snowpit_profile-form .fieldset-wrapper{
+	margin-top:0px;
+}
+form.node-snowpit_profile-form fieldset{
+	margin-top:0;
+	
+}
+
+.field-group-htab .tabledrag-toggle-weight-wrapper{
+	display:none;
+}/*
 
    This is all part of styling the 'grain types' drop down on the snowpit profile form
 

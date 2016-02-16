@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 (function ($) {
   Drupal.behaviors.infiniteblahblah = {
+=======
+
+  Drupal.behaviors.snowpilot = {
+>>>>>>> Stashed changes
     attach: function (context, settings) {
         $('.collapsible-content.collapsed').hide();
         $('#edit-field-layer .layer_num_0 h3.collapsible-handle').click(function () {
@@ -90,3 +95,7 @@
     }
     };
 }) (jQuery);
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes

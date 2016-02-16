@@ -34,6 +34,39 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	return;
 }
 
+//<<<<<<< Local Changes
+function snowpilot_snopit_set_density_titles(&$form){
+	
+	return;
+}
+
+function snowpilot_snopit_set_stability_test_titles(&$form){
+	// this will be a fancy one, with compiled stab test output
+	return;
+}
+
+function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
+	$x= 0;
+	while (isset($form['field_temp_collection']['und'][$x])){
+		$next_layer = $x+1;
+		if (isset($form['field_temp_collection']['und'][$next_layer])){ $collapsed = ' collapsed'; }else { $collapsed = '';}
+		
+		$form['field_temp_collection']['und'][$x]['#prefix'] = "<div class='collapsible-container layer_num_". $x ." '>".
+			"<h3 class='collapsible-handle layer-title'>Temp Point Number " . $next_layer. ": ". 
+				$form['field_temp_collection']['und'][$x]['field_temp_temp']['und'][0]['value']['#default_value'] . "&#176;". 
+					$snowpit_unit_prefs['field_temp_units'].
+						" @ ". $form['field_temp_collection']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
+						" ". $snowpit_unit_prefs['field_depth_units'].
+					 "</h3>".
+				'<div class="collapsible-content'. $collapsed .'" >';
+		$form['field_temp_collection']['und'][$x]['#suffix'] ="</div> </div>";
+		$x++;
+	}
+	return $form;
+}
+
+//=======
+//>>>>>>> External Changes
 function snowpilot_snowpit_set_layer_titles(&$form){
 	// Start with the overall title of the group
 	$form['field_layer']['und']['#title'] = "Snowpack layers"; // 
