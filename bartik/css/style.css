@@ -146,10 +146,15 @@ a.button {
 #snowpit-profile-node-form .field-name-field-hardness,
 #snowpit-profile-node-form .field-name-field-grain-size,
 #snowpit-profile-node-form .field-name-field-height,
-#snowpit-profile-node-form .field-name-field-density-top{
+#snowpit-profile-node-form .field-name-field-density-top,
+#snowpit-profile-node-form .field-name-field-temp-temp,
+#snowpit-profile-node-form .field-name-field-depth{
 	display:inline-block;
 
 }
+
+
+
 
 #snowpit-profile-node-form .field-name-field-hardness2,
 #snowpit-profile-node-form .field-name-field-grain-size-max,
@@ -161,7 +166,8 @@ a.button {
 }
 
 #snowpit-profile-node-form .field-name-field-bottom-depth,
-#snowpit-profile-node-form .field-name-field-density-bottom{
+#snowpit-profile-node-form .field-name-field-density-bottom,
+#snowpit-profile-node-form .field-name-field-depth{
 	padding-left: 25px;
 	
 }
@@ -221,7 +227,16 @@ form.node-snowpit_profile-form fieldset{
 
 .field-group-htab .tabledrag-toggle-weight-wrapper{
 	display:none;
-}/*
+}
+/* Temp collection field sizes: */
+
+
+.field-type-field-collection input.form-text{
+	width: 35px;
+}
+
+
+/*
 
    This is all part of styling the 'grain types' drop down on the snowpit profile form
 

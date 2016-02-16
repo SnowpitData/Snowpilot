@@ -21,11 +21,15 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			}
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
+			drupal_add_js('/sites/all/modules/snowpilot/js/snowpilot.js');
+			
 			snowpilot_snowpit_set_layer_titles($form);
 			
-			$form['#after_build'][] = 'snowpilot_set_layer_title_after_build';
+			snowpilot_snowpit_set_temp_coll_titles($form, $snowpit_unit_prefs);
 			
+			snowpilot_snowpit_set_density_titles($form, $snowpit_unit_prefs);
 
+snowpilot_snowpit_set_stability_test_titles($form, $snowpit_unit_prefs);
 			
 			//dsm();
 		//}
@@ -34,15 +38,46 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	return;
 }
 
-//<<<<<<< Local Changes
-function snowpilot_snopit_set_density_titles(&$form){
-	
-	return;
+function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
+	$x= 0;
+	while (isset($form['field_density_profile']['und'][$x])){
+		$next_layer = $x+1;
+		if (isset($form['field_density_profile']['und'][$next_layer])){ $collapsed = ' collapsed'; }else { $collapsed = '';}
+		
+		$form['field_density_profile']['und'][$x]['#prefix'] = "<div class='collapsible-container density_num_". $x ." '>".
+			"<h3 class='collapsible-handle density-title'>Density Measurement " . $next_layer. ": ". 
+				$form['field_density_profile']['und'][$x]['field_density_top']['und'][0]['value']['#default_value'] . 
+					_density_unit_fix($snowpit_unit_prefs['field_density_units']).
+						" @ ". $form['field_density_profile']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
+						" ". $snowpit_unit_prefs['field_depth_units'].
+					 "</h3>". '<div class="collapsible-content'. $collapsed .'" >';
+		$form['field_density_profile']['und'][$x]['#suffix'] ="</div> </div>";
+		$x++;
+	}
+	return $form;
 }
 
-function snowpilot_snopit_set_stability_test_titles(&$form){
+function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs){
 	// this will be a fancy one, with compiled stab test output
-	return;
+	$x= 0;
+	while (isset($form['field_test']['und'][$x])){
+		$next_layer = $x+1;
+		if (isset($form['field_test']['und'][$next_layer])){ $collapsed = ' collapsed'; 
+		}else { $collapsed = '';}
+		
+		$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
+			"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. ": ". 
+				//$form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0] . 
+					 $form['field_test']['und'][$x]['field_stability_test_score']['und']['#default_value'][0]." ".
+					 $form['field_test']['und'][$x]['field_shear_quality']['und']['#default_value'][0]." ".
+						 "Depth: ".$form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
+						" ". $snowpit_unit_prefs['field_depth_units'].
+					 "</h3>". '<div class="collapsible-content'. $collapsed .'" >';
+		$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";
+		$x++;
+	}
+	dsm($form['field_test']);
+	return $form;
 }
 
 function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
@@ -51,30 +86,31 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 		$next_layer = $x+1;
 		if (isset($form['field_temp_collection']['und'][$next_layer])){ $collapsed = ' collapsed'; }else { $collapsed = '';}
 		
-		$form['field_temp_collection']['und'][$x]['#prefix'] = "<div class='collapsible-container layer_num_". $x ." '>".
-			"<h3 class='collapsible-handle layer-title'>Temp Point Number " . $next_layer. ": ". 
+		$form['field_temp_collection']['und'][$x]['#prefix'] = "<div class='collapsible-container temp_num_". $x ." '>".
+			"<h3 class='collapsible-handle temp-title'>Temp Point " . $next_layer. ": ". 
 				$form['field_temp_collection']['und'][$x]['field_temp_temp']['und'][0]['value']['#default_value'] . "&#176;". 
 					$snowpit_unit_prefs['field_temp_units'].
 						" @ ". $form['field_temp_collection']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
 						" ". $snowpit_unit_prefs['field_depth_units'].
-					 "</h3>".
-				'<div class="collapsible-content" >';
+					 "</h3>". '<div class="collapsible-content'. $collapsed .'" >';
 		$form['field_temp_collection']['und'][$x]['#suffix'] ="</div> </div>";
 		$x++;
 	}
 	return $form;
 }
 
-//=======
-//>>>>>>> External Changes
 function snowpilot_snowpit_set_layer_titles(&$form){
 	// Start with the overall title of the group
-	$form['field_layer']['und']['#title'] = "Snowpack layers"; // 
+	$form['field_layer']['und']['#title'] = "Snowpack Layers"; // 
+	// Add more button:
+	$form['field_layer']['und']['add_more']['#value'] = "New Snowpack Layer";
 	$x=0;
 
 	while(isset($form['field_layer']['und'][$x] )){
+		// Set remove button text
+		$form['field_layer']['und'][$x]['remove_button']['#value'] = "Remove Layer";
 		$next_layer = $x+1 ; 
-	
+		
 		$collapsed = '';
 		if (isset($form['field_layer']['und'][$next_layer])) {
 	
@@ -98,23 +134,6 @@ function snowpilot_snowpit_set_layer_titles(&$form){
 		//dsm($form['field_layer']['und'][$x]);
 		$x++;
 	}
-	dsm($form['field_layer']);
-}
-
-function snowpilot_set_layer_title_after_build(&$form, &$form_state){
-	//$form['field_layer']['und'][0]['#groups']['group_layer_inner']->format_settings['instance_settings']['description'] = "Layer 1";
-	//$form['field_layer']['und'][1]['#groups']['group_layer_inner']->format_settings['instance_settings']['description'] = "Layer 2";
-	
-			
-	//$form['field_layer']['und'][0]['field_height']['und'][0]['value']['#field_prefix'] = "<h3> Hey this is big and in front</h3>"; //
-	//$form['field_layer']['und'][1]['field_height']['und'][0]['value']['#field_prefix'] = "<h3> Hey this is big and in front, and this is second</h3>"; //
-	
-	drupal_add_js('/sites/all/modules/snowpilot/js/snowpilot.js');
-	
-
-	
-	return $form;
-	
 }
 
 
@@ -353,6 +372,24 @@ function snowpilot_snopit_prof_set_suffices(&$form, $snowpit_unit_prefs){
 		$form['field_test']['und'][$x]['field_length_of_isolated_col_pst']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
 		$x++;
 	}
+	
+	// REpeated per temp collection
+	$x = 0;
+	while (isset ($form['field_temp_collection']['und'][$x])){
+		$form['field_temp_collection']['und'][$x]['field_temp_temp']['und'][0]['value']['#field_suffix'] = "&#176;". $snowpit_unit_prefs['field_temp_units'];
+		$form['field_temp_collection']['und'][$x]['field_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+		$x++;
+	}
+	// Repeated per density measurement
+	$x = 0;
+	while ( isset( $form['field_density_profile']['und'][$x])){
+		$form['field_density_profile']['und'][$x]['field_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+		$form['field_density_profile']['und'][$x]['field_density_top']['und'][0]['value']['#field_suffix'] = _density_unit_fix($snowpit_unit_prefs['field_density_units']);
+		
+		
+		$x++;
+	}
+	
 	return;
 }
 
