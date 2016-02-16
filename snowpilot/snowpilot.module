@@ -58,7 +58,7 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 						" @ ". $form['field_temp_collection']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
 						" ". $snowpit_unit_prefs['field_depth_units'].
 					 "</h3>".
-				'<div class="collapsible-content'. $collapsed .'" >';
+				'<div class="collapsible-content" >';
 		$form['field_temp_collection']['und'][$x]['#suffix'] ="</div> </div>";
 		$x++;
 	}
@@ -98,7 +98,7 @@ function snowpilot_snowpit_set_layer_titles(&$form){
 		//dsm($form['field_layer']['und'][$x]);
 		$x++;
 	}
-	dsm($form['field_layer']['und']);
+	dsm($form['field_layer']);
 }
 
 function snowpilot_set_layer_title_after_build(&$form, &$form_state){

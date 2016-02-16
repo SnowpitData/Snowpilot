@@ -1,12 +1,12 @@
-<<<<<<< Updated upstream
+//<<<<<<< Updated upstream
 (function ($) {
   Drupal.behaviors.infiniteblahblah = {
-=======
+//=======
 
-  Drupal.behaviors.snowpilot = {
->>>>>>> Stashed changes
+//  Drupal.behaviors.snowpilot = {
+//>>>>>>> Stashed changes
     attach: function (context, settings) {
-        $('.collapsible-content.collapsed').hide();
+       $('.collapsible-content.collapsed').hide();
         $('#edit-field-layer .layer_num_0 h3.collapsible-handle').click(function () {
             $('.layer_num_0 .collapsible-content').toggle('slow', function () {
                 // Animation complete.
@@ -85,8 +85,8 @@
             $(this).toggleClass('open');
         });
         //repeat through layer number 20 ...
-        $('#edit-field-temp-collection .layer_num_0 h3.collapsible-handle').click(function () {
-            $('.layer_num_0 .collapsible-content').toggle('slow', function () {
+        $('#edit-field-temp-collection .layer_num_11 h3.collapsible-handle').click(function () {
+            $('.layer_num_11 .collapsible-content').toggle('slow', function () {
                 // Animation complete.
             });
             //add css class to H2 title when clicked//
@@ -95,7 +95,7 @@
     }
     };
 }) (jQuery);
-<<<<<<< Updated upstream
-=======
+//<<<<<<< Updated upstream
+//=======
 
->>>>>>> Stashed changes
+//>>>>>>> Stashed changes
