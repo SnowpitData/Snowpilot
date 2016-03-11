@@ -1,5 +1,8 @@
 <?php
 
+include_once('includes/unit_prefs.inc.php');
+include_once('includes/graphing_functions.inc.php');
+
 
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
@@ -29,14 +32,108 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			
 			snowpilot_snowpit_set_density_titles($form, $snowpit_unit_prefs);
 
-snowpilot_snowpit_set_stability_test_titles($form, $snowpit_unit_prefs);
+			snowpilot_snowpit_set_stability_test_titles($form, $snowpit_unit_prefs);
+						
+			snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs);
 			
-			//dsm();
+			foreach( $form['field_layer']['und'] as $delta => $field){
+				if (is_numeric($delta)){
+					//dsm($form['field_layer']['und'][$delta]);
+					//$form['field_layer']['und'][$delta]['#pre_render'][] = 'snowpilot_graintypes_tweak';
+				}
+				
+			}
+			$form['field_test']['und'][0]['field_stability_test_score']['#type'] ='hidden';
+			//dsm($form['field_test']['und'][0]);
+			
+			//
+			//dsm($form_state);
 		//}
 		} // end if node->type == snowpit prof
 	} // end switch
 	return;
 }
+
+function snowpilot_graintypes_tweak($element){
+	//dsm($element);
+	return $element;
+}
+
+function snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs){
+	if ( $snowpit_unit_prefs['field_fracture_category'] != 'fracture_character'){
+		$hide_field = 'field_fracture_character';
+		
+	}else{
+		$hide_field = 'field_shear_quality';
+	}
+	foreach ( $form['field_test']['und'] as $key => $stability_test){
+		//$form['field_test']['und'][$key]["$hide_field"]['und']['#type'] = 'hidden';
+		//dsm($form['field_test']['und'][$key]["$hide_field"]['und']['#type']);
+	}
+	//dsm($form['field_test']);
+	return $form;
+}
+
+function snowpilot_entity_presave($entity, $type){
+
+	if ($type == 'field_collection_item' && $entity->field_name == 'field_test'){
+		//if $entity->
+		
+		// this sets a specifice field ( Stability test score ) when the field collection tiem is saved
+		$entity->field_stability_test_score['und'][0]['value'] = _set_test_result_single($entity);
+	}
+	return $entity;
+}
+
+function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
+	//dsm($form['field_test']['und']['field_stability_test_type']['und']['#value']);
+	$x= 0;
+	
+	foreach($form_state['values']['field_test']['und'] as $test_result){
+		//$test_result['entity']->field_stability_test_score['und'] = array ( 0 => array('value' => 'ECWHATEVER'));
+		
+	//	$test_item = $form_state['values']['field_test']['und'][$x]['entity']->field_stability_test_score;
+//		$test_item['und'][0] = array( 'value' => _set_test_result_single($test_result));
+	//	form_set_value($form['field_test']['und'][0]['field_stability_test_score'], 
+	//	array( 'und' => array( 0 => array( 'value' => _set_test_result_single($test_result)))), 
+	//	$form_state );
+	//	dsm($test_item);
+		//['field_stability_test_score'][0]['value'] = _set_test_result_single($test_result);
+			//_set_test_result_single($test_result);
+		//dsm(_set_test_result_single($test_result));
+
+
+		
+		$x++;
+	}
+	return $form_state;
+}
+
+function _set_test_result_single($test_result){
+	if (isset($test_result->field_stability_test_type['und'])){
+	switch ($test_result->field_stability_test_type['und'][0]['value']){
+		case 'ECT':	return $test_result->field_stability_test_score_ect['und'][0]['value'];
+		break;
+		case 'CT':	return $test_result->field_stability_test_score_ct['und'][0]['value'];
+		
+		break;
+		case 'RB':	return $test_result->field_stability_test_score_rb['und'][0]['value'];
+		
+		break;
+		case 'PST':	return '';
+		
+		break;
+		case 'SB':	return $test_result->field_stability_test_score_sb['und'][0]['value'];
+		
+		break;
+		case 'ST': return $test_result->field_stability_test_score_st['und'][0]['value'];
+		
+		break;
+	}
+	}
+	return;
+}
+
 
 function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 	$x= 0;
@@ -59,26 +156,27 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs){
 	// this will be a fancy one, with compiled stab test output
+	$form['field_test']['und']['add_more']['#value'] = "New Stability Test";
+	
 	$x= 0;
 	while (isset($form['field_test']['und'][$x])){
 		$next_layer = $x+1;
 		if (isset($form['field_test']['und'][$next_layer])){ $collapsed = ' collapsed'; 
 		}else { $collapsed = '';}
 		
+		$form_test_shorthand = stability_test_score_shorthand_form($form['field_test']['und'][$x]);
 		$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
-			"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. ": ". 
-				//$form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0] . 
-					 $form['field_test']['und'][$x]['field_stability_test_score']['und']['#default_value'][0]." ".
-					 $form['field_test']['und'][$x]['field_shear_quality']['und']['#default_value'][0]." ".
+			"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. ": ". $form_test_shorthand ." ".
 						 "Depth: ".$form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
 						" ". $snowpit_unit_prefs['field_depth_units'].
 					 "</h3>". '<div class="collapsible-content'. $collapsed .'" >';
 		$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";
 		$x++;
 	}
-	dsm($form['field_test']);
+	//dsm($form['field_test']);
 	return $form;
 }
+
 
 function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 	$x= 0;
@@ -139,205 +237,14 @@ function snowpilot_snowpit_set_layer_titles(&$form){
 
 function snowpilot_node_view($node, $view_mode){
 	if ($node->type == 'snowpit_profile'){
+	snowpilot_snowpit_graph_header_write($node);	
 		$prefs = snowpilot_unit_prefs_get($node, 'node'); 
-		
 		$node->content['field_air_temp'][0]['#markup'] = $node->content['field_air_temp']['#items'][0]['value']. $prefs['field_temp_units'];
 	}
 	return $node;
-}
-/*
-	  depth 0 from: top, bottom ;  field_depth_0_from
-		Depth Units: cm, inches ; field_depth_units
-		Temp Units: C, F ; field_temp_units
-		Coord Type: Lat / Long,  UTM
-		elev units: m, ft
-		Default Logintude: W, E
-		Latitude: N, S
-		Density Units: kg/cubic m , lbs / cubic ft
-		Fracture category: Shear Quality , Fracture character
-		Hardness scale: linear, exponential
-			
-		Default	State/Province: from taxonomy hierarchical select
-		Default Range : hierarchical select 
-			
-			Also:
-		prof
-		Affiliation - this can be chosen from a taxonomy on the user page
-		first
-		last
-		phone
-		email
-		name
-				*/			
+}		
 		
 				// use a 'favorite locations' node type to store fields that should be prepopulated on the snowpit profile form.
-
-
-// This function checks to see if all the user info fields have been filled out.
-//   if so, it will return the $account object.
-//   if some field is missing, it will redirect the user to the user edit page (!) to fill in that info.
-
-function snowpilot_user_unit_prefs_check($uid){
-	$account = user_load($uid);
-	$drupal_keys_required = array( // this is a list of keys that are required in order to populate the snowpit profile
-		'field_depth_0_from', 
-		'field_depth_units', 
-		'field_temp_units', 
-		'field_coordinate_type', 
-		'field_elevation_units',
-		'field_longitude_type',
-		'field_latitude_type',
-		'field_density_units',
-		'field_fracture_category',
-		'field_hardness_scale',
-	//	'field_loaction',
-	//  'field_loaction_0'
-	//	'field_loaction_1',
-		'field_first_name',
-		'field_last_name',
-		'field_phone',
-		'field_professional',
-	//	'field_professional_affiliation',
-		'name',
-		'mail'
-	);
-  $missing_keys = array();
-	foreach($drupal_keys_required as $key){
-		if (count($account->$key ) == 0 ){
-			$missing_keys[] = $key;
-		
-		}
-	}
-	/*
-	    This checks to make sure all of the 'drupal required keys' are present. IF not, the user is redirected to the 
-			user edit form, then back here.
-	*/
-	if (count($missing_keys)){
-		drupal_set_message( "<h3>Missing User Unit Preferences</h3>You need to set your <a href = '/user/". $uid ."/edit#edit-field-first-name'>User Unit Preferences</a> before you can create a new Snowpit Profile.<br/>
-			The following preferences have not been set yet: <li>" . implode($missing_keys,'<li>'), 'warning');
-		drupal_goto("user/". $uid ."/edit", array('query' => array('destination' => 'node/add/snowpit-profile')) );
-			return FALSE;
-	}
-	return $account;
-}
-
-// snowpilot_unit_prefs_get will return unit prefs, an array,
-//input is user object
-// $ouput_format = 'drupal' (default): 'avsic' or 'drupal' - indicates the keys of the array, which format to follow inteh return array 
-// return is $unit_prefs = array('hardnessScaling' => 'linear|exponential', 'rhoUnits' =>'kgsper' etc.)
-// or is array( 'field_temp_units' => 'C' , 'field_depth_units' => 'in', 'field_depth_0_from' => 'top' )  
-// type is node or user, where to draw the data from 
-
-
-function snowpilot_unit_prefs_get($entity, $type = 'user'){
-
-	$unit_prefs = array( 
-		
-		
-		'field_depth_0_from' => _helper_cleaner($entity,'field_depth_0_from'), 
-		'measureFrom' => _helper_cleaner($entity,'field_depth_0_from'), 
-		
-		'field_depth_units' =>  _helper_cleaner($entity,'field_depth_units'), 
-		'depthUnits'  => _helper_cleaner($entity,'field_depth_units'), 
-			
-		'field_temp_units' => _helper_cleaner($entity,'field_temp_units'), 
-		'tempUnits'  => _helper_cleaner($entity,'field_temp_units'), 
-			
-		'field_coordinate_type' =>  _helper_cleaner($entity,'field_coordinate_type'),
-		'coordType' =>  _helper_cleaner($entity,'field_coordinate_type'),
-		
-		'field_elevation_units' =>  _helper_cleaner($entity,'field_elevation_units'),
-		'elvUnits'  => _helper_cleaner($entity,'field_elevation_units'),
-			
-		'field_longitude_type' => _helper_cleaner($entity,'field_longitude_type'),
-		'longType'=> _helper_cleaner($entity,'field_longitude_type'),
-			
-		'field_latitude_type' => _helper_cleaner($entity,'field_latitude_type'),
-		'latType' => _helper_cleaner($entity,'field_latitude_type'),
-		
-		'field_density_units' =>  _helper_cleaner($entity,'field_density_units') ,
-		'rhoUnits' =>  _helper_cleaner($entity,'field_density_units') ,
-		
-		'field_fracture_category' =>  _helper_cleaner($entity, 'field_fracture_category'),
-		'fractureCat' =>  _helper_cleaner($entity, 'field_fracture_category'),
-		
-		'field_hardness_scale' => _helper_cleaner($entity,'field_hardness_scale'),
-		'hardnessScaling' => _helper_cleaner($entity,'field_hardness_scale'),
-		///////
-		'field_loaction_0' => _helper_cleaner($entity, 'field_loaction','tid'),
-		'state' => _helper_cleaner($entity, 'field_loaction','tid'), // this needs a conversion function to the state/province name
-		
-		'field_loaction_1' => _helper_cleaner($entity, 'field_loaction','tid', '1'),
-		'range' =>  _helper_cleaner($entity, 'field_loaction','tid', '1'),  // this will need a conversion function to the name of the range
-		
-		'field_first_name' =>_helper_cleaner($entity,'field_first_name'),
-		'first' => _helper_cleaner($entity,'field_first_name'),
-		
-		'field_last_name' => _helper_cleaner($entity,'field_last_name'),
-		'last' => _helper_cleaner($entity,'field_last_name'),
-		
-		'field_phone' => _helper_cleaner($entity,'field_phone'),
-		'phone' => _helper_cleaner($entity,'field_phone'),
-		
-		'field_professional' =>  _helper_cleaner($entity,'field_professional'),
-		'prof' => _helper_cleaner($entity,'field_professional'),
-			
-		'field_professional_affiliation' => _helper_cleaner($entity, 'field_professional_affiliation','tid')  ,
-		'affil'  => _helper_cleaner($entity, 'field_professional_affiliation', 'tid')  ,// tid needs to be converted to name
-		
-		
-		);
-		/*
-		     These fields are not present in the 'node' variable that this function works on.
-		*/
-		if ($type  == 'user'){
-			$unit_prefs['name'] = $entity->name; // hey, this is the same value in both core drupal and avscience db!
-		
-			$unit_prefs['mail'] = $entity->mail;
-			$unit_prefs['email'] = $entity->mail;
-		}
-		
-	/*	foreach($unit_prefs as $value){
-			if ($value == '' ) return FALSE; 	
-		}*/
-		return $unit_prefs;
-}
-
-// This function is used by snowpilot_unit_prefs_get to avoid trying to fetch a property of a non-object ...
-// For now, works only with regular fields of 
-
-function _helper_cleaner($entity, $field, $value = 'value', $count = 0){  
-  if (isset($entity->$field) && count($entity->$field)){
-		//var_dump($entity->$field);
-		//var_dump($entity); echo $field;
-		$entity = (array) $entity;
-		return $entity[$field]['und'][$count][$value]; 
-	}else{
-		return NULL;
-	}
-
-}
-	 
-	 
-function snowpilot_snopit_prof_unit_prefs_set(&$form,$snowpit_unit_prefs){
-
-
-	$form['field_loaction']['und']['#default_value'][0] = $snowpit_unit_prefs['field_loaction_0'];
-	$form['field_loaction']['und']['#default_value'][1] = $snowpit_unit_prefs['field_loaction_1'];
-	foreach( $snowpit_unit_prefs as $key => $pref){
-		if ($key != 'field_loaction_0' 
-			&& $pref != 'field_loaction_1' 
-			&& substr($key,0,6) == 'field_' 
-		  && isset($form[$key])){
-				$form[$key]['und']['#default_value'] = $pref ;
-				//drupal_set_message("<pre>". var_export($form, TRUE )."</pre>");
-				
-		}
-	}
-	
-	
-	return $form;
-}
 
 
 
@@ -345,7 +252,6 @@ function snowpilot_snopit_prof_set_suffices(&$form, $snowpit_unit_prefs){
 	//dsm($form['field_elevation']['und'][0]);
 	$form['field_air_temp']['und'][0]['value']['#field_suffix'] = 'º'.$snowpit_unit_prefs['field_temp_units'];
 	$form['field_elevation']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_elevation_units'];
-	$form['field_slope_angle']['und'][0]['value']['#field_suffix'] = " degrees";
 	$form['field_surface_penetration']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
 	$form['field_boot_penetration_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
 	$form['field_ski_penetration']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
@@ -394,7 +300,147 @@ function snowpilot_snopit_prof_set_suffices(&$form, $snowpit_unit_prefs){
 }
 
 function _density_unit_fix($units){
-	return ($units == 'kg_cubic_m' ? 'kg/m&#xb3' : 'lb/ft&#xb3');
+	return ($units == 'kg_cubic_m' ? 'kg/m&#xb3;' : 'lb/ft&#xb3;');  // this should be fixed so that metric units would be the default
+}
+
+
+function snowpilot_cardinal_wind_dir($degrees){
+	if (!is_numeric($degrees)) return;
+	switch (true){
+		
+		case ($degrees >= 360-22.5 || $degrees < 22.5): $card = 'N'; break; 
+		case ($degrees >=22.5 && $degrees < 67.5 ): $card = 'NE'; break;
+		case ($degrees >=67.5 && $degrees < 112.5): $card = 'E'; break;
+		case ($degrees >=112.5 && $degrees < 157.5): $card = 'SE'; break;
+		case ($degrees >=157.5 && $degrees < 202.5): $card = 'S'; break;
+		case ($degrees >=202.5 && $degrees < 247.5): $card = 'SW'; break;
+		case ($degrees >= 247.5 && $degrees < 292.5): $card = 'W'; break;
+		case ($degrees >=292.5 && $degrees < 337.5): $card ='NW'; break;
+	
+	
+	}
+	return $card;
+}
+
+function _snowpilot_find_pit_depth($node){
+	if (isset($node->field_total_height_of_snowpack['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top'){
+		return $node->field_total_height_of_snowpack['und'][0]['value'];
+	}else{
+		$ids = array();
+		$max = 0;
+		foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
+		$all_layers = field_collection_item_load_multiple($ids);
+		foreach ($all_layers as $layer){
+			if ($layer->field_height > $max ) $max = $layer->field_height ;
+			if ($layer->field_bottom_depth > $max ) $max = $layer->field_bottom_depth ;	
+		}
+		return $max;
+	}
+	
+}
+
+
+function depth_val($a,$b){
+	$a_depth = $a->field_depth['und'][0]['value']; 
+	$b_depth = $b->field_depth['und'][0]['value'];
+	
+	switch (true){
+		case $a_depth>$b_depth:
+			return 1;
+		break;
+		case $a_depth<$b_depth:
+			return -1;
+		break;
+		case $a_depth == $b_depth:
+		  return 0;
+		break;
+	}	
+	
+}
+
+function layer_depth_val( $a , $b){
+	return ($a->y_val_top > $b->y_val_top) ? 1 : -1 ;
+}
+
+
+//  Returns a string when give a stability test part of a node, eg. $node->field_test['und'][$x]
+//  $test is a fieldCollectionEntityObject
+
+function stability_test_score_shorthand($test, $snowpit_unit_prefs){
+	$string = '';
+	//dsm($test);
+	switch ($test->field_stability_test_type['und'][0]['value']){
+		case 'ECT':
+			if (in_array( $test->field_stability_test_score['und'][0]['value'], array( 'ECTP','ECTN' ) ) && isset ($test->field_ec_score['und'][0]['value'] )){
+				$string = $test->field_stability_test_type['und'][0]['value'] . $test->field_ec_score['und'][0]['value'];		
+			}else{
+				$string = $test->field_stability_test_score['und'][0]['value'];
+			}
+		
+		break;
+		case 'PST':
+			$string = 'PST'. $test->field_length_of_saw_cut ['und'][0]['value']."/". $test->field_length_of_isolated_col_pst['und'][0]['value']." (". $test->field_data_code_pst['und'][0]['value']. ")";
+		
+		
+		break;
+		case 'CT':
+			if (in_array($test->field_stability_test_score_ct['und'][0]['value'], array('CTE','CTM', 'CTH', 'CTN'  )) && isset($test->field_ct_score['und'][0]['value'])){
+				$string = 'CT'.$test->field_ct_score['und'][0]['value'];
+			}else{
+		  	$string = $test->field_stability_test_score_ct['und'][0]['value'];
+				
+			}
+			
+			if ( $snowpit_unit_prefs['field_fracture_category'] == 'shear_quality' && isset($test->field_shear_quality['und'][0]['value'])){
+				$string .= ", ".$test->field_shear_quality['und'][0]['value'];
+			}elseif (isset( $test->field_fracture_character['und'][0]['value'])){
+				$string .= ", ".$test->field_fracture_character['und'][0]['value'];
+			}
+		break;	
+		case 'RB':
+		case 'ST':
+		case 'SB':
+		  $string = $test->field_stability_test_score['und'][0]['value']. ", ".$test->field_shear_quality['und'][0]['value'];
+		break;	
+	}
+
+	return $string;
+}
+
+function stability_test_score_shorthand_form($stab_test){
+	$string = '';
+	switch ($stab_test['field_stability_test_type']['und']['#default_value'][0]){
+		case 'ECT':
+		  $string = $stab_test['field_stability_test_score_ect']['und']['#default_value'][0];
+			if (in_array( $stab_test['field_stability_test_score_ect']['und']['#default_value'][0], array( 'ECTP','ECTN' ) ) && isset ($stab_test['field_ec_score']['und'][0]['value']['#default_value'] )){
+				$string .= " ". $stab_test['field_ec_score']['und'][0]['value']['#default_value'];		
+			}
+		
+		break;
+		case 'PST':
+			$string = 'PST'. $stab_test['field_length_of_saw_cut']['und'][0]['value']['#default_value']."/". $stab_test['field_length_of_isolated_col_pst']['und'][0]['value']['#default_value']." (". $stab_test['field_data_code_pst']['und']['#default_value'][0]. ")";
+		
+		
+		break;
+		case 'CT':
+	  	$string = $stab_test['field_stability_test_score_ct']['und']['#default_value'][0];
+			if (in_array($stab_test['field_stability_test_score_ct']['und']['#default_value'][0], array('CTE','CTM', 'CTH', 'CTN'  )) && isset($stab_test['field_ct_score']['und'][0]['value']['#default_value'])){
+				$string .= $stab_test['field_ct_score']['und'][0]['value']['#default_value']. " ". $stab_test['field_shear_quality']['und']['#default_value'][0];
+			}
+		break;	
+		case 'RB':
+	  $string = $stab_test['field_stability_test_score_rb']['und']['#default_value'][0]. ", ".$stab_test['field_shear_quality']['und']['#default_value'][0]; break;
+		
+		case 'ST':
+	  $string = $stab_test['field_stability_test_score_st']['und']['#default_value'][0]. ", ".$stab_test['field_shear_quality']['und']['#default_value'][0]; break;
+		
+		case 'SB':
+		  $string = $stab_test['field_stability_test_score_sb']['und']['#default_value'][0]. ", ".$stab_test['field_shear_quality']['und']['#default_value'][0];
+		break;	
+	}
+
+	return $string;
+	
 }
 
 ?>

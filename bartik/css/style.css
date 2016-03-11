@@ -167,7 +167,7 @@ a.button {
 
 #snowpit-profile-node-form .field-name-field-bottom-depth,
 #snowpit-profile-node-form .field-name-field-density-bottom,
-#snowpit-profile-node-form .field-name-field-depth{
+#snowpit-profile-node-form .group-layers .field-name-field-depth{
 	padding-left: 25px;
 	
 }
@@ -194,11 +194,45 @@ a.button {
     snoww profile edit form
 */
 
+form.node-snowpit_profile-form #edit-title{
+	width: 300px;
+}
+
+input#edit-field-date-time-und-0-value-datepicker-popup-0{
+	width: 90px;
+	
+}
+input#edit-field-date-time-und-0-value-timeEntry-popup-1{
+	width:60px;
+}
+
+#edit-field-date-time > div{
+	width: 250px;
+	
+}
+
+input#edit-field-aspect-und-0-value{
+	width: 30px;
+}
+
+input#edit-field-slope-angle-und-0-value{
+	width: 22px;
+}
+
+input#edit-field-elevation-und-0-value{
+	width: 40px;
+}
+
 #edit-field-elevation,
 #edit-field-aspect,
 #edit-field-slope-angle{
 	display: inline-block;
-	padding: 0 5px;
+	margin: 0 15px;
+}
+
+input#edit-field-total-height-of-snowpack-und-0-value{
+	width: 30px;
+	
 }
 
 body.page-user .profile .field-label{
@@ -218,7 +252,7 @@ body.page-user .profile h3.field-label{
 }
 
 form.node-snowpit_profile-form .fieldset-wrapper{
-	margin-top:0px;
+/*	margin-top:0px; */
 }
 form.node-snowpit_profile-form fieldset{
 	margin-top:0;
@@ -235,6 +269,19 @@ form.node-snowpit_profile-form fieldset{
 	width: 35px;
 }
 
+.field-type-field-collection .field-name-field-stability-comments input.form-text{
+	width: 60px;
+}
+
+@font-face {
+	font-family:snowsymbols;
+	src:url('sites/all/libraries/fonts/ArialMT28.ttf') format('truetype');
+}
+
+.field-name-field-grain-type  select{
+	font-family: snowsymbols, Arial;
+	
+}
 
 /*
 
