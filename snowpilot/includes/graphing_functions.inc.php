@@ -22,7 +22,7 @@ function snowpilot_layers_density_xlate(&$all_layers){
 				//  Loop here to look for conflicts between the cg and the layer(s) above
 				//
 				$prev_test = $x-1;
-				while ( snowpilot_collision_check_cg_up($cg, $all_layers[$prev_test]) && ( $prev_test >= 0 )){
+				while ( ( $prev_test >= 0 ) && snowpilot_collision_check_cg_up($cg, $all_layers[$prev_test]) ){
 				//	dsm('new cycle');
 					$cg = array ( $prev_test => array( 'y_val' => $all_layers[$prev_test]->y_val, 'y_val_top' => $all_layers[$prev_test]->y_val_top )) + $cg;	 
 					$all_layers[$prev_test]->collision_flag = TRUE;
@@ -39,13 +39,14 @@ function snowpilot_layers_density_xlate(&$all_layers){
 					snowpilot_write_xlations($cg, $all_layers);
 				}else*/
 				
-				if ( !$all_layers[$x-1]->collision_flag){ // layer obove is not a collision, write it all straight across
-					$layer->y_val_top_xlate = $layer->y_val_top;
-					$all_layers[$x-1]->y_val_xlate = $layer->y_val_top;
-				}else{   // layer above IS a collision, make it 20 pixels high, and set that to the top of current layer too
+				if ( isset($all_layers[$x-1]->collision_flag) && $all_layers[$x-1]->collision_flag == TRUE){ // layer above IS a collision, make it 20 pixels high, and set that to the top of current layer too		
 					$all_layers[$x-1]->y_val_xlate = $all_layers[$x-1]->y_val_top_xlate + 20;
 					$layer->y_val_top_xlate =	$all_layers[$x-1]->y_val_xlate;
-					
+				}else{   // layer obove is not a collision, write it all straight across
+				
+					$layer->y_val_top_xlate = $layer->y_val_top;
+					$all_layers[$x-1]->y_val_xlate = $layer->y_val_top;	
+	
 				}
 				// make sure the bottom line of the last layer is in the right spot
 				if ( $x == count($all_layers) - 1 ){ 	$all_layers[$x]->y_val_xlate	= $all_layers[$x]->y_val; }
@@ -162,7 +163,7 @@ function _h2pix($h, $all = FALSE){
 			'K+' => 87,
 			'I-' => 63,
 			'I' => 39,
-			'' => ''
+			//'' => 451
 		); 
 		if ($all){
 			return $h2pix;
@@ -318,14 +319,63 @@ function snowpit_graph_pixel_depth($depth, $pit_depth, $meas_from = 'bottom'){
 function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_from = 'bottom'){
 	$prev_y_val = 0;
 	foreach ($test_results as $test){
+		//
+		// We need to see if there are multiple test scores that are identical and indicate as "2x", etc. 
+		// If so we 'continue 3; to skip the last processing in the foreach loop, so test->y_position is never set.
+		//
+		$test->multiple = 1;
+		foreach ( $test_results as $test_compare){
+			if ( ($test->item_id != $test_compare->item_id) &&
+				( $test->field_stability_test_type == $test_compare->field_stability_test_type  ) &&
+				( $test->field_stability_test_score == $test_compare->field_stability_test_score  ) &&
+				( $test->field_depth == $test_compare->field_depth  ) &&
+				( isset ($test_compare->multiple) && ($test_compare->multiple > 0))
+
+			){ 		// so the two tests are almost exactly alike, worth taking another look and comparing test-specific fields
+
+ 			 switch ($test->field_stability_test_type['und'][0]['value']){
+ 				  case 'ECT':
+ 					  if (( $test->field_ec_score == $test_compare->field_ec_score) &&
+							  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
+								( $test->field_fracture_character == $test_compare->field_fracture_character)
+ 						) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}
+ 					break;
+					case 'CT':
+				  if (( $test->field_ct_score == $test_compare->field_ct_score) &&
+						  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
+							( $test->field_fracture_character == $test_compare->field_fracture_character)
+					) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}
+					case 'PST':
+				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
+						  ( $test->field_length_of_saw_cut == $test_compare->field_length_of_saw_cut) &&
+							( $test->field_data_code_pst == $test_compare->field_data_code_pst)
+					) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}
+					break;
+					case 'RB':
+				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
+					  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
+							( $test->field_release_type == $test_compare->field_release_type)
+					) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}				
+					break;
+					case 'ST':
+					case 'SB':
+					$test->multiple = 0; $test_compare->multiple +=1; continue 3;	
+					break;
+				}
+			}
+			
+		}	
+		$depth_true = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
 		if ( $prev_y_val){			
-			$test->y_position = ($prev_y_val + 20 > snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth , $measure_from ))
+			$test->y_position = ($prev_y_val + 20 > snowpit_graph_pixel_depth($depth_true, $pit_depth , $measure_from ))
 				 ? $prev_y_val+20
-				: snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from) ;
+				: snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from) ;
+			$prev_y_val = $prev_y_val+20 ;
+			
 		}else{
-			$test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from);
+			$test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
+			$prev_y_val = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
 		}
-		$prev_y_val = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from);
 	}
 	return $test_results;
 }
@@ -348,7 +398,7 @@ function _generate_specifics_string($node) {
 			// Anything beyond the specific field here ,  will require accessing via the $node  object  
 			
 			$field_item = $node->$field;
-			if ($field_item['und'][0]['value'] != '0'){
+			if ( isset($field_item['und'][0]) && ($field_item['und'][0]['value'] != '0')){
 				$item_full = field_info_instance('node', $field, 'snowpit_profile');
 				switch ($field){
 					case 'field_adjacent_to_avy':
@@ -400,10 +450,16 @@ $label_font = '/sites/all/libraries/fonts/Arial.ttf';
 $value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
 $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 
-      imagettftext($img, 11, 0, 14, 17, $black, $label_font, "Snowpit Location Name");
-      imagettftext($img, 11, 0, 14, 35, $black, $value_font, $node->title);
-      imagettftext($img, 11, 0, 14, 53, $black, $value_font, "Location"); // Location information
-
+      imagettftext($img, 11, 0, 14, 17, $black, $value_font, $node->title);
+			// Location information
+      if ( isset ($node->field_loaction['und'])){
+				if ( isset ($node->field_loaction['und'][0]['taxonomy_term'])){
+			    imagettftext($img, 11, 0, 14, 35, $black, $value_font, $node->field_loaction['und'][0]['taxonomy_term']->description);
+				}
+				if ( isset ($node->field_loaction['und'][1]['taxonomy_term'])){
+        	imagettftext($img, 11, 0, 14, 53, $black, $value_font, $node->field_loaction['und'][1]['taxonomy_term']->name); 
+				}
+			}
       $text_pos = imagettftext($img, 11, 0, 14, 71, $black, $label_font, 'Elevation: ');
 			if (isset($node->field_elevation['und'])){
 				imagettftext($img, 11, 0, $text_pos[2], 71, $black, $value_font, $node->field_elevation['und'][0]['value'] .' '.$node->field_elevation_units['und'][0]['value']);
@@ -417,8 +473,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			$specifics = _generate_specifics_string($node);
 			imagettftext($img, 9, 0, $text_pos[2], 107, $black, $value_font, $specifics );
 			// Observer
-			$text_pos = imagettftext($img, 11, 0, 183 , 17, $black, $label_font, "Observer: ");
-			imagettftext( $img , 11, 0, $text_pos[2]  ,17 ,$black , $value_font, $user_account->name . " (". $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value'].")");
+			imagettftext($img, 11, 0, 183 , 17, $black,  $value_font, $user_account->name . " (". $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value'].")");
 			imagettftext($img, 11, 0, 183, 35, $black, $value_font, date('D M j H:i Y (T) ', 
 			strtotime($node->field_date_time['und'][0]['value']." ". $node->field_date_time['und'][0]['timezone_db']))); //Date / Time of observation
 
@@ -473,34 +528,48 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			imagettftext( $img, 11, 0 , 805, 17, $black, $label_font, 'Layer Notes');
 			
 			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
-			if ($node->body['und'][0]['safe_value'] != '' ){ 
+			if ( isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' ){ 
 				$notes_lines = _output_formatted_notes($node->body['und'][0]['safe_value'], $value_font );
 				foreach($notes_lines as $x => $line){
 					imagettftext($img, 9, 0, $textpos[2], 779 + $x * 20 ,$black, $value_font,$line);
 					
 				}
 			}
-			dsm($node);
+//			dsm($node);
 			
 			//  write stability tests column and comments 
 			//  TODO : expand into its own function
 			if (isset($node->field_test['und'])){
 				$ids = array();
 				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];}
+				//dsm($ids);
 				$test_results = field_collection_item_load_multiple($ids);
 				uasort($test_results, 'depth_val');
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the coulmn on the right
 				$comment_count = 0;
-				foreach ( $test_results as $x => $test){
-					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth)){
-					// this use of imageline will need to be updated to include some kind of cluster management
-						imageline($img, 707, $test->y_position, 941, $test->y_position, $black);
-						imagettftext($img, 9, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) ." @".$test->field_depth['und'][0]['value'].$snowpit_unit_prefs['field_depth_units']);
-				
-						if ( count($test->field_stability_comments)){
+				if ( isset ( $node->field_surface_penetration)  || isset( $node->field_total_height_of_snowpack )){
+					$textpos = array();
+					if ( isset( $node->field_total_height_of_snowpack ) ){ 
+						$textpos = imagettftext($img, 9 , 0, 645, $comment_count*13 + 35, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
+						$comment_count = 1;
+					}
+					if ( isset( $node->field_total_height_of_snowpack['und'] ) && ( isset ( $node->field_boot_penetration_depth['und']) || isset($node->field_ski_penetration['und'])) ){
+						
+//						imagettftext
+					}
 					
-						imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test->field_depth['und'][0]['value'].': '.$test->field_stability_comments['und'][0]['safe_value'] );
-						$comment_count++;
+				}
+				
+				foreach ( $test_results as $x => $test){
+					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth) ){
+					// this use of imageline will need to be updated to include some kind of cluster management
+						if (isset( $test->y_position)){ // if this has been 'multipled' with another stb test, the y_position won't be set
+							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);
+							imagettftext($img, 9, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
+						}
+						if ( count($test->field_stability_comments)){
+							imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test->field_depth['und'][0]['value'].': '.$test->field_stability_comments['und'][0]['safe_value'] );
+							$comment_count++;
 						}
 					}
 				}
@@ -544,7 +613,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				snowpilot_layers_density_xlate($keyed_all_layers);
 				// this solo line goes across the top of the top layer. Could be programmed later if we decide to include the 'headspace' above the top of the pit
 				imageline($img, 483, $keyed_all_layers[0]->y_val_top, 667, $keyed_all_layers[0]->y_val_top, $black);
-				dsm($keyed_all_layers);
+//				dsm($keyed_all_layers);
 				///
 				// IN this loop, we set the items in the 'density managed' column - grain types, sizes, moisture, etc.
 				//
@@ -556,8 +625,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 					
 				// Calculate grain type image(s) for this layer
+				$grain_type_image ='';
+				if ( isset($layer->field_grain_type['und'])){
 					$grain_type_image = isset($layer->field_grain_type['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type['und'][0]['tid']);
-					$secondary_grain_type = '';
+				}	
+				$secondary_grain_type = '';
 					if (isset($layer->field_grain_type_secondary['und'])){
 						$secondary_grain_type_image = isset($layer->field_grain_type_secondary['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type_secondary['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type_secondary['und'][0]['tid']);
 						$secondary_grain_type = ' ('. $secondary_grain_type_image . ')';
@@ -594,6 +666,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1'){
 						$x_redline = _h2pix($layer->field_hardness['und'][0]['value']); $y_redline_top = $layer->y_val_top; $y_redline_bottom = $layer->y_val; /// 
 						$concern_delta = $layer->item_id;
+						imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
+							$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value']. ': Problematic Layer');
+						$comment_counter++;
 					} 			
 								
 				}
@@ -734,10 +809,15 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	
 	
 	// Output the png image
-	$filename = 'graph-'.$node->nid . '.png';
-imagepng($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename);
+	$filename = 'graph-'.$node->nid ;
+	imagejpeg($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.jpg',100);
+	
+	imagepng($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.png');
+	
 // Destroy GD image
 imagedestroy($img);
+
+return;
 }
 
 ?>

@@ -275,7 +275,7 @@ form.node-snowpit_profile-form fieldset{
 
 @font-face {
 	font-family:snowsymbols;
-	src:url('sites/all/libraries/fonts/ArialMT28.ttf') format('truetype');
+	src:url('/sites/all/libraries/fonts/ArialMT28.ttf') format('truetype');
 }
 
 .field-name-field-grain-type  select{
