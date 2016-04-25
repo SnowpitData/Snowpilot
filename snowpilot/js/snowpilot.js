@@ -362,6 +362,32 @@
                 //$(this).toggleClass('open');
             });
         });
+        $('#edit-field-temp-collection .stability_test_num_6 h3.collapsible-handle', context).once('open', function () {
+            $('#edit-field-temp-collection .stability_test_num_6 h3.collapsible-handle', context).click(function () {
+                $('.stability_test_num_6 .collapsible-content').toggle('slow', function () {
+                    // Animation complete.
+                });
+                //add css class to H2 title when clicked//
+                //$(this).toggleClass('open');
+            });
+        });        $('#edit-field-temp-collection .stability_test_num_7 h3.collapsible-handle', context).once('open', function () {
+            $('#edit-field-temp-collection .stability_test_num_7 h3.collapsible-handle', context).click(function () {
+                $('.stability_test_num_7 .collapsible-content').toggle('slow', function () {
+                    // Animation complete.
+                });
+                //add css class to H2 title when clicked//
+                //$(this).toggleClass('open');
+            });
+        });
+        $('#edit-field-temp-collection .stability_test_num_8 h3.collapsible-handle', context).once('open', function () {
+            $('#edit-field-temp-collection .stability_test_num_8 h3.collapsible-handle', context).click(function () {
+                $('.stability_test_num_8 .collapsible-content').toggle('slow', function () {
+                    // Animation complete.
+                });
+                //add css class to H2 title when clicked//
+                //$(this).toggleClass('open');
+            });
+        });
         
         }    // end of attach 
     };  //end of Drupal.behavior.snowpilot

@@ -1,0 +1,413 @@
+/**
+ * @file
+ * Styles are organized using the SMACSS technique. @see http://smacss.com/book/
+ *
+ * When you turn on CSS aggregation at admin/config/development/performance, all
+ * of these @include files will be combined into a single file.
+ */
+
+/* HTML element (SMACSS base) rules */
+@import "normalize.css";
+
+/* Layout rules */
+@import "layouts/responsive.css";
+
+/* Component (SMACSS module) rules */
+@import "components/misc.css";
+/* Optionally, add your own components here. */
+@import "print.css";
+
+/* SMACSS theme rules */
+/* @import "theme-A.css"; */
+/* @import "theme-B.css"; */
+
+#header {
+    background-color: #ff8600;
+    background-image: -moz-linear-gradient(center top , #febf4c 0%, #ff8600 100%);
+		
+}
+
+.header__logo{
+	margin: 20px 5px;
+}
+
+#navigation {
+    padding: 10px 2px;
+    background-color: #ff8600;
+    /*background-image: -moz-linear-gradient(center top , #febf4c 0%, #ff8600 100%);
+		*/
+}
+
+#navigation ul.links {
+    color: #68696b;
+    font-size: 1.1em;
+}
+
+#navigation ul.links li a{
+	color: #68696b;
+}
+
+#main-menu ul.links li{
+    float: left;
+    list-style: none;
+    padding: 2 4px;
+    margin: 1px 1px;
+}
+
+#main-menu a {
+    color: #333;
+    background: #ccc;
+    background: rgba(255, 255, 255, 0.7);
+    float: left;
+    height: 2.4em;
+    line-height: 2.4em;
+    padding: 0 0.8em;
+    text-decoration: none;
+    text-shadow: 0 1px #eee;
+    -khtml-border-radius-topleft: 8px;
+    -khtml-border-radius-topright: 8px;
+    -moz-border-radius-topleft: 8px;
+    -moz-border-radius-topright: 8px;
+    -webkit-border-top-left-radius: 8px;
+    -webkit-border-top-right-radius: 8px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+#main-menu li a.active, #main-menu li.active-trail a {
+    background: #ffffff;
+}
+
+form .field-multiple-table th.field-label,
+form .field-multiple-table td {
+    padding-left: 10px;
+}
+
+
+@font-face {
+	font-family:snowsymbols;
+	src:url('/sites/all/libraries/fonts/ArialMT28.ttf') format('truetype');
+}
+
+body {
+  line-height: 1.2;
+  font-size: 75%;
+  word-wrap: break-word;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+}
+a:link,
+a:visited {
+  text-decoration: none;
+}
+a:hover,
+a:active,
+a:focus {
+  text-decoration: underline;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 1.0em 0 0.5em;
+  font-weight: inherit;
+}
+h1 {
+  font-size: 1.357em;
+  color: #000;
+}
+h2 {
+  font-size: 1.143em;
+}
+p {
+  margin: 0 0 1.2em;
+}
+del {
+  text-decoration: line-through;
+}
+tr.odd {
+  background-color: #dddddd;
+}
+img {
+  outline: 0;
+}
+code,
+pre,
+kbd,
+samp,
+var {
+  padding: 0 0.4em;
+  font-size: 0.857em;
+  font-family: Menlo, Consolas, "Andale Mono", "Lucida Console", "Nimbus Mono L", "DejaVu Sans Mono", monospace, "Courier New";
+}
+code {
+  background-color: #f2f2f2;
+  background-color: rgba(40, 40, 0, 0.06);
+}
+pre code,
+pre kbd,
+pre samp,
+pre var,
+kbd kbd,
+kbd samp,
+code var {
+  font-size: 100%;
+  background-color: transparent;
+}
+pre code,
+pre samp,
+pre var {
+  padding: 0;
+}
+.description code {
+  font-size: 1em;
+}
+kbd {
+  background-color: #f2f2f2;
+  border: 1px outset #575757;
+  margin: 0 3px;
+  color: #666;
+  display: inline-block;
+  padding: 0 6px;
+  -khtml-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+pre {
+  background-color: #f2f2f2;
+  background-color: rgba(40, 40, 0, 0.06);
+  margin: 10px 0;
+  overflow: hidden;
+  padding: 15px;
+  white-space: pre-wrap;
+}
+
+/* Custom styles for snowpilot */
+
+
+/* default text input field width: depths, etc.   */
+.form-field-type-field-collection input.form-text{
+	width: 35px;
+}
+
+.form-field-type-field-collection .field-name-field-comments input.form-text{
+	width: 145px;
+}
+
+.form-field-type-field-collection .field-name-field-stability-comments input.form-text{
+	width: 105px;
+}
+
+
+.hidden{
+	display: none;
+}
+
+h3.layer-title,
+h3.test-title{
+	margin: 0.05em 0 0.05em 0;
+	border-bottom: solid 1px #c9c9c9;
+}
+
+#snowpit-profile-node-form .field-name-field-grain-type,
+#snowpit-profile-node-form .field-name-field-grain-type-secondary{
+	margin-bottom:0;
+	
+}
+
+#snowpit-profile-node-form .field-name-field-date-time{
+	width: 49%;
+	float: right;
+}
+
+#snowpit-profile-node-form .form-item-title{
+	width: 50%;
+	float: left;
+	
+}
+
+#snowpit-profile-node-form .field-name-field-hardness,
+#snowpit-profile-node-form .field-name-field-grain-size,
+#snowpit-profile-node-form .field-name-field-height,
+#snowpit-profile-node-form .field-name-field-density-top,
+#snowpit-profile-node-form .field-name-field-temp-temp,
+#snowpit-profile-node-form .field-name-field-depth{
+	display:inline-block;
+
+}
+
+
+
+
+#snowpit-profile-node-form .field-name-field-hardness2,
+#snowpit-profile-node-form .field-name-field-grain-size-max,
+#snowpit-profile-node-form .field-name-field-bottom-depth,
+#snowpit-profile-node-form .field-name-field-density-bottom{
+	
+	display: inline-block;
+
+}
+
+#snowpit-profile-node-form .field-name-field-bottom-depth,
+#snowpit-profile-node-form .field-name-field-density-bottom,
+#snowpit-profile-node-form .group-layers .field-name-field-depth,
+#snowpit-profile-node-form .field-name-field-grain-size-max,
+#snowpit-profile-node-form .field-name-field-hardness2{
+	padding-left: 25px;
+	
+}
+
+#snowpit-profile-node-form .field-name-field-use-multiple-hardnesses,
+#snowpit-profile-node-form .field-name-field-use-multiple-grain-type,
+#snowpit-profile-node-form .field-name-field-use-multiple-grain-size,
+#snowpit-profile-node-form .field-name-field-use-multiple-density,
+#snowpit-profile-node-form .field-name-field-water-content,
+#snowpit-profile-node-form .field-name-field-this-is-my-layer-of-greate {
+	padding-top: 3px;
+  border-top: 2px solid #fff;
+  margin-top: 4px;
+	
+}
+
+#snowpit-profile-node-form #edit-field-layer-und-0-remove-button{
+	background-color: #eaa;
+	color: #955;
+	float: right;
+	
+}
+/*
+    snoww profile edit form
+*/
+
+form.node-snowpit_profile-form #edit-title{
+	width: 300px;
+}
+
+input#edit-field-date-time-und-0-value-datepicker-popup-0{
+	width: 90px;
+	
+}
+input#edit-field-date-time-und-0-value-timeEntry-popup-1{
+	width:60px;
+}
+
+#edit-field-date-time > div{
+	width: 250px;
+	
+}
+
+input#edit-field-aspect-und-0-value{
+	width: 30px;
+}
+
+input#edit-field-slope-angle-und-0-value{
+	width: 22px;
+}
+
+input#edit-field-elevation-und-0-value{
+	width: 40px;
+}
+
+#edit-field-elevation,
+#edit-field-aspect,
+#edit-field-slope-angle{
+	display: inline-block;
+	margin: 0 15px;
+}
+
+input#edit-field-total-height-of-snowpack-und-0-value{
+	width: 30px;
+	
+}
+
+body.page-user .profile .field-label{
+	width: 150px;
+}
+
+body.page-user .profile h3.field-label{
+	width: 280px;
+}
+
+.group-snowpit td.field-multiple-drag{
+	display: none;
+}
+
+.group-snopit .tabledrag-toggle-weight-wrapper{
+	display: none;
+}
+
+form.node-snowpit_profile-form .fieldset-wrapper{
+/*	margin-top:0px; */
+}
+form.node-snowpit_profile-form fieldset{
+	margin-top:0;
+	
+}
+
+.field-group-htab .tabledrag-toggle-weight-wrapper{
+	display:none;
+}
+/* Temp collection field sizes: */
+
+/* default text input field width: depths, etc.   */
+.field-type-field-collection input.form-text{
+	width: 35px;
+}
+
+.field-type-field-collection .field-name-field-comments input.form-text{
+	width: 145px;
+}
+
+.field-type-field-collection .field-name-field-stability-comments input.form-text{
+	width: 105px;
+}
+
+
+.field-name-field-grain-type select,
+.field-name-field-grain-type-secondary select,
+#messages .messages{
+	font-family: snowsymbols, Arial;
+	
+}
+/*  Formatting the width and position of the layers, stability tests, density and temp collection tables */ 
+
+
+/* Hierarchichal select for grain types */
+
+#snowpit-profile-node-form .field-name-field-grain-type div.form-type-cshs div.select-wrapper:nth-of-type(2),
+#snowpit-profile-node-form .field-name-field-grain-type-secondary div.form-type-cshs div.select-wrapper:nth-of-type(2){
+	margin-left: 35px;
+	display: block;
+	/*background: #dedede url('/images/grain-types/primary-rounded-grains.jpg') no-repeat -15px top;*/
+}
+
+#snowpit-profile-node-form .field-name-field-grain-type-secondary select{
+	min-width: 205px;
+}
+
+
+fieldset.group-layers,
+fieldset.group-stability-tests,
+fieldset.group-temp-profile,
+fieldset.group-density{
+	float: right;
+	width: 300px;
+}
+
+#edit-field-graph-canvas {
+    display: inline-block;
+    height: 650px;
+    width: 820px;
+		background-color: #cdcdcd;
+		padding: 8px;
+}
+
+#snow_profile_diagram{
+	background-color: #fdfdfd;
+	height: 630px;
+}

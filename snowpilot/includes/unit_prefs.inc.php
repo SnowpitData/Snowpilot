@@ -94,12 +94,14 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			'field_hardness_scale' => _helper_cleaner($entity,'field_hardness_scale'),
 			'hardnessScaling' => _helper_cleaner($entity,'field_hardness_scale'),
 			///////
+			
 			'field_loaction_0' => _helper_cleaner($entity, 'field_loaction','tid'),
 			'state' => _helper_cleaner($entity, 'field_loaction','tid'), // this needs a conversion function to the state/province name
 		
-			'field_loaction_1' => _helper_cleaner($entity, 'field_loaction','tid', '1'),
+		  'field_loaction_1' => _helper_cleaner($entity, 'field_loaction','tid', '1'),
 			'range' =>  _helper_cleaner($entity, 'field_loaction','tid', '1'),  // this will need a conversion function to the name of the range
 		
+			//////
 			'field_first_name' =>_helper_cleaner($entity,'field_first_name'),
 			'first' => _helper_cleaner($entity,'field_first_name'),
 		
@@ -141,7 +143,9 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			//var_dump($entity->$field);
 			//var_dump($entity); echo $field;
 			$entity = (array) $entity;
-			return $entity[$field]['und'][$count][$value]; 
+			if (  isset ( $entity[$field]['und'][$count])){  
+				return $entity[$field]['und'][$count][$value]; 
+			}
 		}else{
 			return NULL;
 		}
@@ -150,16 +154,15 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 	 
 	 
 	function snowpilot_snopit_prof_unit_prefs_set(&$form,$snowpit_unit_prefs){
-
-
-		$form['field_loaction']['und']['#default_value'][0] = $snowpit_unit_prefs['field_loaction_0'];
-		$form['field_loaction']['und']['#default_value'][1] = $snowpit_unit_prefs['field_loaction_1'];
+		//dsm($form);
+		$form['field_loaction']['und'][0]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_0'];
+		$form['field_loaction']['und'][1]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_1'];
 		foreach( $snowpit_unit_prefs as $key => $pref){
 			if ($key != 'field_loaction_0' 
 				&& $pref != 'field_loaction_1' 
 				&& substr($key,0,6) == 'field_' 
 			  && isset($form[$key])){
-					$form[$key]['und']['#default_value'] = $pref ;
+					$form[$key]['und']['#default_value'][0] = $pref ;
 					//drupal_set_message("<pre>". var_export($form, TRUE )."</pre>");
 				
 			}

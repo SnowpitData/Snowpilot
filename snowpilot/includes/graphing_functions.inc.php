@@ -233,6 +233,78 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
 	
 }
 
+function _snowpilot_option_padding($tid){
+	$tid2spaces = array(
+		'33' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Precipitation particles
+		'34' => '', // Decomposing & fragmented PP
+		'35' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Rounded Grains
+		'36' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Faceted crystals
+		'37' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // depth hoar
+		'38' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // surface hoar
+		'39' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // melt forms
+		'40' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // ice formations
+		'41' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // machine made snow
+		
+		// Precipitation Particles types
+		'42' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //PP -> columns
+		'43' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // PP -> Needles
+		'44' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // PP -> plates
+		'45' => '&nbsp;', // PP -> stellars, dendrites
+		'46' => '&nbsp;&nbsp;&nbsp;', // irregular crystals
+		'47' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // graupel
+		'48' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Hail
+		'49' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Ice pellets
+		'50' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // rime
+		
+		// Decomposing and fragmented precip particles
+		'104' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // partly decomposed PP
+		'78' => '&nbsp;', // wind-broken precip particles
+		//  Rounded grain types
+		'79' => '&nbsp;&nbsp;&nbsp;&nbsp;', // small rounded particles
+		'80' => '&nbsp;&nbsp;&nbsp;&nbsp;', //large rounded particles
+		'81' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //Wind packed
+		'82' => '&nbsp;', // faceted rounded particles
+		// Faceted crystal types
+		'105' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Solid faceted particles
+		'83' => '&nbsp;', // Near surface faceted particles
+		'84' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // Rounding faceted particles 
+		
+		// Surface Hoar types
+		'90' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // surface hoar crystals
+		'91' => '&nbsp;', // cavity or crevasse hoar
+		'92' => '&nbsp;&nbsp;&nbsp;&nbsp;', // Rounding surface hoar
+		// Depth Hoar types
+		'85' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Hollow cups
+		'86' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //Hollow Prizms
+		'87' => '&nbsp;&nbsp;&nbsp;&nbsp;', // Chains of depth hoar
+		'88' => '&nbsp;', // large striated crystals
+		'89' => '&nbsp;&nbsp;&nbsp;', // rounding depth Hoar
+		
+		// Melt forms types
+		'93' => '&nbsp;',// clustered rounded grains
+		'94' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //rounded polycrystals
+		'95' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Slush
+		'96' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //Melt-freeze crust
+		
+		// Ice Formations
+		'97' => '&nbsp;&nbsp;&nbsp;&nbsp;',// Ice Layer
+		'98' => '&nbsp;',// Ice column
+		'99' => '&nbsp;&nbsp;&nbsp;',// Basal Ice
+		'100' => '&nbsp;',//  Rain crust
+		'101' => '&nbsp;&nbsp;&nbsp;',// Sun crust
+		
+		// Machine made snow types
+		'102' => '&nbsp;', // rounded Polycrystalline particles
+		'103' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // crushed Ice Particles  
+		
+	);
+	if ( is_numeric($tid) && isset($tid2spaces[$tid])){
+	  return $tid2spaces[$tid];
+	}else{
+		return '';
+	}
+}
+
 
 function _tid2snowsymbols($tid = NULL, $all = FALSE){
 	
@@ -297,13 +369,15 @@ function _tid2snowsymbols($tid = NULL, $all = FALSE){
 		'101' => '&#x078C;',// Sun crust
 		
 		// Machine made snow types
+		'102' => '&#x07A4;', // rounded Polycrystalline particles
+		'103' => '&#x07A5;', // crushed Ice Particles  
 		
 	);
 	
 	if ($tid == NULL || $all ) { return $tid2snowsymbols;
-	}else{ 
+	}elseif( is_numeric($tid) && isset($tid2snowsymbols[$tid])){ 
 		return $tid2snowsymbols[$tid]; 
-	}
+	}else{ return ''; }
 	
 }
 
@@ -524,7 +598,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 			}
 			
-			imagettftext( $img, 11, 0 , 645, 17, $black, $label_font, 'Stability Test Notes');
 			imagettftext( $img, 11, 0 , 805, 17, $black, $label_font, 'Layer Notes');
 			
 			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
@@ -547,18 +620,20 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				uasort($test_results, 'depth_val');
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the coulmn on the right
 				$comment_count = 0;
-				if ( isset ( $node->field_surface_penetration)  || isset( $node->field_total_height_of_snowpack )){
-					$textpos = array();
-					if ( isset( $node->field_total_height_of_snowpack ) ){ 
-						$textpos = imagettftext($img, 9 , 0, 645, $comment_count*13 + 35, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
+				$textpos = array();
+				if ( isset( $node->field_total_height_of_snowpack['und']) && $node->field_total_height_of_snowpack['und'][0]['value'] <> '' ){ 
+					$textpos = imagettftext($img, 9 , 0, 645, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
+					$comment_count = 1;
+				}
+				if ( isset( $node->field_surface_penetration['und'] )  && ( $node->field_surface_penetration['und'][0]['value'] == 'boot' ) && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
+					$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 645 ;
+						imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PF'.$node->field_boot_penetration_depth['und'][0]['value']  );
 						$comment_count = 1;
-					}
-					if ( isset( $node->field_total_height_of_snowpack['und'] ) && ( isset ( $node->field_boot_penetration_depth['und']) || isset($node->field_ski_penetration['und'])) ){
-						
-//						imagettftext
-					}
+				}elseif(isset( $node->field_surface_penetration['und'] )  && ( $node->field_surface_penetration['und'][0]['value'] == 'ski' ) && (  $node->field_ski_penetration['und'][0]['value'] != '' )){
 					
 				}
+					
+				imagettftext( $img, 11, 0 , 645, $comment_count*13 + 20, $black, $label_font, 'Stability Test Notes');
 				
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth) ){
@@ -781,13 +856,13 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	//the tickmarks for hardness across the bottom and top, and labels
 	foreach ( _h2pix(NULL, TRUE) as $hardness => $pixels ){
 		if ( substr($hardness, -1 ) != '+' && substr($hardness, -1) != '-' ){
-			imageline( $img , $pixels, 140, $pixels, 158, $black);
-			imageline( $img, $pixels, 732, $pixels, 751, $black);
+			imageline( $img , $pixels, 140, $pixels, 156, $black);
+			imageline( $img, $pixels, 734, $pixels, 751, $black);
 			imagettftext($img, 10, 0 , $pixels - 5, 765, $black, $label_font, $hardness);
-			imagettftext($img, 10, 0, $pixels- 5, 172, $black, $label_font, $hardness);
+			//imagettftext($img, 10, 0, $pixels- 5, 172, $black, $label_font, $hardness);
 		} else{ // it is a + or - declaration, shorter ticks and no label
-			imageline( $img , $pixels, 140, $pixels, 147, $black);
-			imageline( $img, $pixels, 744, $pixels, 751, $black);	
+			imageline( $img , $pixels, 140, $pixels, 145, $black);
+			imageline( $img, $pixels, 746, $pixels, 751, $black);	
 		}
 		
 		

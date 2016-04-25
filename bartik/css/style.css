@@ -1,6 +1,11 @@
 
 /* ---------- Overall Specifications ---------- */
 
+@font-face {
+	font-family:snowsymbols;
+	src:url('/sites/all/libraries/fonts/ArialMT28.ttf') format('truetype');
+}
+
 body {
   line-height: 1.5;
   font-size: 87.5%;
@@ -132,6 +137,21 @@ a.button {
 
 /* Custom styles for snowpilot */
 
+.hidden{
+	display: none;
+}
+
+h3.layer-title{
+	margin: 0.05em 0 0.05em 0;
+	border-bottom: solid 1px #c9c9c9;
+}
+
+#snowpit-profile-node-form .field-name-field-grain-type,
+#snowpit-profile-node-form .field-name-field-grain-type-secondary{
+	margin-bottom:0;
+	
+}
+
 #snowpit-profile-node-form .field-name-field-date-time{
 	width: 49%;
 	float: right;
@@ -167,7 +187,9 @@ a.button {
 
 #snowpit-profile-node-form .field-name-field-bottom-depth,
 #snowpit-profile-node-form .field-name-field-density-bottom,
-#snowpit-profile-node-form .group-layers .field-name-field-depth{
+#snowpit-profile-node-form .group-layers .field-name-field-depth,
+#snowpit-profile-node-form .field-name-field-grain-size-max,
+#snowpit-profile-node-form .field-name-field-hardness2{
 	padding-left: 25px;
 	
 }
@@ -178,7 +200,7 @@ a.button {
 #snowpit-profile-node-form .field-name-field-use-multiple-density,
 #snowpit-profile-node-form .field-name-field-water-content,
 #snowpit-profile-node-form .field-name-field-this-is-my-layer-of-greate {
-	padding-top: 10px;
+	padding-top: 3px;
   border-top: 2px solid #fff;
   margin-top: 4px;
 	
@@ -264,30 +286,56 @@ form.node-snowpit_profile-form fieldset{
 }
 /* Temp collection field sizes: */
 
-
+/* default text input field width: depths, etc.   */
 .field-type-field-collection input.form-text{
 	width: 35px;
 }
 
+.field-type-field-collection .field-name-field-comments input.form-text{
+	width: 145px;
+}
+
 .field-type-field-collection .field-name-field-stability-comments input.form-text{
-	width: 60px;
+	width: 105px;
 }
 
-@font-face {
-	font-family:snowsymbols;
-	src:url('/sites/all/libraries/fonts/ArialMT28.ttf') format('truetype');
-}
 
-.field-name-field-grain-type  select{
+.field-name-field-grain-type select,
+.field-name-field-grain-type-secondary select,
+#messages .messages{
 	font-family: snowsymbols, Arial;
 	
+}
+/*  Formatting the width and position of the layers, stability tests, density and temp collection tables */ 
+
+
+/* Hierarchichal select for grain types */
+
+#snowpit-profile-node-form .field-name-field-grain-type div.form-type-cshs div.select-wrapper:nth-of-type(2),
+#snowpit-profile-node-form .field-name-field-grain-type-secondary div.form-type-cshs div.select-wrapper:nth-of-type(2){
+	margin-left: 35px;
+	display: block;
+	/*background: #dedede url('/images/grain-types/primary-rounded-grains.jpg') no-repeat -15px top;*/
+}
+
+#snowpit-profile-node-form .field-name-field-grain-type-secondary select{
+	min-width: 205px;
+}
+
+
+fieldset.group-layers,
+fieldset.group-stability-tests,
+fieldset.group-temp-profile,
+fieldset.group-density-profile{
+	float: right;
+	width: 300px;
 }
 
 /*
 
    This is all part of styling the 'grain types' drop down on the snowpit profile form
-
-*/
+		only works on FF
+*/ /*
 
 #edit-field-layer-und-0-field-grain-type-secondary-und-hierarchical-select-selects-0 > option,
 #edit-field-layer-und-0-field-grain-type-secondary-und-hierarchical-select-selects-1>option,
@@ -431,6 +479,8 @@ div.select::after{
 	width: 20px;
 	height:16px;
 }
+
+*/
 /* ------------------ Reset Styles ------------------ */
 
 caption {
