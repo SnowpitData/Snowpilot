@@ -411,3 +411,30 @@ fieldset.group-density{
 	background-color: #fdfdfd;
 	height: 630px;
 }
+
+/*
+    Measure from top / bottom link formatting ( on Layers Tab )
+*/
+
+#edit-field-depth-0-from label{
+	display: inline-block;
+	font-weight: normal;
+	font-size:.9em;
+	color: blue;
+}
+
+#edit-field-depth-0-from select{
+	font-size:.85em;
+	width: 70px;
+	color: blue;
+}
+
+
+/* User Profiles page formatting */
+
+#content .profile div.field {
+    border-top: 1px solid #efefef;
+    max-width: 450px;
+    min-height: 25px;
+    padding-top: 2px;
+}

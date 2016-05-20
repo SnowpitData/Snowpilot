@@ -1,0 +1,44 @@
+<?php
+function sp_liveprofile_init(){
+	define('LIBRARY_PATH' , 'sites/all/libraries/jquery/vendor/');
+	define('SP_LIVEPROFILE_LIBRARY' , 'sites/all/modules/snowpilot/sp_liveprofile/js/');
+	drupal_add_js(LIBRARY_PATH.'rgbcolor.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'StackBlur.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'canvg.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'svg.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'svg.draggable.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'svg.easing.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'svg_todataurl.js', 'file' );
+	//
+	//  Jquery.js and jquery.ui.cor.min.js are both loaded via the core system module
+	//
+	drupal_add_js(LIBRARY_PATH.'jquery.ui.widget.min.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'jquery.ui.mouse.min.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'jquery.ui.button.min.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'jquery.ui.dialog.min.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'jquery.ui.draggable.min.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'jquery.ui.position.min.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'jquery.ui.resizable.min.js', 'file' );
+	drupal_add_js(LIBRARY_PATH.'opentip-jquery.js', 'file' );
+	//drupal_add_js(LIBRARY_PATH.'', 'file' );
+
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile.js', 'file' );
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_std.js', 'file' );
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_button.js', 'file' );
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_popup.js', 'file' );
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_feat.js', 'file' );
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_layer.js', 'file' );
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_grid.js', 'file' );
+	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_main.js', 'file' );
+
+	drupal_add_css(LIBRARY_PATH.'jquery.ui.theme.css', 'file');
+	drupal_add_css(LIBRARY_PATH.'jquery.ui.core.css', 'file');
+	drupal_add_css(LIBRARY_PATH.'jquery.ui.button.css', 'file');
+	drupal_add_css(LIBRARY_PATH.'jquery.ui.dialog.css', 'file');
+	drupal_add_css(LIBRARY_PATH.'jquery.ui.resizeable.css', 'file');
+	drupal_add_css(LIBRARY_PATH.'jquery.ui.dialog.css', 'file');
+	drupal_add_css(LIBRARY_PATH.'opentip.css', 'file');
+}
+
+			
+			?>

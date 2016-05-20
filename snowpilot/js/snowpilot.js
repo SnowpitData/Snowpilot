@@ -4,6 +4,67 @@
    Drupal.behaviors.snowpilot = {
 
     attach: function (context, settings) {
+			//
+			//  hide "depth 0 measured from" field
+			//
+			$('#edit-field-depth-0-from select', context).hide();
+			
+			//
+			//  reset label field to show which option is chosen
+			//
+			$('#edit-field-depth-0-from label', context).text( function() {
+				return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();
+			});
+			//
+			//  everytime the select option is changed, hide the dropdown and reset the label to relect !!
+			//
+			
+			$('#edit-field-depth-0-from select', context).once( function () {
+				$('#edit-field-depth-0-from select', context).change( function () {
+					$('#edit-field-depth-0-from label', context).text( function() {
+						return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();	
+					});
+				//  hide select is here
+					$('#edit-field-depth-0-from select', context).hide();
+				} );
+			});
+			// If the user just navigates away from the field ( blur ), also
+			// hide the select and set the label
+			//
+			$('#edit-field-depth-0-from select', context).blur( function () {
+				
+				$('#edit-field-depth-0-from label', context).text( function() {
+					return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();	
+				});
+				//  hide select is here
+				$('#edit-field-depth-0-from select', context).hide();
+			} );
+					
+			
+			$('#edit-field-depth-0-from label', context).once('open', function () {
+					$('#edit-field-depth-0-from label', context).click(function () {
+						$('#edit-field-depth-0-from select', context).toggle('200', function(){ 
+						}); // done
+					}); //
+			} );
+			//
+			//  end tweaks for "hide depth from ..." field
+			//
+			
+			//
+			//  start tweaks for "this is my layer of greatest concern"
+			//
+			
+			$('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).click (function () {
+				//$(this,context).show();
+				$('div.field-name-field-this-is-my-layer-of-greate',context).not(this,context).hide();
+				//$(this,context).removeClass('hidden');
+				
+			});
+			
+			
+			
+			/// show / hide layers on click
         $('.collapsible-content.collapsed', context).hide();
        
         $('#edit-field-layer .layer_num_0 h3.collapsible-handle', context).once('open', function () { 

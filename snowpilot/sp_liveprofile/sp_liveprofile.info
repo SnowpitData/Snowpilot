@@ -1,0 +1,9 @@
+name = Snowpilot live Profile
+description = Live snowpit graphing utility webapp.
+core = 7.x
+
+;files[] = sp_liveprofile.module
+
+version = "7.x-0.01"
+core = "7.x"
+project = "snowpilot"

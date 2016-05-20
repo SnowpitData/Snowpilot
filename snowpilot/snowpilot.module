@@ -3,6 +3,8 @@
 include_once('includes/unit_prefs.inc.php');
 include_once('includes/graphing_functions.inc.php');
 
+function snowpilot_menu_alter(){
+}
 
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
@@ -24,7 +26,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			}
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
-			drupal_add_js('/sites/all/modules/snowpilot/js/snowpilot.js');
+			drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 			
 			snowpilot_snowpit_set_layer_titles($form, $snowpit_unit_prefs);
 			
@@ -262,7 +264,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		$next_layer = $x+1 ; 
 		
 		$collapsed = '';
-		if (isset($form['field_layer']['und'][$next_layer])) {
+		if (isset($form['field_layer']['und'][$next_layer])) {  // if this is not the last layer , collapse the box and set the top depth ....
 	
 			$form['field_layer']['und'][$next_layer]['field_height']['und'][0]['value']['#default_value'] = 
 				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'];
@@ -282,6 +284,14 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 
 		$form['field_layer']['und'][$x]['#suffix'] ="</div> </div>";
 		//dsm($form['field_layer']['und'][$x]);
+		if (  $form['field_layer']['und'][$x]['field_this_is_my_layer_of_greate']['und']['#default_value'] == '1' ){
+			$dec_x = $x-1;
+			while ( $dec_x >= 0 ){
+			//	$form['field_layer']['und'][$dec_x]['field_this_is_my_layer_of_greate']['#type'] = 'hidden'; 
+			//	$form['field_layer']['und'][$dec_x]['field_concern']['#type'] = 'hidden';
+				$dec_x-- ; 
+			}
+		}
 		
 		//$form['field_layer']['und'][$x]['#pre_render'][] = 'snowpilot_graintypes_tweak';
 		$x++;
