@@ -286,6 +286,8 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		//dsm($form['field_layer']['und'][$x]);
 		if (  $form['field_layer']['und'][$x]['field_this_is_my_layer_of_greate']['und']['#default_value'] == '1' ){
 			$dec_x = $x-1;
+			// taking this out of the hook_form_alter and putting into jQuery because it will need to happen on-the-fly , not just on page load or new
+			
 			while ( $dec_x >= 0 ){
 			//	$form['field_layer']['und'][$dec_x]['field_this_is_my_layer_of_greate']['#type'] = 'hidden'; 
 			//	$form['field_layer']['und'][$dec_x]['field_concern']['#type'] = 'hidden';

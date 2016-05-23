@@ -1,0 +1,301 @@
+<?php
+
+/**
+ * @file
+ * A simple clientside hierarchical select widget for taxonomy terms.
+ */
+
+define('CSHS_DEFAULT_NONE_VALUE', '_none');
+define('CSHS_DEFAULT_NONE_LABEL', '- Please select -');
+
+include_once 'cshs.formatter.inc';
+include_once 'cshs.element.inc';
+
+/**
+ * Implements hook_theme().
+ */
+function cshs_theme() {
+  return array(
+    'cshs_select' => array(
+      'render element' => 'element',
+    ),
+    'cshs_term_group' => array(
+      'variables' => array(
+        'title' => '',
+        'terms' => '',
+      ),
+      'template' => 'cshs-term-group',
+      'path' => drupal_get_path('module', 'cshs') . '/theme',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_info().
+ *
+ * Define a custom widget.
+ */
+function cshs_field_widget_info() {
+  return array(
+    'cshs' => array(
+      'label' => t('Clientside hierarchical select'),
+      'field types' => array('taxonomy_term_reference'),
+      'settings' => array(
+        'cshs' => array(
+          'force_deepest' => FALSE,
+          'parent' => 0,
+          'level_labels' => '',
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_views_data_alter().
+ *
+ * Taken from SHS - add the custom filter handler to taxonomy reference fields.
+ * Does not work together with SHS, as the handler is replaced and not added.
+ */
+function cshs_field_views_data_alter(&$result, &$field, $module) {
+  if (empty($field['columns']) || !in_array($field['type'], array('taxonomy_term_reference'))) {
+    return;
+  }
+
+  $field_column = key($field['columns']);
+  foreach ($result as $key => $group) {
+    $field_identifier = sprintf('%s_%s', $field['field_name'], $field_column);
+    if (empty($group[$field_identifier]) || empty($group[$field_identifier]['filter']['handler'])) {
+      // Only modify field definitions for the primary column.
+      continue;
+    }
+    // Replace handler.
+    $result[$key][$field_identifier]['filter']['handler'] = 'cshs_handler_filter_term_node_tid';
+  }
+}
+
+/**
+ * Implements hook_field_widget_settings_form().
+ *
+ * Provide a widget settings-form.
+ */
+function cshs_field_widget_settings_form($field, $instance) {
+  $widget = $instance['widget'];
+  $settings = $widget['settings'];
+
+  $form = array();
+
+  $form['cshs'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Clientside hierarchical select settings',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#tree' => TRUE,
+  );
+
+  $form['cshs']['force_deepest'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Force selection of deepest level'),
+    '#description' => t('If checked the user will be forced to select terms from the deepest level.'),
+    '#default_value' => empty($settings['cshs']['force_deepest']) ? FALSE : $settings['cshs']['force_deepest'],
+  );
+
+  $options[0] = '---';
+  // TODO this might break with huge vocs.
+  $voc = taxonomy_vocabulary_machine_name_load($field['settings']['allowed_values'][0]['vocabulary']);
+  if (isset($voc)) {
+    foreach (taxonomy_get_tree($voc->vid) as $term) {
+      $options[$term->tid] = str_repeat('- ', $term->depth) . $term->name;
+    }
+  }
+
+  $form['cshs']['parent']  = array(
+    '#type' => 'select',
+    '#title' => t('Parent'),
+    '#description' => t('Select a parent term to use only a subtree of a vocabulary for this field.'),
+    '#options' => $options,
+    '#default_value' => !empty($settings['cshs']['parent']) ? $settings['cshs']['parent'] : 0,
+  );
+
+  $form['cshs']['level_labels'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Labels per hierarchy-level'),
+    '#description' => t('Enter labels for each hierarchy-level separated by comma.'),
+    '#default_value' => !empty($settings['cshs']['level_labels']) ? $settings['cshs']['level_labels'] : '',
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_field_widget_form().
+ *
+ * Provide a widget form.
+ */
+function cshs_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $value_key = key($field['columns']);
+
+  $instance_settings = $instance['widget']['settings']['cshs'];
+  $settings = $field['settings'];
+
+  $labels = array();
+  if (isset($instance_settings['level_labels']) && strlen($instance_settings['level_labels'])) {
+    $labels = drupal_explode_tags($instance_settings['level_labels']);
+  }
+
+  $parent = isset($instance_settings['parent']) ? $instance_settings['parent'] : 0;
+  $vocab_name = isset( $settings['allowed_values'][0]['vocabulary'] ) ? $settings['allowed_values'][0]['vocabulary']  : '';
+
+  // Prepare the list of options.
+  $options = _cshs_get_options($vocab_name, $parent);
+
+  // Set some properties specific to field-widgets.
+  $widget = $element;
+
+  $widget += array(
+    '#type' => 'cshs',
+    '#label' => $instance['label'],
+    '#default_value' => isset($items[$delta][$value_key]) ? $items[$delta][$value_key] : NULL,
+    '#options' => $options,
+    '#value_key' => $value_key,
+    //'#properties' => $properties,
+    '#labels' => $labels,
+    '#force_deepest' => isset($instance_settings['force_deepest']) ? $instance_settings['force_deepest'] : FALSE,
+    '#parent' => isset($instance_settings['parent']) ? $instance_settings['parent'] : 0,
+  );
+
+  $element[$value_key] = $widget;
+  return $element;
+}
+
+/**
+ * Implements hook_field_widget_error().
+ */
+function cshs_field_widget_error($element, $error, $form, &$form_state) {
+  form_error($element, $error['message']);
+}
+
+/**
+ * Collects the options for a field.
+ */
+function _cshs_get_options($vocab_name, $parent = 0) {
+  // Setup properties directly instead of calling _options_properties().
+  $properties = array(
+    'filter_xss' => FALSE,
+    'strip_tags' => TRUE,
+    'empty_option' => 'option_none',
+    'optgroups' => FALSE,
+  );
+
+  // Get all terms as options.
+  $options = array();
+  if ($vocabulary = taxonomy_vocabulary_machine_name_load($vocab_name)) {
+    if ($terms = taxonomy_get_tree($vocabulary->vid, $parent)) {
+      if (module_exists('i18n_taxonomy')) {
+        // Localize terms.
+        $terms = i18n_taxonomy_localize_terms($terms);
+      }
+      foreach ($terms as $term) {
+        $options[$term->tid] = array(
+          'name' => str_repeat('- ', $term->depth) . $term->name,
+          'parent_tid' => _cshs_shift_parent($term->parents),
+        );
+      }
+    }
+  }
+
+  // Sanitize the options.
+  _options_prepare_options($options, $properties);
+
+  // Always add an empty option.
+  _cshs_add_none_option($options);
+
+  return $options;
+}
+
+/**
+ * Theme function to render the select.
+ *
+ * Modified version of theme_select to allow usage of cshs_form_select_options.
+ */
+function theme_cshs_select($variables) {
+  $element = $variables['element'];
+  element_set_attributes($element, array('id', 'name', 'size'));
+  _form_set_class($element, array('form-select', 'simpler-select-root'));
+
+  return '<select' . drupal_attributes($element['#attributes']) . '>' . cshs_form_select_options($element) . '</select>';
+}
+
+/**
+ * Modified version of form_select_options.
+ *
+ * Adds a data-parent attribute for the term options.
+ */
+function cshs_form_select_options($element, $choices = NULL) {
+  if (!isset($choices)) {
+    $choices = $element['#options'];
+  }
+  // array_key_exists() accommodates the rare event where $element['#value'] is
+  // NULL.
+  // isset() fails in this situation.
+  $value_valid = isset($element['#value']) || array_key_exists('#value', $element);
+  $value_is_array = $value_valid && is_array($element['#value']);
+  $options = '';
+  foreach ($choices as $key => $choice) {
+    $key = (string) $key;
+    if ($value_valid && (!$value_is_array && (string) $element['#value'] === $key || ($value_is_array && in_array($key, $element['#value'])))) {
+      $selected = ' selected="selected"';
+    }
+    else {
+      $selected = '';
+    }
+
+    // Get the name of the term.
+    $term_name = $choice['name'];
+
+    // Get the tid of the parent.
+    $parent_tid = $choice['parent_tid'];
+
+    // If widget is used as field widget, so lets see if there is a root configured.
+    if (isset($element['#field_name'])) {
+      $field_instance_info = field_info_instance($element['#entity_type'], $element['#field_name'], $element['#bundle']);
+      if (isset($field_instance_info['widget']['settings']['cshs']['parent'])) {
+        $root_tid = $field_instance_info['widget']['settings']['cshs']['parent'];
+
+        // If the parent term is actually the configured root of this field, set
+        // parent to 0.
+        if ($parent_tid == $root_tid) {
+          $parent_tid = 0;
+        }
+      }
+    }
+
+    // Prepare data-parent attribute.
+    $data_parent = ' data-parent="' . $parent_tid . '" ';
+
+			$term_name .= _snowpilot_option_padding($key). _tid2snowsymbols($key)."&nbsp;&nbsp;&nbsp;&nbsp;";  // a Snowpilot function
+		
+    $options .= '<option value="' . check_plain($key) . '"' . $selected . $data_parent . '>' . $term_name . '</option>';
+  }
+
+  return $options;
+}
+
+/**
+ * Helper that returns the first tid of an array of parents from a term object.
+ *
+ * @param $parent_tids An array of all parents from a term object
+ * @return int|mixed The first parent tid
+ */
+function _cshs_shift_parent($parent_tids) {
+  if (count($parent_tids)) {
+    $parent_tids = array_values($parent_tids);
+    $parent_tid = array_shift($parent_tids);
+    return $parent_tid;
+  }
+  return 0;
+}
+
+function _cshs_add_none_option(&$options) {
+  $options = array(CSHS_DEFAULT_NONE_VALUE => array('name' => t(CSHS_DEFAULT_NONE_LABEL), 'parent_tid' => 0)) + $options;
+}

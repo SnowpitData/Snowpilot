@@ -1,0 +1,13 @@
+name = Clientside hierarchical select
+description = A simple clientside hierarchical select widget for taxonomy terms
+dependencies[] = taxonomy
+package = Form Elements
+files[] = includes/handlers/cshs_handler_filter_term_node_tid.inc
+core = 7.x
+
+; Information added by Drupal.org packaging script on 2015-02-17
+version = "7.x-1.0-beta4"
+core = "7.x"
+project = "cshs"
+datestamp = "1424176087"
+
