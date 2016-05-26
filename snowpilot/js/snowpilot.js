@@ -4,6 +4,14 @@
    Drupal.behaviors.snowpilot = {
 
     attach: function (context, settings) {
+        
+        $('input[name=field_layer_add_more]', context).click(function() {
+            var maxIndex = SnowProfile.snowLayers.length - 1;
+            var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
+            SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
+            alert("Button works!");
+          });
+          
 			//
 			//  hide "depth 0 measured from" field
 			//
@@ -16,7 +24,7 @@
 				return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();
 			});
 			//
-			//  everytime the select option is changed, hide the dropdown and reset the label to reflect !!
+			//  everytime the select option is changed, hide the dropdown and reset the label to relect !!
 			//
 			
 			$('#edit-field-depth-0-from select', context).once( function () {
@@ -54,8 +62,6 @@
 			//
 			//  start tweaks for "this is my layer of greatest concern"
 			//
-<<<<<<< Local Changes
-<<<<<<< Local Changes
 			
 			
         $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').change(function() {
@@ -70,62 +76,6 @@
 			
 			
 			
-=======
-<<<<<<< ced6b2063ac371aec71e82148a4a64874240fe40
-			
-			
-        $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').change(function() {
-            if ($(this).is(':checked')) {
-              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').not(this).each(function() {
-                $(this).parent().hide();
-              });
-            } else {
-              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').parent().show();
-            }
-          });
-			
-			
-			
-=======
-=======
-<<<<<<< HEAD
->>>>>>> External Changes
-			$('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').change(function() {
-			    if ($(this).is(':checked')) {
-			      $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').not(this).each(function() {
-			        $(this).parent().hide();
-			      });
-			    } else {
-			      $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').parent().show();
-			    }
-			  });
-	
-		/*$('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).not(this).each(function() {
-			        $(this).hide();
-			});
-			*/
-		
-<<<<<<< Local Changes
->>>>>>> layer of greatest concern and style changes
->>>>>>> External Changes
-=======
-=======
-			
-			
-        $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').change(function() {
-            if ($(this).is(':checked')) {
-              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').not(this).each(function() {
-                $(this).parent().hide();
-              });
-            } else {
-              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').parent().show();
-            }
-          });
-			
-			
-			
->>>>>>> origin/master
->>>>>>> External Changes
 			/// show / hide layers on click
         $('.collapsible-content.collapsed', context).hide();
        
