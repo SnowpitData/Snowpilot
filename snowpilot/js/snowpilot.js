@@ -61,18 +61,43 @@
 			
 			//
 			//  start tweaks for "this is my layer of greatest concern"
-			//
-			
-			
-        $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').change(function() {
-            if ($(this).is(':checked')) {
-              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').not(this).each(function() {
-                $(this).parent().hide();
-              });
-            } else {
-              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').parent().show();
-            }
+			//////////////////////////////////////////////////////////
+			// Hid initially if anything is checked
+			$('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox:checked', context).each(function() {
+        if ($(this).is(':checked')) {
+          $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).not(this).each(function() {
+            $(this).parent().hide();
           });
+        } else {
+          $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).parent().show();
+        }
+			});
+			
+			//If anything gets checked, hide the others; and vice versa
+			
+      $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).change(function() {
+        if ($(this).is(':checked')) {
+          $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).not(this).each(function() {
+             $(this).parent().hide();
+          });
+        } else {
+          $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).parent().show();
+        }
+      });
+				
+			//////////////////////////////////////
+			// Hide live Profile on "core Info" tab
+			$('#edit-field-graph-canvas', context).hide();
+			
+			
+			$('ul.horizontal-tabs-list li.second a', context ).click(  function() {
+        alert("You clicked ");
+				
+				
+			});
+			
+			
+			 
 			
 			
 			
