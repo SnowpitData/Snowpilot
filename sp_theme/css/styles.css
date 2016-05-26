@@ -401,15 +401,14 @@ fieldset.group-density{
 
 #edit-field-graph-canvas {
     display: inline-block;
-    height: 650px;
-    width: 820px;
+    width: 943px;
 		background-color: #cdcdcd;
 		padding: 8px;
 }
 
 #snow_profile_diagram{
 	background-color: #fdfdfd;
-	height: 630px;
+	
 }
 
 /*
