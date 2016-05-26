@@ -55,12 +55,16 @@
 			//  start tweaks for "this is my layer of greatest concern"
 			//
 			
-			$('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).click (function () {
-				//$(this,context).show();
-				$('div.field-name-field-this-is-my-layer-of-greate',context).not(this,context).hide();
-				//$(this,context).removeClass('hidden');
-				
-			});
+			
+        $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').change(function() {
+            if ($(this).is(':checked')) {
+              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').not(this).each(function() {
+                $(this).parent().hide();
+              });
+            } else {
+              $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox').parent().show();
+            }
+          });
 			
 			
 			
