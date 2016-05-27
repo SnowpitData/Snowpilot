@@ -4,15 +4,15 @@
    Drupal.behaviors.snowpilot = {
 
     attach: function (context, settings) {
+        $('input[name=field_layer_add_more]', context).once( function () {
+            $('input[name=field_layer_add_more]', context).mousedown(function() {
+                var maxIndex = SnowProfile.snowLayers.length - 1;
+                var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
+                SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
+                
+              });
+        });
         
-        $('input[name=field_layer_add_more]', context).mousedown(function() {
-            alert("Button works!");
-            var maxIndex = SnowProfile.snowLayers.length - 1;
-            var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
-            SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
-            
-          });
-          
 			//
 			//  hide "depth 0 measured from" field
 			//
