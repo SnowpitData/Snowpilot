@@ -255,7 +255,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	// Start with the overall title of the group
 	$form['field_layer']['und']['#title'] = "Snowpack Layers"; // 
 	// Add more button:
-	$form['field_layer']['und']['add_more']['#value'] = "New Snowpack Layer";
+	$form['field_layer']['und']['add_more']['#value'] = "Add Layer";
 	$x=0;
 
 	while(isset($form['field_layer']['und'][$x] )){

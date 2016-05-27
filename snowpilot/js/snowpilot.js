@@ -62,7 +62,7 @@
 			//
 			//  start tweaks for "this is my layer of greatest concern"
 			//////////////////////////////////////////////////////////
-			// Hid initially if anything is checked
+			// Hide initially if anything is checked
 			$('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox:checked', context).each(function() {
         if ($(this).is(':checked')) {
           $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).not(this).each(function() {
@@ -86,19 +86,36 @@
       });
 				
 			//////////////////////////////////////
-			// Hide live Profile on "core Info" tab
-			$('#edit-field-graph-canvas', context).hide();
-			
-			
-			$('ul.horizontal-tabs-list li.second a', context ).click(  function() {
-        alert("You clicked ");
+			// Hide live Profile initially, and on clicking "Core Info" tab (...-button-0 a ), but show on clicking all other tabs
+			$('ul.horizontal-tabs-list li.horizontal-tab-button-0.selected' ).each( function() {
+				$('#edit-field-graph-canvas', context).hide();
 				
+			});		
+			
+			$('ul.horizontal-tabs-list li.horizontal-tab-button-1 a' ).click( function() {
+				$('#edit-field-graph-canvas', context).show();
 				
 			});
+			$('ul.horizontal-tabs-list li.horizontal-tab-button-2 a' ).click( function() {
+				$('#edit-field-graph-canvas', context).show();
+				
+			});
+			$('ul.horizontal-tabs-list li.horizontal-tab-button-3 a' ).click( function() {
+				$('#edit-field-graph-canvas', context).show();
+				
+			});			
+			$('ul.horizontal-tabs-list li.horizontal-tab-button-4 a' ).click( function() {
+				$('#edit-field-graph-canvas', context).show();
+				
+			});		
+			$('ul.horizontal-tabs-list li.horizontal-tab-button-0 a' ).click( function() {
+				$('#edit-field-graph-canvas', context).hide();
+				
+			});			 
 			
-			
-			 
-			
+			/////////////////////////////
+			// hide the Measurement Unit Prefs fieldset
+			$('#snowpit-profile-node-form fieldset.group-measurement-prefs').hide();
 			
 			
 			/// show / hide layers on click
