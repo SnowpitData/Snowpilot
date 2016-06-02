@@ -252,7 +252,7 @@
       }));
 
       // Add the label to the Grain Shape column
-      SnowProfile.gridGroup.add(SnowProfile.drawing.text('Grain\nShape')
+      SnowProfile.gridGroup.add(SnowProfile.drawing.text('Grain\nType')
       .font({
         size: 14,
         leading: 1.1,
@@ -274,16 +274,17 @@
       .move(SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.GRAIN_SIZE_LEFT,
         10));
 
-      // Add the label to the Comment column
-      var commentHeading = SnowProfile.drawing.text('Comment')
+      // Add the label to the Comment column - Changed to Stability Tests for SnowPilot
+      var commentHeading = SnowProfile.drawing.text('Stability\nTests')
         .font({
           size: 14,
+          leading: 1.1,
           style: 'bold',
           family: 'sans-serif',
           fill: SnowProfile.Cfg.LABEL_COLOR
         })
         .move(SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.COMMENT_LEFT,
-          25);
+          10);
       SnowProfile.gridGroup.add(commentHeading);
 
       // // For debugging show the bounding box
@@ -361,7 +362,7 @@
      * Respond to change in total snow depth value.
      */
     function totalDepthChange() {
-      var totalDepth = $("#snow_profile_total_depth").val();
+      var totalDepth = $("#edit-field-total-height-of-snowpack-und-0-value").val();
       if (totalDepth === '') {
         SnowProfile.totalDepth = null;
 
@@ -506,12 +507,12 @@
     } // function pitDepthChange()
 
     // Set controls to default values
-    $("#snow_profile_pit_depth").val(SnowProfile.pitDepth);
-    $("#snow_profile_total_depth").val(SnowProfile.totalDepth);
-    $("#snow_profile_ref_depth").val(SnowProfile.depthRef);
+    //$("#edit-field-total-height-of-snowpack-und-0-value").val(SnowProfile.pitDepth);
+    //$("#snow_profile_total_depth").val(SnowProfile.totalDepth);
+    //$("#snow_profile_ref_depth").val(SnowProfile.depthRef);
 
     // Listen for a change to the "Total snow depth" input
-    $("#snow_profile_total_depth").change(totalDepthChange);
+    $("#edit-field-total-height-of-snowpack-und-0-value").change(totalDepthChange);
 
     // Listen for a change to the "snow pit depth" input
     $("#snow_profile_pit_depth").change(pitDepthChange);

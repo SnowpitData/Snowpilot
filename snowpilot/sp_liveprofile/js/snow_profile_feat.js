@@ -40,15 +40,15 @@
      * the user to describe the features of this layer.
      * @type {Object}
      */
-    var editButton = new SnowProfile.Button("edit");
+    //var editButton = new SnowProfile.Button("edit");
     var i = layerObj.getIndex();
-    var thisEdit = SnowProfile.editGroup.get(i);
-    if (thisEdit === undefined) {
-      SnowProfile.editGroup.add(editButton.getButton());
-    }
-    else {
-      thisEdit.before(editButton.getButton());
-    }
+    //var thisEdit = SnowProfile.editGroup.get(i);
+    //if (thisEdit === undefined) {
+    //  SnowProfile.editGroup.add(editButton.getButton());
+    //}
+    //else {
+    //  thisEdit.before(editButton.getButton());
+    //}
 
     /**
      * Grain shape of this snow layer.
@@ -778,7 +778,7 @@
       var spaceMidY = top + ((bottom - top) / 2);
 
       // Edit button straddles midpoint
-      editButton.setY(spaceMidY - 11);
+      //editButton.setY(spaceMidY - 11);
 
       if (self.height === 0) {
         // No feature description to lay out, forget it
@@ -835,17 +835,17 @@
      * Remove and destroy all SVG objects belonging to this Features object.
      */
     this.destroy = function() {
-      editButton.destroy();
+      //editButton.destroy();
       lineBelow.remove();
       featDescr.clear();
     };
 
     // When Edit button clicked, pop up a modal dialog form.
-    $(document).bind("SnowProfileButtonClick", function(evt, extra) {
+    /*$(document).bind("SnowProfileButtonClick", function(evt, extra) {
       if (extra.buttonObj === editButton) {
         SnowProfile.PopUp(self.describe());
       }
-    });
+    });*/
 
   };  //SnowProfile.Features = function()
 })(jQuery);

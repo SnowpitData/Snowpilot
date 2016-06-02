@@ -2,6 +2,7 @@
  * @file Defines the namespace and configuration for the snow profile editor.
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
+ * Modified by Joe DeBruycker Q1 2016
  */
 
 /* global SVG */
@@ -249,7 +250,7 @@ var SnowProfile = {};
     /**
      * Number of layers initially shown on a fresh copy of the page.
      */
-    NUM_INIT_LAYERS: 3,
+    NUM_INIT_LAYERS: 1,
 
     /**
      * Depth interval in cm of layers initially shown on a
@@ -656,8 +657,8 @@ var SnowProfile = {};
       featureBottom = Math.max(layerBottom, (featureTop + height));
 
       // Center the layer's insert button on the top line
-      SnowProfile.snowLayers[i].insertButton.setCy(
-        Math.max(layerTop, featureTop));
+      //SnowProfile.snowLayers[i].insertButton.setCy(
+      //  Math.max(layerTop, featureTop));
 
       // Draw the line below the bottom of the features description.
       SnowProfile.snowLayers[i].features().lineBelowY(featureBottom);
@@ -1020,6 +1021,20 @@ var SnowProfile = {};
       $("#edit-submit").click(function() {
         SnowProfile.export();
       });
+      
+      $('input[name=field_layer_add_more]').mousedown(function() {
+        var maxIndex = SnowProfile.snowLayers.length - 1;
+        var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
+        SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
+        //alert(SnowProfile.snowLayers[0].depth());
+      });
+      
+      // Testing event handlers for updating editor from text input 
+      /*$("#my_test_input").change(function () {
+          SnowProfile.snowLayers[1].depth($(this).val());
+          SnowProfile.snowLayers[1].draw();
+          //alert($(this).val());  
+      });*/
 
     });
 

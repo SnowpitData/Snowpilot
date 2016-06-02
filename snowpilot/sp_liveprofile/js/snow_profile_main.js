@@ -26,12 +26,6 @@
   };
 })(jQuery);
 
- Drupal.behaviors.sp_livegraph = function() {
-			//
-			SnowProfile.main();
-
-};
-
 // Configure Emacs for Drupal JavaScript coding standards
 // Local Variables:
 // js2-basic-offset: 2

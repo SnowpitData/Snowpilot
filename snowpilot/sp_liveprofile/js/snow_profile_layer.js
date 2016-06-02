@@ -2,6 +2,7 @@
  * @file Define the object that describes a snow layer
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
+ * Modified by Joe DeBruycker, Q1 2016
  */
 
 /* global SnowProfile */
@@ -293,7 +294,7 @@
      * is inserted below this layer.
      * @type {Object}
      */
-    this.insertButton = new SnowProfile.Button("insert");
+    //this.insertButton = new SnowProfile.Button("insert");
 
     /**
      * Define a diagonal line from the bottom of this layer right to the
@@ -371,6 +372,7 @@
      */
     function destroy() {
       handle.off('mouseup mousedown mouseover mouseout');
+      slopeHandle.off('mouseup mousedown mouseover mouseout');
       $(document).unbind("SnowProfileHideControls", handleInvisible);
       $(document).unbind("SnowProfileShowControls", handleVisible);
       $(document).unbind("SnowProfileDrawGrid", self.draw);
@@ -379,7 +381,7 @@
       layerOutline.remove();
       diagLine.remove();
       featObj.destroy();
-      self.insertButton.destroy();
+      //self.insertButton.destroy();
       SnowProfile.layout();
     }
 
@@ -598,13 +600,13 @@
     // at the same depth or deeper.
     for (i = 0; i < numLayers; i++) {
       thisHandle = SnowProfile.handlesGroup.get(i);
-      thisInsert = SnowProfile.insertGroup.get(i);
+      //thisInsert = SnowProfile.insertGroup.get(i);
       if (SnowProfile.snowLayers[i].depth() >= depthVal) {
 
         // Insertion point found, we need to insert above snowLayers[i].
         SnowProfile.snowLayers.splice(i, 0, this);
         thisHandle.before(handle);
-        thisInsert.before(self.insertButton.getButton());
+        //thisInsert.before(self.insertButton.getButton());
         inserted = true;
         break;
       }
@@ -615,7 +617,7 @@
     if (!inserted) {
       SnowProfile.snowLayers.push(this);
       SnowProfile.handlesGroup.add(handle);
-      SnowProfile.insertGroup.add(self.insertButton.getButton());
+      //SnowProfile.insertGroup.add(self.insertButton.getButton());
     }
 
     // Listen for "SnowProfileHideControls" events
@@ -675,7 +677,7 @@
     });
 
     // When Insert button clicked, insert a snow layer below this one.
-    $(document).bind("SnowProfileButtonClick", function(evt, extra) {
+    /*$(document).bind("SnowProfileButtonClick", function(evt, extra) {
 
       if (extra.buttonObj === self.insertButton) {
         i = self.getIndex();
@@ -710,7 +712,8 @@
         }
         SnowProfile.newLayer(depthVal + (spaceBelow / 2));
       }
-    });
+    });*/
+    
   }; // function SnowProfile.Layer()
 })(jQuery);
 
