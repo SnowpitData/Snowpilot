@@ -183,6 +183,7 @@ function _cshs_get_options($vocab_name, $parent = 0) {
   $properties = array(
     'filter_xss' => FALSE,
     'strip_tags' => TRUE,
+		'strip_tags_and_unescape' => TRUE,
     'empty_option' => 'option_none',
     'optgroups' => FALSE,
   );

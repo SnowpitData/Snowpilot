@@ -210,7 +210,19 @@ function _output_formatted_notes($string, $font){
 }
 
 function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
-
+	if ( !isset($layer->field_hardness['und'][0])){ // error checking in case that hardness is not set
+			$pink_problem = imagecolorallocate($img,254, 240, 240);
+			$dark_pink = imagecolorallocate($img, 128, 64, 0);
+			$black = imagecolorallocate($img,0,0,0);
+			$value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
+			
+			$points = array(15, $layer->y_val_top,  447 , $layer->y_val_top, 447, $layer->y_val, 15, $layer->y_val);
+			imagefilledpolygon($img, $points, 4, $pink_problem) ;
+			imagettftext($img, 13, 0, 35, ($layer->y_val - $layer->y_val_top)/2 + $layer->y_val_top, $black, $value_font, 'No Hardness specified, please Update Snowpit');///
+			imagepolygon($img,$points, 4, $dark_pink);
+			
+			
+	}else{  // hness IS set, a basic part of a layer  ; excess layers should be already stripped by _validate
 	$hness = $layer->field_hardness['und'][0]['value'];
 	if ( $layer->field_use_multiple_hardnesses['und'][0]['value'] == '1' &&
 		isset ($layer->field_hardness2['und'][0]['value'])){	
@@ -228,7 +240,7 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
 				imagerectangle($img, _h2pix($hness), $layer->y_val, 447 , $layer->y_val_top, $color );
 			}
 		}
-		
+	}
 		
 	
 }
@@ -516,6 +528,7 @@ $white = imagecolorallocate($img, 255, 255, 255);
 $purple_layer = imagecolorallocate($img, 154, 153, 213);
 $red_layer = imagecolorallocate($img, 178, 36, 35);
 $blue_outline = imagecolorallocate($img, 15, 8, 166);
+$pink_problem = imagecolorallocate($img,254, 240, 240);
 
 // Set background color to white
 imagefill($img, 0, 0, $white);
@@ -636,7 +649,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				imagettftext( $img, 11, 0 , 645, $comment_count*13 + 20, $black, $label_font, 'Stability Test Notes');
 				
 				foreach ( $test_results as $x => $test){
-					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth) ){
+					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth['und']) ){
 					// this use of imageline will need to be updated to include some kind of cluster management
 						if (isset( $test->y_position)){ // if this has been 'multipled' with another stb test, the y_position won't be set
 							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);

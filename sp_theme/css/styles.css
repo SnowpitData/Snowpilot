@@ -220,14 +220,15 @@ h3.test-title{
 	
 }
 
-#snowpit-profile-node-form .field-name-field-date-time{
-	width: 49%;
-	float: right;
-}
-
 #snowpit-profile-node-form .form-item-title{
 	width: 50%;
 	float: left;
+	
+}
+
+#snowpit-profile-node-form .form-field-name-field-date-time{
+	float: right;
+	width: 50%;
 	
 }
 
@@ -376,7 +377,9 @@ form.node-snowpit_profile-form fieldset{
 }
 /*  Formatting the width and position of the layers, stability tests, density and temp collection tables */ 
 
-
+#edit-field-total-height-of-snowpack label{
+	display: inline-block;
+}
 /* Hierarchichal select for grain types */
 
 #snowpit-profile-node-form .field-name-field-grain-type div.form-type-cshs div.select-wrapper:nth-of-type(2),
@@ -406,6 +409,36 @@ fieldset.group-density{
 		padding: 8px;
 }
 
+#edit-field-google-map-canvas,
+fieldset.group-stability {
+	display: inline-block;
+	float: right;
+	width: 49%;
+	background-color: #cdcdcd;
+	padding: 8px;
+}
+
+#google-map{
+	background-color: #fff;
+	width: 300px;
+	height: 200px;
+	
+}
+
+fieldset.group-location,
+fieldset.group-weather {
+	width: 45%;
+	display: inline-block;
+}
+#edit-field-latitude{
+	/*display: inline-block;
+	width: 49%;
+}
+#edit-field-longitude{
+	display: inline-block;
+	width: 49%;*/
+}
+
 #snow_profile_diagram{
 	background-color: #fdfdfd;
 	
@@ -428,6 +461,29 @@ fieldset.group-density{
 	color: blue;
 }
 
+button#edit-button,
+button#save-button,
+button#print-button{
+	/*display: inline-block;*/
+	background-color:#f8fff0;
+}
+
+
+
+body.node-type-snowpit-profile ul.tabs-primary{
+	display:none;
+}
+
+#block-block-2 img.profile-graph{
+	display: block;
+	
+}
+
+/*@media print {
+    :not(.printable) { display: none; }
+    img.printable { display: block; }
+		
+}*/
 
 /* User Profiles page formatting */
 
@@ -437,3 +493,5 @@ fieldset.group-density{
     min-height: 25px;
     padding-top: 2px;
 }
+
+body.node-type-snowpit-profile

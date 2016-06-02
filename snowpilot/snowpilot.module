@@ -5,7 +5,11 @@ include_once('includes/graphing_functions.inc.php');
 
 function snowpilot_menu_alter(){
 }
-
+function snowpilot_init(){
+	
+	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
+	
+}
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
 	//	
@@ -26,7 +30,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			}
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
-			drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 			
 			snowpilot_snowpit_set_layer_titles($form, $snowpit_unit_prefs);
 			
@@ -107,6 +110,7 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 		// If this is a degenerative layer, (i.e. no bottom_depth and no hardness field set ) then we just delete it
 		if ( is_numeric($key) && ( $layer['field_bottom_depth']['und'][0]['value'] == '' ) ){
 		  unset($form_state['values']['field_layer']['und'][$key]);  // chop off this layer		
+			// verified that this works
 		}else{
 			//drupal_set_message( "Not gonna chop.");
 		}
@@ -257,6 +261,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	// Add more button:
 	$form['field_layer']['und']['add_more']['#value'] = "Add Layer";
 	$x=0;
+	//dsm($form['field_layer']['und']);
 
 	while(isset($form['field_layer']['und'][$x] )){
 		// Set remove button text
@@ -283,7 +288,6 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 				'<div class="collapsible-content'. $collapsed .'" >';
 
 		$form['field_layer']['und'][$x]['#suffix'] ="</div> </div>";
-		//dsm($form['field_layer']['und'][$x]);
 		if (  $form['field_layer']['und'][$x]['field_this_is_my_layer_of_greate']['und']['#default_value'] == '1' ){
 			$dec_x = $x-1;
 			// taking this out of the hook_form_alter and putting into jQuery because it will need to happen on-the-fly , not just on page load or new
@@ -338,6 +342,16 @@ function snowpilot_snopit_prof_set_suffices(&$form, $snowpit_unit_prefs){
 	$form['field_boot_penetration_depth']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
 	$form['field_ski_penetration']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
   $form['field_total_height_of_snowpack']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_depth_units'];
+	
+	$form['field_latitude']['und'][0]['value']['#field_suffix'] = "&#176;".$snowpit_unit_prefs['field_latitude_type'];
+	$form['field_longitude']['und'][0]['value']['#field_suffix'] = "&#176;".$snowpit_unit_prefs['field_longitude_type'];
+	
+	$form['field_north']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_latitude_type'];
+	$form['field_east']['und'][0]['value']['#field_suffix'] = $snowpit_unit_prefs['field_longitude_type'];
+	
+	// not just a suffix, but a real form value ( in core info)
+	
+	$form['field_utm_zone']['und'][0]['value']['#default_value'] = $snowpit_unit_prefs['field_utm_zone'];
 	
 	// Repeated per layer
 	$x = 0; //count($form['field_layer']['und'] );
@@ -461,8 +475,11 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 		
 		break;
 		case 'PST':
+		if ( isset ($test->field_length_of_saw_cut ['und'][0]['value']) && 
+				isset( $test->field_length_of_isolated_col_pst['und'][0]['value'] ) & 
+				isset ($test->field_data_code_pst['und'][0]['value'])){
 			$string = 'PST'. $test->field_length_of_saw_cut ['und'][0]['value']."/". $test->field_length_of_isolated_col_pst['und'][0]['value']." (". $test->field_data_code_pst['und'][0]['value']. ")";
-		
+		}else 'PST, missing data';
 		
 		break;
 		case 'CT':

@@ -4,14 +4,7 @@
    Drupal.behaviors.snowpilot = {
 
     attach: function (context, settings) {
-        
-        $('input[name=field_layer_add_more]', context).click(function() {
-            var maxIndex = SnowProfile.snowLayers.length - 1;
-            var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
-            SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
-            alert("Button works!");
-          });
-          
+			          
 			//
 			//  hide "depth 0 measured from" field
 			//
@@ -117,6 +110,13 @@
 			// hide the Measurement Unit Prefs fieldset
 			$('#snowpit-profile-node-form fieldset.group-measurement-prefs').hide();
 			
+			// save button at top of 'view' page
+			/*$('button#save-button', context).click(function(e) {
+			    e.preventDefault();  //stop the browser from following
+					//alert('hello world!');
+			    window.location.href = '/sites/default/files/snowpit-profiles/graph-41.jpg?1464807785';
+			});*/
+			
 			
 			/// show / hide layers on click
         $('.collapsible-content.collapsed', context).hide();
@@ -130,7 +130,7 @@
                 //$(this).toggleClass('open');
             });
         });
-        
+				
         $('#edit-field-layer .layer_num_1 h3.collapsible-handle', context).once('open', function () { 
             $('#edit-field-layer .layer_num_1 h3.collapsible-handle', context).click(function () {
                 $('.layer_num_1 .collapsible-content').toggle('slow', function () {

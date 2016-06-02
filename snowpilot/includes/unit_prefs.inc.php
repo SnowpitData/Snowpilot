@@ -84,6 +84,23 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			
 			'field_latitude_type' => _helper_cleaner($entity,'field_latitude_type'),
 			'latType' => _helper_cleaner($entity,'field_latitude_type'),
+			
+	
+			'field_longitude' => _helper_cleaner($entity,'field_longitude'),
+			'longitude'=> _helper_cleaner($entity,'field_longitude'),
+			
+			'field_latitude' => _helper_cleaner($entity,'field_latitude'),
+			'lat' => _helper_cleaner($entity,'field_latitude'),
+			
+			
+			'field_utm_zone' => _helper_cleaner($entity, 'field_utm_zone'),
+			'field_zone' => _helper_cleaner($entity, 'field_utm_zone'),
+			
+			'field_north' => _helper_cleaner($entity, 'field_north'),
+			'north' => _helper_cleaner($entity, 'field_north'),
+			
+			'field_east' => _helper_cleaner($entity, 'field_east'),
+			'east' =>  _helper_cleaner($entity, 'field_east'),
 		
 			'field_density_units' =>  _helper_cleaner($entity,'field_density_units') ,
 			'rhoUnits' =>  _helper_cleaner($entity,'field_density_units') ,
@@ -117,13 +134,13 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			'field_professional_affiliation' => _helper_cleaner($entity, 'field_professional_affiliation','tid')  ,
 			'affil'  => _helper_cleaner($entity, 'field_professional_affiliation', 'tid')  ,// tid needs to be converted to name
 		
-		
+			
 			);
 			/*
 			     These fields are not present in the 'node' variable that this function works on.
 			*/
 			if ($type  == 'user'){
-				$unit_prefs['name'] = $entity->name; // hey, this is the same value in both core drupal and avscience db!
+				$unit_prefs['name'] = $entity->name; // hey, this is the same key name in both core drupal and avscience db!
 		
 				$unit_prefs['mail'] = $entity->mail;
 				$unit_prefs['email'] = $entity->mail;
