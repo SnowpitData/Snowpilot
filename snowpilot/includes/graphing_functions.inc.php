@@ -172,9 +172,13 @@ function _h2pix($h, $all = FALSE){
 		}
 }
 
-// breaks $nod->body into 1, 2, or 3 lines depending on how long it is
+// breaks $node->body into 1, 2, or 3 lines depending on how long it is
 // a fairly simpllistic algorithm: if the whole thing is too long for the line, chop it into ( at a space )
 // if the pieces are still too long, chop it in thirds
+// TODO: this function will have to take into account extra-long notes entries; 
+// after three break point, we need to keep going to get them short enough; but also leave a [ More Notes ] item on jpgs; and 
+// and for pdf output, an extra sheet of paper
+//
 
 function _output_formatted_notes($string, $font){
 	$box0 = imagettfbbox(9,0,$font,$string);
@@ -212,7 +216,7 @@ function _output_formatted_notes($string, $font){
 function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
 	if ( !isset($layer->field_hardness['und'][0])){ // error checking in case that hardness is not set
 			$pink_problem = imagecolorallocate($img,254, 240, 240);
-			$dark_pink = imagecolorallocate($img, 128, 64, 0);
+			$dark_pink = imagecolorallocate($img, 142, 47, 11); //#8c2e0b , the border for warning messages
 			$black = imagecolorallocate($img,0,0,0);
 			$value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
 			
@@ -417,7 +421,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 				( $test->field_depth == $test_compare->field_depth  ) &&
 				( isset ($test_compare->multiple) && ($test_compare->multiple > 0))
 
-			){ 		// so the two tests are almost exactly alike, worth taking another look and comparing test-specific fields
+			){ 		// so the two tests ARE exactly alike for those previous fields; how about for test-specific fields?
 
  			 switch ($test->field_stability_test_type['und'][0]['value']){
  				  case 'ECT':
@@ -565,11 +569,22 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			strtotime($node->field_date_time['und'][0]['value']." ". $node->field_date_time['und'][0]['timezone_db']))); //Date / Time of observation
 
 			$text_pos = imagettftext($img, 11, 0, 183, 53, $black, $label_font, "Co-ord: ");
-			if (isset($node->field_select_location['und'])){
-				imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, $node->field_select_location['und'][0]['latitude'] .
-				$node->field_latitude_type['und'][0]['value'].", ". 
-				$node->field_select_location['und'][0]['longitude'] .
-				$node->field_longitude_type['und'][0]['value']);
+			if ($snowpit_unit_prefs['field_coordinate_type'] != 'UTM'){
+				if (isset($node->field_latitude['und']) && isset($node->field_longitude['und'])){
+					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
+						number_format($node->field_latitude['und'][0]['value'] .
+						$node->field_latitude_type['und'][0]['value'], 5).", ". 
+						number_format($node->field_longitude['und'][0]['value'] , 5).
+						$node->field_longitude_type['und'][0]['value']);
+				}
+			}else{ // Not Lat long, their preference is UTM
+				imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
+					$node->field_utm_zone['und'][0]['value'].' '.
+					$node->field_east['und'][0]['value'] .
+					$node->field_longitude_type['und'][0]['value'].' '.				
+					$node->field_north['und'][0]['value'] .
+					$node->field_latitude_type['und'][0]['value']
+				);
 			}
 			
 			$text_pos = imagettftext($img, 11, 0, 183, 71, $black, $label_font, "Slope Angle: ");
@@ -901,11 +916,18 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imagejpeg($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.jpg',100);
 	
 	imagepng($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.png');
-	
+	snowpilot_snowpit_crop_layers_write($img,$node->nid);
 // Destroy GD image
 imagedestroy($img);
 
 return;
 }
 
-?>
+function snowpilot_snowpit_crop_layers_write($img,$nid){
+	$new_img = imagecreatetruecolor(466,613);
+	$result = imagecopy($new_img, $img, 0,0, 14,140,466,613 );
+	//$new_img = imagescale($new_img,350);
+	$filename = 'layers-'.$nid ;
+	
+	imagepng($new_img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.png');	
+}

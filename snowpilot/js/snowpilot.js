@@ -14,19 +14,19 @@
 			//
 			//  hide "depth 0 measured from" field
 			//
-			$('#edit-field-depth-0-from select', context).hide();
+			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).hide();
 			
 			//
 			//  reset label field to show which option is chosen
 			//
-			$('#edit-field-depth-0-from label', context).text( function() {
+			$('#snowpit-profile-node-form #edit-field-depth-0-from label', context).text( function() {
 				return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();
 			});
 			//
 			//  everytime the select option is changed, hide the dropdown and reset the label to relect !!
 			//
 			
-			$('#edit-field-depth-0-from select', context).once( function () {
+			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).once( function () {
 				$('#edit-field-depth-0-from select', context).change( function () {
 					$('#edit-field-depth-0-from label', context).text( function() {
 						return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();	
@@ -38,7 +38,7 @@
 			// If the user just navigates away from the field ( blur ), also
 			// hide the select and set the label
 			//
-			$('#edit-field-depth-0-from select', context).blur( function () {
+			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).blur( function () {
 				
 				$('#edit-field-depth-0-from label', context).text( function() {
 					return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();	
@@ -48,7 +48,7 @@
 			} );
 					
 			
-			$('#edit-field-depth-0-from label', context).once('open', function () {
+			$('#snowpit-profile-node-form #edit-field-depth-0-from label', context).once('open', function () {
 					$('#edit-field-depth-0-from label', context).click(function () {
 						$('#edit-field-depth-0-from select', context).toggle('200', function(){ 
 						}); // done
@@ -72,7 +72,7 @@
         }
 			});
 			
-			//If anything gets checked, hide the others; and vice versa
+			//If anything gets checked, hide the other boxes; and vice versa
 			
       $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).change(function() {
         if ($(this).is(':checked')) {
@@ -117,11 +117,11 @@
 			$('#snowpit-profile-node-form fieldset.group-measurement-prefs').hide();
 			
 			// save button at top of 'view' page
-			/*$('button#save-button', context).click(function(e) {
+			$('button#save-button', context).click(function(e) {
 			    e.preventDefault();  //stop the browser from following
 					//alert('hello world!');
-			    window.location.href = '/sites/default/files/snowpit-profiles/graph-41.jpg?1464807785';
-			});*/
+			    window.location.href = '/sites/default/files/snowpit-profiles/graph-'+ $(this).attr("nid") +'.jpg?345';
+			});
 			
 			
 			/// show / hide layers on click

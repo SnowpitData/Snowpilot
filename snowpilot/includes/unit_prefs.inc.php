@@ -1,7 +1,5 @@
 <?php
 
-
-
 /*
     This checks to make sure all of the 'drupal required keys' are present. IF not, the user is redirected to the 
 		user edit form, then back here.
@@ -10,45 +8,6 @@
 //   if so, it will return the $account object.
 //   if some field is missing, it will redirect the user to the user edit page (!) to fill in that info.
 
-function snowpilot_user_unit_prefs_check($uid){
-	$account = user_load($uid);
-	$drupal_keys_required = array( // this is a list of keys that are required in order to populate the snowpit profile
-		'field_depth_0_from', 
-		'field_depth_units', 
-		'field_temp_units', 
-		'field_coordinate_type', 
-		'field_elevation_units',
-		'field_longitude_type',
-		'field_latitude_type',
-		'field_density_units',
-		'field_fracture_category',
-		'field_hardness_scale',
-	//	'field_loaction',
-	//  'field_loaction_0'
-	//	'field_loaction_1',
-		'field_first_name',
-		'field_last_name',
-		'field_phone',
-		'field_professional',
-	//	'field_professional_affiliation',
-		'name',
-		'mail'
-	);
-  $missing_keys = array();
-	foreach($drupal_keys_required as $key){
-		if (count($account->$key ) == 0 ){
-			$missing_keys[] = $key;
-		
-		}
-	}
-	if (count($missing_keys)){
-		drupal_set_message( "<h3>Missing User Unit Preferences</h3>You need to set your <a href = '/user/". $uid ."/edit#edit-field-first-name'>User Unit Preferences</a> before you can create a new Snowpit Profile.<br/>
-			The following preferences have not been set yet: <li>" . implode($missing_keys,'<li>'), 'warning');
-		drupal_goto("user/". $uid ."/edit", array('query' => array('destination' => 'node/add/snowpit-profile')) );
-			return FALSE;
-	}
-	return $account;
-}
 
 
 	// snowpilot_unit_prefs_get will return unit prefs, an array,
@@ -188,5 +147,55 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 	
 		return $form;
 	}
+	//
+	//  this function checks to see if the users unit proferences have been set
+	//  @param $uid the user id 
+	//
+	//	@param $redirect_to_user_edit Set this to FALSE in an ajax context, or it will really screw things up
+	//
+	//  @return TRUE or FALSE TODO: return also some useful array like $missing_keys or something
+	//  perhaps also redirect to user/uid/edit ,if that value is TRUE
 
-	?>
+function snowpilot_user_unit_prefs_check($uid,$redirect_to_user_edit = TRUE){
+	$account = user_load($uid);
+	$drupal_keys_required = array( // this is a list of keys that are required in order to populate the snowpit profile
+		'field_depth_0_from', 
+		'field_depth_units', 
+		'field_temp_units', 
+		'field_coordinate_type', 
+		'field_elevation_units',
+		'field_longitude_type',
+		'field_latitude_type',
+		'field_density_units',
+		'field_fracture_category',
+		'field_hardness_scale',
+		//	'field_latitude',
+		//  'field_longitude'
+		//	'field_utm_zone',
+		'field_first_name',
+		'field_last_name',
+		//	'field_phone',
+		//	'field_professional',
+		//	'field_professional_affiliation',
+		'name',
+		'mail'
+	);
+	 $missing_keys = array();
+	foreach($drupal_keys_required as $key){
+		if (count($account->$key ) == 0 ){
+			$field = field_info_field($key);
+			$field_instance = field_info_instance('node', $key, 'snowpit_profile');
+			$missing_keys[] = $field_instance['label'];	
+		}
+	}
+	if (count($missing_keys)){
+		drupal_set_message( "<h3>Missing User Unit Preferences</h3>You need to set your <a href = '/user/". $uid ."/edit#edit-field-first-name'>User Unit Preferences</a> before you can create a new Snowpit Profile.<br/>
+			The following preferences have not been set yet: <li>" . implode($missing_keys,'<li>'), 'warning');
+		if ( $redirect_to_user_edit == TRUE ) {
+			drupal_goto("user/". $uid ."/edit", array('query' => array('destination' => drupal_get_destination())) );
+		}
+				return FALSE;
+		}
+	return TRUE;
+}
+	

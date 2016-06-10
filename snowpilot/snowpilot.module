@@ -3,11 +3,41 @@
 include_once('includes/unit_prefs.inc.php');
 include_once('includes/graphing_functions.inc.php');
 
-function snowpilot_menu_alter(){
+//function snowpilot_menu_alter(){
+	//}
+
+function snowpilot_menu(){
+	$items['snowpilot/%ctools_js/login']= array(
+		'title' => 'Modal Login',
+		'page callback' => 'snowpilot_login',
+  	'page arguments' => array(1),
+ 	 	'access callback' => TRUE,
+ 		'type' => MENU_CALLBACK,
+	);
+  $items['snowpilot/%ctools_js/login/%'] = array(
+      'title' => 'Post-Login Action',
+      'page callback' => 'snowpilot_login_success',
+      'page arguments' => array(1, 3),
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+  );
+	return $items;
 }
+
 function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
+	
+	
+	//
+	//  We will pester the user on all pages if preferences aren't set
+	//
+	global $user;
+	if($user->uid <> 0){ 
+
+			snowpilot_user_unit_prefs_check($user->uid,FALSE);
+
+	}
 	
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
@@ -43,6 +73,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs);
 			
 			$form['#submit'][] = 'snowpilot_snowpit_profile_node_form_submit';
+			$form['actions']['submit']['#value'] = 'Save and Preview';
 			foreach( $form['field_test']['und'] as $delta => $test_result){
 				if (is_numeric($delta)){
 					// this hides or shows the shear_quality / fracture_character fields
@@ -65,10 +96,78 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			//dsm($form_state);
 		//}
 		} // end if node->type == snowpit prof
+		break;
+		case 'user_login':
+			$form['name']['#description'] = t('Snowpilot username, or email address');
+			$form['pass']['#description'] ='';
+		break;
 	} // end switch
 	return;
 }
 
+
+/**
+ * A modal login callback.
+ */
+function snowpilot_login($js = NULL) {
+  // Fall back if $js is not set.
+	global $user;
+  if (!$js) {
+    return drupal_get_form('user_login');
+  }
+  ctools_include('modal');
+  ctools_include('ajax');
+  $form_state = array(
+    'title' => t('Login'),
+    'ajax' => TRUE,
+  );
+  $output = ctools_modal_form_wrapper('user_login', $form_state);
+  if (!empty($form_state['executed'])) {
+    // We'll just overwrite the form output if it was successful.
+		//
+		// these three functions ( .../login , .../login success , .../snowpilot_ $item - are from AJAX Sample)
+    //
+		//
+    $output = array();
+    $inplace = ctools_ajax_text_button(t('remain here'), 'snowpilot/nojs/login/inplace', t('Go to your account'));
+    $output[] = ctools_modal_command_display(t('Login Success'), '<div class="modal-message">Login successful. You will be redirected in a moment.</div>');
+		
+		// Redirect to the user-prefs edit page if they are lacking one of the required ones.
+		if (!snowpilot_user_unit_prefs_check($user->uid,FALSE)){
+			$output[] = ctools_ajax_command_redirect('user/'.$user->uid.'/edit#edit-field-first-name');	
+	  //	
+		}else{
+			$output[] = ctools_ajax_command_redirect('snowpits');	
+		}
+	}
+	print ajax_render($output);
+
+  exit;
+}
+
+/**
+ * Post-login processor: should we go to the user account or stay in place?
+ */
+function snowpilot_login_success($js, $action) {
+  if (!$js) {
+    // we should never be here out of ajax context
+    return MENU_NOT_FOUND;
+  }
+
+  ctools_include('ajax');
+  ctools_add_js('ajax-responder');
+  $commands = array();
+  if ($action == 'inplace') {
+    // stay here
+    $commands[] = ctools_ajax_command_reload();
+  }
+  else {
+    // bounce bounce
+    $commands[] = ctools_ajax_command_redirect('user');
+  }
+  print ajax_render($commands);
+  exit;
+}
 
 function snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs){
 	if ( $snowpit_unit_prefs['field_fracture_category'] != 'fracture_character'){
@@ -467,9 +566,10 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 	//dsm($test);
 	switch ($test->field_stability_test_type['und'][0]['value']){
 		case 'ECT':
-			if (in_array( $test->field_stability_test_score['und'][0]['value'], array( 'ECTP','ECTN' ) ) && isset ($test->field_ec_score['und'][0]['value'] )){
+			/*if (in_array( $test->field_stability_test_score['und'][0]['value'], array( 'ECTP','ECTN' ) ) && isset ($test->field_ec_score['und'][0]['value'] )){
 				$string = $test->field_stability_test_type['und'][0]['value'] . $test->field_ec_score['und'][0]['value'];		
-			}else{
+				dsm('yeah, got here');
+			}else{*/
 				$string = $test->field_stability_test_score['und'][0]['value'];
 			}
 		
@@ -550,4 +650,4 @@ function stability_test_score_shorthand_form($stab_test){
 	
 }
 
-?>
+
