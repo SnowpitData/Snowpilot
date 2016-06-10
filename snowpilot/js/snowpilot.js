@@ -1,8 +1,10 @@
 (function ($) {
-
-   Drupal.behaviors.snowpilot = {
-
+  
+  // Behaviors related to Live Graph Editor
+  Drupal.behaviors.snowpilot1 = {
+    
     attach: function (context, settings) {
+      
       $('input[name=field_layer_add_more]', context).once( function () {
           $('input[name=field_layer_add_more]', context).mousedown(function() {
               var maxIndex = SnowProfile.snowLayers.length - 1;
@@ -11,6 +13,15 @@
               
             });
       });
+      
+    } // end attach
+  }; // end behaviors.snowpilot.liveeditor
+
+  // Behaviors related to Snowpit Profile Forms
+  Drupal.behaviors.snowpilot2 = {
+
+    attach: function (context, settings) {
+      
 			//
 			//  hide "depth 0 measured from" field
 			//
@@ -22,6 +33,7 @@
 			$('#snowpit-profile-node-form #edit-field-depth-0-from label', context).text( function() {
 				return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();
 			});
+      
 			//
 			//  everytime the select option is changed, hide the dropdown and reset the label to relect !!
 			//
@@ -35,6 +47,7 @@
 					$('#edit-field-depth-0-from select', context).hide();
 				} );
 			});
+      
 			// If the user just navigates away from the field ( blur ), also
 			// hide the select and set the label
 			//
@@ -45,15 +58,15 @@
 				});
 				//  hide select is here
 				$('#edit-field-depth-0-from select', context).hide();
-			} );
+			});
 					
 			
 			$('#snowpit-profile-node-form #edit-field-depth-0-from label', context).once('open', function () {
 					$('#edit-field-depth-0-from label', context).click(function () {
-						$('#edit-field-depth-0-from select', context).toggle('200', function(){ 
+						$('#edit-field-depth-0-from select', context).toggle('200', function() { 
 						}); // done
 					}); //
-			} );
+			});
 			//
 			//  end tweaks for "hide depth from ..." field
 			//
@@ -124,393 +137,45 @@
 			});
 			
 			
-			/// show / hide layers on click
-        $('.collapsible-content.collapsed', context).hide();
-       
-        $('#edit-field-layer .layer_num_0 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_0 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_0 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
+			//// show / hide layers on click
+      $('.collapsible-content.collapsed', context).hide();
+      
+      // REFACTOR TO USE EVENT DELEGATES: 
+      // Snowpack Layers
+      $('#edit-field-layer', context).once('open', function () {
+        $('#edit-field-layer', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
+          $(this).parent().find('div.collapsible-content').toggle('slow');
+          event.stopPropagation();
         });
-				
-        $('#edit-field-layer .layer_num_1 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_1 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_1 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
+      });
+      
         
-        $('#edit-field-layer .layer_num_2 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_2 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_2 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
+      // TEMP collection:
+      $('#edit-field-temp-collection', context).once('open', function () {
+        $('#edit-field-temp-collection', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
+          $(this).parent().find('div.collapsible-content').toggle('slow');
+          event.stopPropagation();
         });
+      });
+      
             
-        $('#edit-field-layer .layer_num_3 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_3 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_3 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
+      // DENSITY collection:
+      $('#edit-field-density-profile', context).once('open', function () {
+        $('#edit-field-density-profile', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
+          $(this).parent().find('div.collapsible-content').toggle('slow');
+          event.stopPropagation();
         });
-            
-        $('#edit-field-layer .layer_num_4 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_4 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_4 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-layer .layer_num_5 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_5 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_5 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-layer .layer_num_6 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_6 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_6 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-layer .layer_num_7 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_7 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_7 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-layer .layer_num_8 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_8 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_8 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-layer .layer_num_9 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_9 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_9 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-layer .layer_num_10 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-layer .layer_num_10 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_10 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .layer_num_11 h3.collapsible-handle', context).once('open', function () {             
-            $('#edit-field-temp-collection .layer_num_11 h3.collapsible-handle', context).click(function () {
-                $('.layer_num_11 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
+      });
 
-//repeat through layer number 20 ...
-
+      // Stability Tests:
+      $('#edit-field-test', context).once('open', function () {
+        $('#edit-field-test', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
+          $(this).parent().find('div.collapsible-content').toggle('slow');
+          event.stopPropagation();
+        });
+      });
         
-// TEmp collection:
-        $('#edit-field-temp-collection .temp_num_0 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_0 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_0 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_1 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_1 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_1 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_2 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_2 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_2 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_3 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_3 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_3 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_4 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_4 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_4 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_5 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_5 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_5 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_6 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_6 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_6 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_7 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_7 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_7 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_8 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_8 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_8 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_9 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_9 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_9 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .temp_num_10 h3.collapsible-handle', context).once('open', function () { 
-            $('#edit-field-temp-collection .temp_num_10 h3.collapsible-handle', context).click(function () {
-                $('.temp_num_10 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-
-            
-// DENSITY collection:
-        $('#edit-field-density-profile .density_num_0 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-density-profile .density_num_0 h3.collapsible-handle', context).click(function () {
-                $('.density_num_0 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-density-profile .density_num_1 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-density-profile .density_num_1 h3.collapsible-handle', context).click(function () {
-                $('.density_num_1 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-density-profile .density_num_2 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-density-profile .density_num_2 h3.collapsible-handle', context).click(function () {
-                $('.density_num_2 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-density-profile .density_num_3 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-density-profile .density_num_3 h3.collapsible-handle', context).click(function () {
-                $('.density_num_3 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-density-profile .density_num_4 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-density-profile .density_num_4 h3.collapsible-handle', context).click(function () {
-                $('.density_num_4 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .density_num_5 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-temp-collection .density_num_5 h3.collapsible-handle', context).click(function () {
-                $('.density_num_5 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-                    
-// Stability Tests:
-        $('#edit-field-test .stability_test_num_0 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-test .stability_test_num_0 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_0 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-test .stability_test_num_1 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-test .stability_test_num_1 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_1 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-test .stability_test_num_2 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-test .stability_test_num_2 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_2 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-test .stability_test_num_3 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-test .stability_test_num_3 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_3 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-test .stability_test_num_4 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-test .stability_test_num_4 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_4 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-            
-        $('#edit-field-temp-collection .stability_test_num_5 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-temp-collection .stability_test_num_5 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_5 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-        $('#edit-field-temp-collection .stability_test_num_6 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-temp-collection .stability_test_num_6 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_6 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });        $('#edit-field-temp-collection .stability_test_num_7 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-temp-collection .stability_test_num_7 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_7 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-        $('#edit-field-temp-collection .stability_test_num_8 h3.collapsible-handle', context).once('open', function () {
-            $('#edit-field-temp-collection .stability_test_num_8 h3.collapsible-handle', context).click(function () {
-                $('.stability_test_num_8 .collapsible-content').toggle('slow', function () {
-                    // Animation complete.
-                });
-                //add css class to H2 title when clicked//
-                //$(this).toggleClass('open');
-            });
-        });
-        
-        }    // end of attach 
-    };  //end of Drupal.behavior.snowpilot
+    }    // end of attach 
+  };  //end of Drupal.behavior.snowpilot.formlayers
 }) (jQuery);
 
