@@ -571,7 +571,7 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 				dsm('yeah, got here');
 			}else{*/
 				$string = $test->field_stability_test_score['und'][0]['value'];
-			}
+				//}
 		
 		break;
 		case 'PST':

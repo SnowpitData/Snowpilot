@@ -1,24 +1,7 @@
 (function ($) {
   
-  // Behaviors related to Live Graph Editor
-  Drupal.behaviors.snowpilot1 = {
-    
-    attach: function (context, settings) {
-      
-      $('input[name=field_layer_add_more]', context).once( function () {
-          $('input[name=field_layer_add_more]', context).mousedown(function() {
-              var maxIndex = SnowProfile.snowLayers.length - 1;
-              var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
-              SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
-              
-            });
-      });
-      
-    } // end attach
-  }; // end behaviors.snowpilot.liveeditor
-
   // Behaviors related to Snowpit Profile Forms
-  Drupal.behaviors.snowpilot2 = {
+  Drupal.behaviors.snowpilot = {
 
     attach: function (context, settings) {
       
