@@ -2,9 +2,9 @@
 function sp_liveprofile_init(){
 	define('LIBRARY_PATH' , 'sites/all/libraries/jquery/vendor/');
 	define('SP_LIVEPROFILE_LIBRARY' , 'sites/all/modules/snowpilot/sp_liveprofile/js/');
-	global $node;
-	//dsm($node);
-//	if ($node->type == 'snowpit_profile' && arg(2) == 'edit'){
+	$node = menu_get_object();
+	// only include the js files need on snowprofile node/xx/edit pages:
+	if (!empty($node) && $node->type == 'snowpit_profile' && arg(2) == 'edit'){
 		// we need to use body OnLoad to start the live graph dealy
 	drupal_add_js(LIBRARY_PATH.'rgbcolor.js', 'file' );
 	drupal_add_js(LIBRARY_PATH.'StackBlur.js', 'file' );
@@ -43,6 +43,6 @@ function sp_liveprofile_init(){
 	drupal_add_css(LIBRARY_PATH.'jquery.ui.dialog.css', 'file');
 	drupal_add_css(LIBRARY_PATH.'opentip.css', 'file');
 			
-//	}
+	}
 	
 }
