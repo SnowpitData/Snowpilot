@@ -271,7 +271,7 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs){
 	// this will be a fancy one, with compiled stab test output
-	$form['field_test']['und']['add_more']['#value'] = "New Stability Test";
+	$form['field_test']['und']['add_more']['#value'] = "Save Test";
 	
 
 	$x= 0;
@@ -300,7 +300,7 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 							
 							'#name' => 'field_test_add_more',
 							'#value' => 'Duplicate Test',
-							'#attributes' => array('class' => array ( 0 => 'field-add-more-submit'), 'style' => array (0 => 'float: right;')),
+							'#attributes' => array('class' => array ( 0 => 'field-add-more-submit form-submit duplicate')),
 							//'#validate' => array(),
 							'#submit' => array( 0 => 'snowpilot_duplicate_stability_test' ),
 							'#limit_validation_errors' => array( array ( 0=> 'field_test' , 1 => 'und')),
@@ -359,21 +359,24 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	$form['field_layer']['und']['#title'] = "Snowpack Layers"; // 
 	// Add more button:
 	$form['field_layer']['und']['add_more']['#value'] = "Add Layer";
-	$x=0;
 	//dsm($form['field_layer']['und']);
-
+	$x=0;
 	while(isset($form['field_layer']['und'][$x] )){
 		// Set remove button text
 		$form['field_layer']['und'][$x]['remove_button']['#value'] = "Remove Layer";
 		$next_layer = $x+1 ; 
 		
 		$collapsed = '';
+		
+		// The next 
+
 		if (isset($form['field_layer']['und'][$next_layer])) {  // if this is not the last layer , collapse the box and set the top depth ....
-	
+			$collapsed = ' collapsed';
+			// Set the top of the next field equal to the bottom of the last one.		
 			$form['field_layer']['und'][$next_layer]['field_height']['und'][0]['value']['#default_value'] = 
 				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'];
-			$collapsed = ' collapsed';
 		}
+		
 		if (isset($form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0])){ 
 			$this_hardness = $form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0];
 		}
@@ -387,15 +390,16 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 				'<div class="collapsible-content'. $collapsed .'" >';
 
 		$form['field_layer']['und'][$x]['#suffix'] ="</div> </div>";
-		if (  $form['field_layer']['und'][$x]['field_this_is_my_layer_of_greate']['und']['#default_value'] == '1' ){
-			$dec_x = $x-1;
-			// taking this out of the hook_form_alter and putting into jQuery because it will need to happen on-the-fly , not just on page load or new
-			
-			while ( $dec_x >= 0 ){
-			//	$form['field_layer']['und'][$dec_x]['field_this_is_my_layer_of_greate']['#type'] = 'hidden'; 
-			//	$form['field_layer']['und'][$dec_x]['field_concern']['#type'] = 'hidden';
-				$dec_x-- ; 
-			}
+		
+		//
+		// this block hides the last layer entry form where the bottom of the previous one was "zero depth"
+		//
+
+		if ( isset($form['field_layer']['und'][$x]) && ($snowpit_unit_prefs['field_depth_0_from'] <> 'top') &&
+			$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] === '0'){
+			unset ($form['field_layer']['und'][$x+1]);
+			unset($form['field_layer']['und']['add_more']);
+			$form['field_layer']['und'][$x]['#suffix'] = $form['field_layer']['und'][$x]['#suffix'].'<h3 class ="snowpilot-snowpit-bottom">Bottom of Snowpack</h3>';
 		}
 		
 		//$form['field_layer']['und'][$x]['#pre_render'][] = 'snowpilot_graintypes_tweak';
@@ -564,46 +568,51 @@ function layer_depth_val( $a , $b){
 function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 	$string = '';
 	//dsm($test);
+	//
+	// Let's calculate what the Fracture Character or shear quality part of the string will be
+	//
+	if ( $snowpit_unit_prefs['field_fracture_category'] == 'shear_quality' && isset($test->field_shear_quality['und'][0]['value'])){
+		$fracture = ', ' . $test->field_shear_quality['und'][0]['value'];
+	}elseif (isset( $test->field_fracture_character['und'][0]['value'])){
+		$fracture = ', ' . $test->field_fracture_character['und'][0]['value'];
+	}else{
+		$fracture = '';
+	}
+	//
+	//  
+	//
 	switch ($test->field_stability_test_type['und'][0]['value']){
 		case 'ECT':
-			/*if (in_array( $test->field_stability_test_score['und'][0]['value'], array( 'ECTP','ECTN' ) ) && isset ($test->field_ec_score['und'][0]['value'] )){
-				$string = $test->field_stability_test_type['und'][0]['value'] . $test->field_ec_score['und'][0]['value'];		
-				dsm('yeah, got here');
-			}else{*/
-				$string = $test->field_stability_test_score['und'][0]['value'];
-				//}
-		
+				$string = $test->field_stability_test_score['und'][0]['value'] . $test->field_ec_score['und'][0]['value'] . $fracture;	
 		break;
 		case 'PST':
-		if ( isset ($test->field_length_of_saw_cut ['und'][0]['value']) && 
-				isset( $test->field_length_of_isolated_col_pst['und'][0]['value'] ) & 
+		if ( isset ($test->field_length_of_saw_cut['und'][0]['value']) && 
+				isset( $test->field_length_of_isolated_col_pst['und'][0]['value'] ) && 
 				isset ($test->field_data_code_pst['und'][0]['value'])){
-			$string = 'PST'. $test->field_length_of_saw_cut ['und'][0]['value']."/". $test->field_length_of_isolated_col_pst['und'][0]['value']." (". $test->field_data_code_pst['und'][0]['value']. ")";
-		}else 'PST, missing data';
-		
+			$string = 'PST'. $test->field_length_of_saw_cut ['und'][0]['value']."/". 
+				$test->field_length_of_isolated_col_pst['und'][0]['value'].
+				" (". $test->field_data_code_pst['und'][0]['value']. ")". 
+				$fracture;
+		}else{ 
+			$string = 'PST, missing data';
+		}
 		break;
 		case 'CT':
 			if (in_array($test->field_stability_test_score_ct['und'][0]['value'], array('CTE','CTM', 'CTH', 'CTN'  )) && isset($test->field_ct_score['und'][0]['value'])){
-				$string = 'CT'.$test->field_ct_score['und'][0]['value'];
+				$string = 'CT' . $test->field_ct_score['und'][0]['value'] . $fracture;
 			}else{
-		  	$string = $test->field_stability_test_score_ct['und'][0]['value'];
-				
-			}
-			
-			if ( $snowpit_unit_prefs['field_fracture_category'] == 'shear_quality' && isset($test->field_shear_quality['und'][0]['value'])){
-				$string .= ", ".$test->field_shear_quality['und'][0]['value'];
-			}elseif (isset( $test->field_fracture_character['und'][0]['value'])){
-				$string .= ", ".$test->field_fracture_character['und'][0]['value'];
+		  	$string = $test->field_stability_test_score_ct['und'][0]['value'] . $fracture;
 			}
 		break;	
 		case 'RB':
 		case 'ST':
-		case 'SB':
-		$shear_quality = isset( $test->field_shear_quality['und']) ?  ', '. $test->field_shear_quality['und'][0]['value'] : '';
-		  $string = $test->field_stability_test_score['und'][0]['value'] . $shear_quality;
+		case 'SB':		
+			$string = $test->field_stability_test_score['und'][0]['value'] . $fracture;
 		break;	
 	}
-	if ( $test->multiple >1){
+	//
+	// Test Multiple would be set previously, by the function that calls this
+	if ( $test->multiple > 1 ){
 		$string = $test->multiple.'x '.$string;
 	}
 	

@@ -666,7 +666,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth['und']) ){
 					// this use of imageline will need to be updated to include some kind of cluster management
-						if (isset( $test->y_position)){ // if this has been 'multipled' with another stb test, the y_position won't be set
+						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
 							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);
 							imagettftext($img, 9, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
 						}
