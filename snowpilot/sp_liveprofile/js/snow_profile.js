@@ -337,7 +337,7 @@ var SnowProfile = {};
     SnowProfile.Cfg.GRAPH_WIDTH - (SnowProfile.Cfg.HANDLE_SIZE * 1.5);
 
   /**
-   * Minimum x value allowed for a handle (hardness 'I').
+   * Minimum x value allowed for a handle (hardness 'I+').
    *
    * @const {number}
    * @memberof SnowProfile
@@ -357,11 +357,12 @@ var SnowProfile = {};
    * Width in pixels of one hardness band in the CAAML_HARD table
    *
    * Calculation depends on knowing there are 21 entries in the table
+   * ***NO LONGER THE CASE - NOW THERE ARE 18
    * @const {number}
    * @memberof SnowProfile
    */
   SnowProfile.Cfg.HARD_BAND_WD = (SnowProfile.Cfg.GRAPH_WIDTH -
-    SnowProfile.Cfg.HANDLE_SIZE) / 20;
+    SnowProfile.Cfg.HANDLE_SIZE) / 17;
 
   /**
    * Horizontal width in pixels of the SVG drawing
@@ -534,7 +535,7 @@ var SnowProfile = {};
     var x = SnowProfile.Cfg.DEPTH_LABEL_WD + SnowProfile.Cfg.GRAPH_WIDTH - (SnowProfile.Cfg.HANDLE_SIZE / 2);
     if (code !== null) {
       for (var i = 0; i < SnowProfile.CAAML_HARD.length; i++) {
-        var tmp = 20 - i;
+        var tmp = (SnowProfile.CAAML_HARD.length - 1) - i;
         if (code === SnowProfile.CAAML_HARD[i][0]) {
           x = SnowProfile.Cfg.DEPTH_LABEL_WD +
             (SnowProfile.Cfg.HARD_BAND_WD * tmp) -
@@ -552,13 +553,13 @@ var SnowProfile = {};
    * @returns {string} CAAML hardness code.
    */
   SnowProfile.x2code = function(x) {
-    var code = 'I',
+    var code = 'F-',
       leftSide,
       bandLeft,
       bandRight;
 
-    for (var i = 0; i < SnowProfile.CAAML_HARD.length - 1; i++) {
-      var tmp = 19 - i;
+    for (var i = 0; i < SnowProfile.CAAML_HARD.length; i++) {
+      var tmp = (SnowProfile.CAAML_HARD.length - 2) - i;
       leftSide = SnowProfile.Cfg.DEPTH_LABEL_WD + 1;
       bandLeft = leftSide + (SnowProfile.Cfg.HARD_BAND_WD * tmp) +
           (SnowProfile.Cfg.HANDLE_SIZE / 2);
@@ -1022,12 +1023,12 @@ var SnowProfile = {};
         SnowProfile.export();
       });
       
-      $('input[name=field_layer_add_more]').mousedown(function() {
+      /*$('input[name=field_layer_add_more]').mousedown(function() {
         var maxIndex = SnowProfile.snowLayers.length - 1;
         var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
         SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
         //alert(SnowProfile.snowLayers[0].depth());
-      });
+      });*/
       
       // Testing event handlers for updating editor from text input 
       /*$("#my_test_input").change(function () {

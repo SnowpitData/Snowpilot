@@ -2,6 +2,7 @@
  * @file Define the singleton object that describes the reference grid
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
+ * Edited by Joe DeBruycker
  */
 
 /* global SnowProfile */
@@ -190,7 +191,7 @@
       // Iterate through the table of CAAML hardness codes to
       // build the hardness (horizontal) scale for the graph area
       for (i = 0; i < SnowProfile.CAAML_HARD.length; i++ ) {
-        var tmp = 20 - i;
+        var tmp = (SnowProfile.CAAML_HARD.length - 1) - i;
         x = SnowProfile.Cfg.DEPTH_LABEL_WD +
           (SnowProfile.Cfg.HARD_BAND_WD * tmp);
         if (SnowProfile.CAAML_HARD[i][1]) {

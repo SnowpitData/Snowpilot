@@ -213,8 +213,15 @@
         SnowProfile.snowLayers[i - 1].setLayerOutline();
       }
       
-      // Test dynamic form updates  --  works like a charm!
-      //$("#snow_profile_total_depth").val(newX);
+      // dynamic form updates
+      // Layer heights:
+      $('div.layer_num_' + i + ' input[id*="-height-"]').val(depthVal);
+      if (i > 0){
+        $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(depthVal);  
+      }
+      
+      // Layer Hardness:
+      $('div.layer_num_' + i + ' select[id*="-hardness-"]').val(featObj.hardness());
 
       // Lay out the features
       SnowProfile.layout();
@@ -265,8 +272,13 @@
       //  SnowProfile.snowLayers[i - 1].setLayerOutline();
       //}
       
-      // Test dynamic form updates  --  works like a charm!
-      //$("#snow_profile_total_depth").val(newX);
+      // dynamic form updates
+      // Use multiple hardnesses
+      if(!($('div.layer_num_' + i + ' input[id*="-use-multiple-hardnesses-"]').checked)){
+        $('div.layer_num_' + i + ' input[id*="-use-multiple-hardnesses-"]').attr("checked",true);
+        $('div.layer_num_' + i + ' select[id*="-hardness2-"]').parent().parent().show();
+      }
+      $('div.layer_num_' + i + ' select[id*="-hardness2-"]').val(featObj.hardness2());
 
       // Lay out the features
       SnowProfile.layout();
