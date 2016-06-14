@@ -47,10 +47,36 @@
       $('input[name=field_layer_add_more]', context).once( function () {
           $('input[name=field_layer_add_more]', context).mousedown(function() {
               var maxIndex = SnowProfile.snowLayers.length - 1;
-              var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
-              SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
               
-            });
+              // Field validation?  If there is a value in the bottom depth...
+              if($("#edit-field-layer-und-" + maxIndex + "-field-bottom-depth-und-0-value").val()) {
+                SnowProfile.newLayer($("#edit-field-layer-und-" + maxIndex + "-field-bottom-depth-und-0-value").val());
+              // If there's no value in bottom depth or top depth...
+              } else if(!$("#edit-field-layer-und-" + maxIndex + "-field-height-und-0-value").val()) {
+                var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
+                SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
+              }
+          });
+      });
+      
+      // Listen for text changes to form and update live graph appropriately
+      $('#edit-field-layer', context).once('livegraph_connected', function () {
+        $('#edit-field-layer', context).delegate( 'input', 'change', function (event) {
+          // Find layer number
+          var layerNum = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
+            
+          // Top Depth was changed
+          if($(this).parents('.field-name-field-height').length)
+          {
+            SnowProfile.snowLayers[layerNum].depth($(this).val());
+            SnowProfile.snowLayers[layerNum].draw();
+            if(layerNum !== 0){
+              SnowProfile.snowLayers[layerNum - 1].draw();
+            }
+            SnowProfile.layout();
+          }
+          event.stopPropagation();
+        });
       });
       
     } // end attach
