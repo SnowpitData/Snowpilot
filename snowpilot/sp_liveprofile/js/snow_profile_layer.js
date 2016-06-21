@@ -69,6 +69,37 @@
      */
     var handleTouched = false;
     var slopeHandleTouched = false;
+    
+    /**
+     * Get or set handleTouched boolean of this snow layer
+     * @param {boolean} [touchArg] - Sets whether handle has been touched
+     * @returns {boolean} Whether handle has been touched
+     */
+    this.handleTouchState = function(touchArg) {
+      if (touchArg === undefined) {
+        return handleTouched;
+      }
+      else {
+        handle.stop();
+        handleTouched = touchArg;
+        slopeHandle.attr('visibility','visible');
+      }
+    };
+    
+    /**
+     * Get or set handleTouched boolean of this snow layer
+     * @param {boolean} [touchArg] - Sets whether handle has been touched
+     * @returns {boolean} Whether handle has been touched
+     */
+    this.slopeHandleTouchState = function(touchArg) {
+      if (touchArg === undefined) {
+        return slopeHandleTouched;
+      }
+      else {
+        slopeHandleTouched = touchArg;
+        slopeHandle.attr('visibility','visible');
+      }
+    };
 
     
     /**
@@ -295,9 +326,11 @@
      * For some reason this must be done after handle.draggable() not before.
      * @memberof handle
      */
+    if(SnowProfile.snowLayers.length != 0){
     handle.animate({ease: SVG.easing.backInOut, duration: '1000'})
      .size(SnowProfile.Cfg.HANDLE_SIZE / 1.4, SnowProfile.Cfg.HANDLE_SIZE / 1.4)
      .loop();
+    }
 
     /**
      * "Insert" button
@@ -517,6 +550,12 @@
         // Not the bottom layer so bottom Y is top of next lower layer
         yBottom += SnowProfile.snowLayers[i + 1].handleGetY();
       }
+      
+      // If slope handle is untouched, it moves with primary handle
+      if (!slopeHandleTouched) {
+          slopeHandle.x(handle.x());
+      }
+      slopeHandle.y(handle.y() + (yBottom - yTop));
 
       if (handle.x() !== SnowProfile.Cfg.HANDLE_INIT_X) {
         //layerOutline.width(SnowProfile.Cfg.DEPTH_LABEL_WD + SnowProfile.Cfg.GRAPH_WIDTH - handle.x() - (SnowProfile.Cfg.HANDLE_SIZE / 2));
@@ -525,10 +564,7 @@
       //layerOutline.x(handle.x() + (SnowProfile.Cfg.HANDLE_SIZE / 2));
       //layerOutline.y(yTop);
       //layerOutline.height(yBottom - yTop);
-      if (!slopeHandleTouched) {
-          slopeHandle.x(handle.x());
-      }
-      slopeHandle.y(handle.y() + (yBottom - yTop));
+      
     };
 
     /**
@@ -545,6 +581,14 @@
       }
       else {
         handle.x(SnowProfile.Cfg.HANDLE_INIT_X);
+      }
+      
+      // Set slope handle X
+      if (slopeHandleTouched) {
+        slopeHandle.x(SnowProfile.code2x(featObj.hardness2()));
+      }
+      else {
+        slopeHandle.x(SnowProfile.code2x(featObj.hardness()));
       }
 
       // Set handle Y from depth
