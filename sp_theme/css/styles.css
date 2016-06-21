@@ -82,6 +82,22 @@ form .field-multiple-table th.field-label,
 form .field-multiple-table td {
     padding-left: 10px;
 }
+/*
+		alignment of snowpit list blocks
+		also in responsive.css ~ lines 60
+*/
+
+.region.region-lower-left,
+.region.region-lower-right {
+    margin: 0 auto;
+    width: 490px;
+}
+
+#block-views-snowpit-list-block h2.block-title,
+#block-views-snowpit-list-block-1 h2.block-title {
+    font-size: 2.3em;
+}
+
 
 
 @font-face {
@@ -579,6 +595,39 @@ body.node-type-snowpit-profile{
   rescale graph layer images for list use
 */
 
-.views-field-nid img{
+/*
+//  Here is a list of views classes that correpsond to the fields in this view, for later formatting
+*/
+/* Snowpit Title, shown above graph image */
+.view-snowpit-list .views-field-title a{
+	
+}
+/* the region-> range area*/
+.view-snowpit-list .views-snowpit-region-range{
+
+
+}
+/* User name */
+.view-snowpit-list .views-user-name{
+	
+	
+}
+
+/* Date display */
+.view-snowpit-list .date-display-single{
+	
+}
+
+/* graph image wrapper*/
+.view-snowpit-list .views-graph-image{
+	float: left;
+}
+
+.view-snowpit-list td.col-1,
+.view-snowpit-list td.col-2{
+	width: 400px;
+}
+
+.views-graph-image img{
 	height:250px;
 }

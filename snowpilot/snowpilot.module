@@ -199,22 +199,38 @@ function snowpilot_entity_presave($entity, $type){
 	return $entity;
 }
 
-function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
-	//dsm($form['field_test']['und']['field_stability_test_type']['und']['#value']);
+function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){	
 	
-	
-	$x= 0;
+//  If the last layer has no bottom depth set, truncate it- 'degenerative' layer
 	foreach($form_state['values']['field_layer']['und'] as $key => $layer){
-		
 		// If this is a degenerative layer, (i.e. no bottom_depth and no hardness field set ) then we just delete it
 		if ( is_numeric($key) && ( $layer['field_bottom_depth']['und'][0]['value'] == '' ) ){
 		  unset($form_state['values']['field_layer']['und'][$key]);  // chop off this layer		
-			// verified that this works
-		}else{
-			//drupal_set_message( "Not gonna chop.");
 		}
-		$x++;
 	}
+	// 
+	// For stability tests: if the Score field is not set ( for all except PST type results ), then chop off the degenrate stability test
+	foreach($form_state['values']['field_test']['und'] as $key => $test){
+		if ( is_numeric($key) && !isset($test['field_stability_test_type']['und'][0]['value'])){ // in this case, we don't even have a test type indicated
+			unset($form_state['values']['field_test']['und'][$key]); 		
+		} elseif (is_numeric($key)){
+			if ( (($test['field_stability_test_type']['und'][0]['value'] == 'RB') && !isset($test['field_stability_test_score_rb']['und'][0]['value']))
+				||
+			(($test['field_stability_test_type']['und'][0]['value'] == 'SB') && !isset($test['field_stability_test_score_sb']['und'][0]['value']))
+				||
+			(($test['field_stability_test_type']['und'][0]['value'] == 'CT') && !isset($test['field_stability_test_score_ct']['und'][0]['value']))
+				||
+			(($test['field_stability_test_type']['und'][0]['value'] == 'ECT') && !isset($test['field_stability_test_score_ect']['und'][0]['value']))
+				||
+			(($test['field_stability_test_type']['und'][0]['value'] == 'ST') && !isset($test['field_stability_test_score_st']['und'][0]['value']))
+
+			){
+				
+		  unset($form_state['values']['field_test']['und'][$key]);  // chop off this layer		
+			// verified that this works
+		}
+	}	
+}
 	return $form_state;
 }
 

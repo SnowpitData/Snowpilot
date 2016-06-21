@@ -572,8 +572,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			if ($snowpit_unit_prefs['field_coordinate_type'] != 'UTM'){
 				if (isset($node->field_latitude['und']) && isset($node->field_longitude['und'])){
 					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
-						number_format($node->field_latitude['und'][0]['value'] .
-						$node->field_latitude_type['und'][0]['value'], 5).", ". 
+						number_format($node->field_latitude['und'][0]['value'] , 5).
+						$node->field_latitude_type['und'][0]['value'].", ". 
 						number_format($node->field_longitude['und'][0]['value'] , 5).
 						$node->field_longitude_type['und'][0]['value']);
 				}

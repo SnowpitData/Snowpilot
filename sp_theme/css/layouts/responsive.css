@@ -63,6 +63,20 @@
   clear: both;
 }
 
+#lower-left{
+	float:left;
+}
+
+#lower-right{
+	float:right;
+}
+
+#lower-left,
+#lower-right{
+	width: 49.5%;
+}
+
+
 /* Navigation bar */
 @media all and (min-width: 480px) {
   #main {

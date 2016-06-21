@@ -4,15 +4,25 @@
   Drupal.behaviors.snowpilot = {
 
     attach: function (context, settings) {
-      
+      //
+			// place focus on last tr element in layers part of form
 			//
-			//  hide "depth 0 measured from" field
-			//
-			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).hide();
+			$('#snowpit-profile-node-form table.field-multiple-table tr:last .field-name-field-bottom-depth input', context).focus();
+			
+			
+			
+			
+			
+			
 			
 			//
-			//  reset label field to show which option is chosen
+			//  These functions all have to do with the 
+			//  hide "depth 0 measured from" field
 			//
+			//
+			//  default: hide the fied
+			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).hide();
+			//  reset label field to show which option is chosen
 			$('#snowpit-profile-node-form #edit-field-depth-0-from label', context).text( function() {
 				return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();
 			});
