@@ -21,6 +21,14 @@ function snowpilot_menu(){
       'access callback' => TRUE,
       'type' => MENU_CALLBACK,
   );
+	$items['snowpilot/user/edit'] = array(
+		'title' => 'Edit Snowpit Preferences',
+		'page callback' => 'snowpilot_user_edit',
+		'access callback' => 'snowpilot_user_has_role',
+		'access arguments' => array (2 => 'authenticated user'),
+		'type' => MENU_NORMAL_ITEM,	
+		
+	);
 	return $items;
 }
 
@@ -675,4 +683,17 @@ function stability_test_score_shorthand_form($stab_test){
 	
 }
 
+function snowpilot_user_edit(){
+  global $user;
+  drupal_goto('user/'.$user->uid.'/edit');
+	
+}
 
+function snowpilot_user_has_role($roles) {  
+	global $user;	
+    if (in_array($roles, $user->roles)) {
+      return TRUE;
+    }
+ 
+  return FALSE; 
+}

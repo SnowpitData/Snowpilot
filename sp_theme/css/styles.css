@@ -332,7 +332,11 @@ input#edit-field-elevation-und-0-value{
 
 #edit-field-elevation,
 #edit-field-aspect,
-#edit-field-slope-angle{
+#edit-field-slope-angle,
+#edit-field-surface-penetration,
+#edit-field-boot-penetration-depth,
+#edit-field-ski-penetration,
+#edit-field-total-height-of-snowpack{
 	display: inline-block;
 	margin: 0 15px;
 }
@@ -393,9 +397,7 @@ form.node-snowpit_profile-form fieldset{
 }
 /*  Formatting the width and position of the layers, stability tests, density and temp collection tables */ 
 
-#edit-field-total-height-of-snowpack label{
-	display: inline-block;
-}
+
 /* Hierarchichal select for grain types */
 
 #snowpit-profile-node-form .field-name-field-grain-type div.form-type-cshs div.select-wrapper:nth-of-type(2),
@@ -457,12 +459,13 @@ fieldset.group-stability {
 	height: 200px;
 	
 }
-
+/*
 fieldset.group-location,
 fieldset.group-weather {
 	width: 45%;
 	display: inline-block;
 }
+*/
 #edit-field-latitude{
 	/*display: inline-block;
 	width: 49%;

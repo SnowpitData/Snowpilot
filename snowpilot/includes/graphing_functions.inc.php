@@ -649,7 +649,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the coulmn on the right
 				$comment_count = 0;
 				$textpos = array();
-				if ( isset( $node->field_total_height_of_snowpack['und']) && $node->field_total_height_of_snowpack['und'][0]['value'] <> '' ){ 
+				if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
 					$textpos = imagettftext($img, 9 , 0, 645, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
 					$comment_count = 1;
 				}
@@ -716,7 +716,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				snowpilot_layers_density_xlate($keyed_all_layers);
 				// this solo line goes across the top of the top layer. Could be programmed later if we decide to include the 'headspace' above the top of the pit
 				imageline($img, 483, $keyed_all_layers[0]->y_val_top, 667, $keyed_all_layers[0]->y_val_top, $black);
-//				dsm($keyed_all_layers);
 				///
 				// IN this loop, we set the items in the 'density managed' column - grain types, sizes, moisture, etc.
 				//
