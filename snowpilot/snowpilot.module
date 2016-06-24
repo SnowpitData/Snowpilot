@@ -51,6 +51,7 @@ function snowpilot_init(){
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
 	//	
+	
 	switch($form_id ){
 		case 'snowpit_profile_node_form':
 		$node = $form_state['node'];
@@ -80,35 +81,26 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 						
 			snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs);
 			
+			// these are one-off text changes that don't seem to require their own function
 			$form['#submit'][] = 'snowpilot_snowpit_profile_node_form_submit';
 			$form['actions']['submit']['#value'] = 'Save and Preview';
-			foreach( $form['field_test']['und'] as $delta => $test_result){
-				if (is_numeric($delta)){
-					// this hides or shows the shear_quality / fracture_character fields
-					//dsm($form['field_fracture_category']);
-					if ($form['field_fracture_category']['und']['#default_value'][0] == 'shear_quality' )  {
-						$form['field_test']['und'][$delta]['field_fracture_character']['#type'] = 'hidden';
-					}else{
-						$form['field_test']['und'][$delta]['field_shear_quality']['#type'] = 'hidden';
-					}
-					// this hides the Score field, which is set by _entity_presave 
-					
-					$form['field_test']['und'][$delta]['field_stability_test_score']['#type'] ='hidden';
-					//dsm($form['field_test']['und'][0]);
-				}
-				
-			}
-			//dsm ($form);
-			
-			//
-			//dsm($form_state);
-		//}
-		} // end if node->type == snowpit prof
+			$form['field_density_profile']['und']['add_more']['#value'] = "Add Density";
+			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
+			$form['title']['#maxlength'] = 22;
+
+		} // end case node->type == snowpit prof
 		break;
 		case 'user_login':
 			$form['name']['#description'] = t('Snowpilot username, or email address');
 			$form['pass']['#description'] ='';
 		break;
+		case 'views_exposed_form':
+			if( $form['#id'] == 'views-exposed-form-snowpit-list-page'){
+				$form['field_loaction_tid']['#size'] = '3';
+				//dsm($form);
+			}
+		break;
+			
 	} // end switch
 	return;
 }
@@ -177,18 +169,25 @@ function snowpilot_login_success($js, $action) {
   exit;
 }
 
-function snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs){
-	if ( $snowpit_unit_prefs['field_fracture_category'] != 'fracture_character'){
-		$hide_field = 'field_fracture_character';
-		
-	}else{
-		$hide_field = 'field_shear_quality';
-	}
-	foreach ( $form['field_test']['und'] as $key => $stability_test){
-		//$form['field_test']['und'][$key]["$hide_field"]['und']['#type'] = 'hidden';
-		//dsm($form['field_test']['und'][$key]["$hide_field"]['und']['#type']);
-	}
-	//dsm($form['field_test']);
+function snowpilot_snowpit_set_frac_cat(&$form, $snowpit_unit_prefs){
+	foreach( $form['field_test']['und'] as $delta => $test_result){
+					if (is_numeric($delta)){
+						// this hides or shows the shear_quality / fracture_character fields based on user prefs. 
+						// Most fields, we do this through the gui admin/structure/dependencies
+						// shear quality is a show or hide within the 'stability test' field collection, based on frac_category at the node level
+						//dsm($form['field_fracture_category']);
+						if ($form['field_fracture_category']['und']['#default_value'][0] == 'shear_quality' )  {
+							$form['field_test']['und'][$delta]['field_fracture_character']['#type'] = 'hidden';
+						}else{
+							$form['field_test']['und'][$delta]['field_shear_quality']['#type'] = 'hidden';
+						}
+						// this hides the Score field, which is set by _entity_presave 
+					
+						$form['field_test']['und'][$delta]['field_stability_test_score']['#type'] ='hidden';
+						//dsm($form['field_test']['und'][0]);
+					}
+				
+				}
 	return $form;
 }
 
@@ -231,6 +230,8 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 			(($test['field_stability_test_type']['und'][0]['value'] == 'ECT') && !isset($test['field_stability_test_score_ect']['und'][0]['value']))
 				||
 			(($test['field_stability_test_type']['und'][0]['value'] == 'ST') && !isset($test['field_stability_test_score_st']['und'][0]['value']))
+				||
+			(($test['field_stability_test_type']['und'][0]['value'] == 'PST') && !isset($test['	field_data_code_pst']['und'][0]['value']))
 
 			){
 				
@@ -316,40 +317,27 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 		}else { // this is the last layer, we don't need any shorthand
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
 				"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. "</h3>". '<div class="collapsible-content" >';
-			//dsm($form['field_test']['und']); // don't put dsm here, it will break the "add another"  functionality with AJAX errors.
-		
+			$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";
+			
+		 // don't put dsm here, it will break the "add another"  functionality with AJAX errors.
+	  }
 		// here we will attempt to add a "Duplicate test" button and functionality
-		$form['field_test']['und'][$x]['duplicate'] = 
-			array(  '#type' => 'button',
-							
-							'#name' => 'field_test_add_more',
-							'#value' => 'Duplicate Test',
-							'#attributes' => array('class' => array ( 0 => 'field-add-more-submit form-submit duplicate')),
-							//'#validate' => array(),
-							'#submit' => array( 0 => 'snowpilot_duplicate_stability_test' ),
-							'#limit_validation_errors' => array( array ( 0=> 'field_test' , 1 => 'und')),
-							//'#ajax' => array( 'callback' => 'field_add_more_js', 'effect' => 'fade', 'wrapper' => 'field-test-add-more-wrapper' ),
-							'#weight' => 101,
-						//	'#delta' => $x, // should be equal to last x val, first unsuccessful one
-						//	'_weight' => array('#type' => 'weight', '#delta' => $next_layer , '#weight' => 101 ),
-						
-						); 
-				}
-		///
-		
-		$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";
+
+				
 		$x++;
 	}
-	
-	//dsm($form['field_test']);
+
 	
 	//dsm($form['field_test']);
 	return $form;
 }
 
-function snowpilot_duplicate_stability_test($form){
+
+function snowpilot_duplicate_stability_test(&$form){
 	//dsm( $form);
-	dsm ("Hi");
+	//dsm ("Hi");
+	return;
+	
 }
 
 
@@ -697,3 +685,11 @@ function snowpilot_user_has_role($roles) {
  
   return FALSE; 
 }
+
+function snowpilot_graph_field_trunc(&$img,$string,$x_limit){
+	
+	
+	
+	
+}
+

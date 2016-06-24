@@ -459,6 +459,12 @@ fieldset.group-stability {
 	height: 200px;
 	
 }
+
+#snowpit-profile-node-form fieldset.group-core-info #edit-body{
+	width: 46%;
+	
+}
+
 /*
 fieldset.group-location,
 fieldset.group-weather {
@@ -466,6 +472,23 @@ fieldset.group-weather {
 	display: inline-block;
 }
 */
+/*
+//  itemw to modify the appearance of the snowpits/query page:
+*/
+
+#block-views-snowpit-list-block-1 header{
+	display: none;
+}
+
+.views-exposed-form #edit-field-loaction-tid-wrapper .description{
+	display: none;
+}
+
+form#views-exposed-form-snowpit-list-page .views-exposed-widget.views-submit-button{
+	clear: both;
+	
+}
+	
 #edit-field-latitude{
 	/*display: inline-block;
 	width: 49%;

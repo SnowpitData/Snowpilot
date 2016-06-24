@@ -543,12 +543,20 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 
       imagettftext($img, 11, 0, 14, 17, $black, $value_font, $node->title);
 			// Location information
-      if ( isset ($node->field_loaction['und'])){
-				if ( isset ($node->field_loaction['und'][0]['taxonomy_term'])){
-			    imagettftext($img, 11, 0, 14, 35, $black, $value_font, $node->field_loaction['und'][0]['taxonomy_term']->description);
+      if ( isset ($node->field_loaction['und'][0]['tid'])){
+				$term_obj = taxonomy_term_load($node->field_loaction['und'][0]['tid']);
+				$loc_name = $term_obj->name;
+				$parents = taxonomy_get_parents($node->field_loaction['und'][0]['tid']);
+				$parents_name = '';
+				foreach($parents as $parent ){
+					$parents_name .= $parent->name;
 				}
-				if ( isset ($node->field_loaction['und'][1]['taxonomy_term'])){
-        	imagettftext($img, 11, 0, 14, 53, $black, $value_font, $node->field_loaction['und'][1]['taxonomy_term']->name); 
+				
+				if ( isset ($parents_name)){
+			    imagettftext($img, 11, 0, 14, 35, $black, $value_font, $parents_name);
+				}
+				if ( isset ($loc_name)){
+        	imagettftext($img, 11, 0, 14, 53, $black, $value_font, $loc_name); 
 				}
 			}
       $text_pos = imagettftext($img, 11, 0, 14, 71, $black, $label_font, 'Elevation: ');
@@ -578,13 +586,15 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						$node->field_longitude_type['und'][0]['value']);
 				}
 			}else{ // Not Lat long, their preference is UTM
-				imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
-					$node->field_utm_zone['und'][0]['value'].' '.
-					$node->field_east['und'][0]['value'] .
-					$node->field_longitude_type['und'][0]['value'].' '.				
-					$node->field_north['und'][0]['value'] .
-					$node->field_latitude_type['und'][0]['value']
-				);
+				if(isset($node->field_east['und']) && isset($node->field_north['und'])){
+					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
+						$node->field_utm_zone['und'][0]['value'].' '.
+						$node->field_east['und'][0]['value'] .
+					  $node->field_longitude_type['und'][0]['value'].' '.				
+					  $node->field_north['und'][0]['value'] .
+					  $node->field_latitude_type['und'][0]['value']
+				  );
+				}
 			}
 			
 			$text_pos = imagettftext($img, 11, 0, 183, 71, $black, $label_font, "Slope Angle: ");
@@ -670,9 +680,13 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);
 							imagettftext($img, 9, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
 						}
-						if ( count($test->field_stability_comments)){
-							imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test->field_depth['und'][0]['value'].': '.$test->field_stability_comments['und'][0]['safe_value'] );
-							$comment_count++;
+						if ( count($test->field_stability_comments) ){
+							if ( $comment_count < 5 ){
+								imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test->field_depth['und'][0]['value'].': '.$test->field_stability_comments['und'][0]['safe_value'] );
+								$comment_count++;
+							}else{
+								imagettftext($img, 7, 0, 645, $comment_count*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes ... ]' );
+							}
 						}
 					}
 				}
@@ -752,15 +766,23 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				 	 	imagettftext($img, 10, 0, $textpos[2]+5, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
 				 	}
 				
-				// output Layer comments
-					if (isset($concern_delta) && ($concern_delta == $layer->item_id)){
-						imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value'].": Problematic Layer");
-						$comment_counter++;
+				// Output Layer comments
+					if (isset($concern_delta) && ($concern_delta == $layer->item_id) ){
+						if ($comment_counter < 5){
+					  	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value'].": Problematic Layer");
+						  $comment_counter++;
+					  }else{
+							imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
+					  }
 					}
-					if (isset($layer->field_comments['und'])){
-						imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
+					if (isset($layer->field_comments['und']) ){
+						if ( $comment_counter <5 ){
+						  imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
 							$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value']. ': '.$layer->field_comments['und'][0]['safe_value']);
-						$comment_counter++;
+						  $comment_counter++;
+					  }else{
+						  imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
+					  }
 					}
 					snowpilot_draw_layer_polygon($img, $layer, $purple_layer, TRUE);  // the fill
 					snowpilot_draw_layer_polygon($img, $layer, $blue_outline, FALSE);  // the outline
