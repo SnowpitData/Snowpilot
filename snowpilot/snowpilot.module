@@ -56,17 +56,21 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		case 'snowpit_profile_node_form':
 		$node = $form_state['node'];
     if ($node->type == 'snowpit_profile'){ // this might be rendundant for the switch/case above.
+			global $user;
+			$account = user_load($user->uid);
+			$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
+			
 			if( !isset($node->nid) || isset($node->is_new) ){ // a new snowpit profile node, find $unit_prefs from $user
-				global $user;
-				$account = user_load($user->uid);
-				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
 				if ( snowpilot_user_unit_prefs_check($user->uid)){ // this check function verifies that we have a full set of unit preferences, etc, setup for this user. It redirects to the user /edit page if one or more are lacking
 					// set the unit prefs on the snowpit node form.
 					snowpilot_snopit_prof_unit_prefs_set($form, $snowpit_unit_prefs);	
 				}
-			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node
-				$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');  
+			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
+				$snowpit_unit_prefs = array_merge(snowpilot_unit_prefs_get($node, 'node'), $snowpit_unit_prefs);  
+				dsm($snowpit_unit_prefs);
+				
 			}
+			
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
 			
@@ -81,12 +85,16 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 						
 			snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs);
 			
+			snowpilot_set_visibility_field_options($form, $snowpit_unit_prefs);
+			
 			// these are one-off text changes that don't seem to require their own function
 			$form['#submit'][] = 'snowpilot_snowpit_profile_node_form_submit';
+			$form['#validate'][] = 'snowpilot_snowpit_profile_node_form_validate';
 			$form['actions']['submit']['#value'] = 'Save and Preview';
 			$form['field_density_profile']['und']['add_more']['#value'] = "Add Density";
 			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
 			$form['title']['#maxlength'] = 22;
+			
 
 		} // end case node->type == snowpit prof
 		break;
@@ -191,6 +199,18 @@ function snowpilot_snowpit_set_frac_cat(&$form, $snowpit_unit_prefs){
 	return $form;
 }
 
+function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
+	unset($form['field_snowpit_visibility']['und']['#options']['_none']);
+	if (!isset($snowpit_unit_prefs['field_professional_affiliation']) || $snowpit_unit_prefs['field_professional_affiliation'] == '57'){
+		unset ($form['field_snowpit_visibility']['und']['#options']['group']);
+	}else{
+		$group_name = taxonomy_term_load($snowpit_unit_prefs['field_professional_affiliation'])->name;
+		
+	  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
+	}
+	
+}
+
 function snowpilot_entity_presave($entity, $type){
 
 	if ($type == 'field_collection_item' && $entity->field_name == 'field_test'){
@@ -204,6 +224,41 @@ function snowpilot_entity_presave($entity, $type){
 		
 	}
 	return $entity;
+}
+
+function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
+	// Add serverside validation for stability test ct score
+	//dsm($form_state['values']['field_test']);
+	foreach( $form_state['values']['field_test']['und'] as $key => $test){
+	  if (is_numeric($key) && $test['field_stability_test_type']['und'][0]['value'] == 'CT' 
+		&& isset($test['field_stability_test_score_ct']['und'][0]['value']) 
+		&& isset($test['field_ct_score']['und'][0]['value']) 
+		&& $test['field_ct_score']['und'][0]['value'] <> '' ){
+		  $test_score_ct = $test['field_stability_test_score_ct']['und'][0]['value'];
+		  $ct_score = $test['field_ct_score']['und'][0]['value'];
+			switch ( $test['field_stability_test_score_ct']['und'][0]['value']){
+				case 'CTE':
+				if ( $ct_score <1 || $ct_score >10  ){
+	        form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
+						', which means the CT Score should be between 1 and 10 (inclusive).'));
+				}
+				break;
+				case 'CTM':
+				if ( $ct_score <11 || $ct_score >20  ){
+	        form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
+						', which means the CT Score should be between 11 and 20 (inclusive).'));
+				}				
+				break;
+				case 'CTH':
+				if ( $ct_score <21 || $ct_score >30  ){
+	        form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
+						', which means the CT Score should be between 21 and 30 (inclusive).'));
+				}				
+				break;
+			}
+	  }
+	}
+	return;
 }
 
 function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){	
@@ -220,7 +275,7 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 	foreach($form_state['values']['field_test']['und'] as $key => $test){
 		if ( is_numeric($key) && !isset($test['field_stability_test_type']['und'][0]['value'])){ // in this case, we don't even have a test type indicated
 			unset($form_state['values']['field_test']['und'][$key]); 		
-		} elseif (is_numeric($key)){
+		} elseif (is_numeric($key) && !isset( $test['field_depth']['und'][0]['value'])){
 			if ( (($test['field_stability_test_type']['und'][0]['value'] == 'RB') && !isset($test['field_stability_test_score_rb']['und'][0]['value']))
 				||
 			(($test['field_stability_test_type']['und'][0]['value'] == 'SB') && !isset($test['field_stability_test_score_sb']['und'][0]['value']))
@@ -237,9 +292,9 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 				
 		  unset($form_state['values']['field_test']['und'][$key]);  // chop off this layer		
 			// verified that this works
+		  }
 		}
 	}	
-}
 	return $form_state;
 }
 
@@ -326,18 +381,9 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 				
 		$x++;
 	}
+  //dsm($form);
 
-	
-	//dsm($form['field_test']);
 	return $form;
-}
-
-
-function snowpilot_duplicate_stability_test(&$form){
-	//dsm( $form);
-	//dsm ("Hi");
-	return;
-	
 }
 
 

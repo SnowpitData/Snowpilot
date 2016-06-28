@@ -76,38 +76,32 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 		
 		  'field_loaction_1' => _helper_cleaner($entity, 'field_loaction','tid', '1'),
 			'range' =>  _helper_cleaner($entity, 'field_loaction','tid', '1'),  // this will need a conversion function to the name of the range
-		
+	  );
+	
 			//////
-			'field_first_name' =>_helper_cleaner($entity,'field_first_name'),
-			'first' => _helper_cleaner($entity,'field_first_name'),
-		
-			'field_last_name' => _helper_cleaner($entity,'field_last_name'),
-			'last' => _helper_cleaner($entity,'field_last_name'),
-		
-			'field_phone' => _helper_cleaner($entity,'field_phone'),
-			'phone' => _helper_cleaner($entity,'field_phone'),
-		
-			'field_professional' =>  _helper_cleaner($entity,'field_professional'),
-			'prof' => _helper_cleaner($entity,'field_professional'),
-			
-			'field_professional_affiliation' => _helper_cleaner($entity, 'field_professional_affiliation','tid')  ,
-			'affil'  => _helper_cleaner($entity, 'field_professional_affiliation', 'tid')  ,// tid needs to be converted to name
-		
-			
-			);
 			/*
 			     These fields are not present in the 'node' variable that this function works on.
 			*/
-			if ($type  == 'user'){
-				$unit_prefs['name'] = $entity->name; // hey, this is the same key name in both core drupal and avscience db!
+			if ($type == 'user'){
+				$unit_prefs['field_first_name'] = _helper_cleaner($entity,'field_first_name');
+			$unit_prefs['first'] = _helper_cleaner($entity,'field_first_name');
 		
-				$unit_prefs['mail'] = $entity->mail;
-				$unit_prefs['email'] = $entity->mail;
-			}
+			$unit_prefs['field_last_name'] = _helper_cleaner($entity,'field_last_name');
+			$unit_prefs['last'] = _helper_cleaner($entity,'field_last_name');
 		
-		/*	foreach($unit_prefs as $value){
-				if ($value == '' ) return FALSE; 	
-			}*/
+			$unit_prefs['field_phone'] = _helper_cleaner($entity,'field_phone');
+			$unit_prefs['phone'] = _helper_cleaner($entity,'field_phone');
+		
+			$unit_prefs['field_professional'] =  _helper_cleaner($entity,'field_professional');
+			$unit_prefs['prof'] = _helper_cleaner($entity,'field_professional');
+			
+			$unit_prefs['field_professional_affiliation'] = _helper_cleaner($entity, 'field_professional_affiliation','tid');
+			$unit_prefs['affil']  = _helper_cleaner($entity, 'field_professional_affiliation', 'tid') ;// tid needs to be converted to name
+
+			$unit_prefs['name'] = $entity->name; // hey, this is the same key name in both core drupal and avscience db!	
+			$unit_prefs['mail'] = $entity->mail;
+			$unit_prefs['email'] = $entity->mail;			
+		  }
 			return $unit_prefs;
 	}
 
@@ -130,21 +124,23 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 	 
 	 
 	function snowpilot_snopit_prof_unit_prefs_set(&$form,$snowpit_unit_prefs){
-		//dsm($form);
-		$form['field_loaction']['und'][0]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_0'];
-		$form['field_loaction']['und'][1]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_1'];
+		//drupal_set_message("<pre>". var_export($form['field_loaction']['und'], TRUE )."</pre>");
+		// depending on whether using CSHS or normal Hierarchichal select widget for these, it is represented different in the form
+		$form['field_loaction']['und']['#default_value'][0] = $snowpit_unit_prefs['field_loaction_0'];
+		$form['field_loaction']['und']['#default_value'][1] = $snowpit_unit_prefs['field_loaction_1'];
+		////////
+	//	$form['field_loaction']['und'][0]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_0'];
+	//	$form['field_loaction']['und'][1]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_1'];
 		foreach( $snowpit_unit_prefs as $key => $pref){
 			if ($key != 'field_loaction_0' 
 				&& $pref != 'field_loaction_1' 
 				&& substr($key,0,6) == 'field_' 
 			  && isset($form[$key])){
 					$form[$key]['und']['#default_value'][0] = $pref ;
-					//drupal_set_message("<pre>". var_export($form, TRUE )."</pre>");
+					
 				
 			}
-		}
-	
-	
+		}	
 		return $form;
 	}
 	//

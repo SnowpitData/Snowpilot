@@ -464,6 +464,15 @@ fieldset.group-stability {
 	width: 46%;
 	
 }
+/*
+//  A brutish way to hide the 'Mountain Range' dropdown on the user profile edit form
+*/
+#user-profile-form .field-name-field-loaction .form-type-cshs div:nth-child(4)
+/*,#user-profile-form .field-name-field-loaction.field-widget-taxonomy-hs .hierarchical-select .selects select:nth-of-type(2)*/
+{
+	display: none;
+}
+*/
 
 /*
 fieldset.group-location,
