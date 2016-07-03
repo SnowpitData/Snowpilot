@@ -67,7 +67,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				}
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
 				$snowpit_unit_prefs = array_merge(snowpilot_unit_prefs_get($node, 'node'), $snowpit_unit_prefs);  
-				dsm($snowpit_unit_prefs);
+				//dsm($snowpit_unit_prefs);
 				
 			}
 			
@@ -108,7 +108,12 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				//dsm($form);
 			}
 		break;
-			
+		case 'user_profile_form':
+			// this works, but needs to be expanded to include all/any fields that are not filled in, but should be.
+			//$form['field_fracture_category']['#attributes']['class'][] = 'error';
+			dsm($form);
+		break;
+					
 	} // end switch
 	return;
 }
@@ -227,36 +232,115 @@ function snowpilot_entity_presave($entity, $type){
 }
 
 function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
-	// Add serverside validation for stability test ct score
-	//dsm($form_state['values']['field_test']);
+	// Add serverside validation for stability tests
 	foreach( $form_state['values']['field_test']['und'] as $key => $test){
-	  if (is_numeric($key) && $test['field_stability_test_type']['und'][0]['value'] == 'CT' 
-		&& isset($test['field_stability_test_score_ct']['und'][0]['value']) 
-		&& isset($test['field_ct_score']['und'][0]['value']) 
-		&& $test['field_ct_score']['und'][0]['value'] <> '' ){
-		  $test_score_ct = $test['field_stability_test_score_ct']['und'][0]['value'];
-		  $ct_score = $test['field_ct_score']['und'][0]['value'];
-			switch ( $test['field_stability_test_score_ct']['und'][0]['value']){
-				case 'CTE':
-				if ( $ct_score <1 || $ct_score >10  ){
-	        form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
-						', which means the CT Score should be between 1 and 10 (inclusive).'));
-				}
+	  if (is_numeric($key) && isset($test['field_stability_test_type']['und'][0]['value']) && $test['field_stability_test_type']['und'][0]['value'] <> ''){ // 
+	  	switch ($test['field_stability_test_type']['und'][0]['value']){
+				case 'ECT':
+				//  Stability test type == ECT , so we check for depth and score fields.
+			    if ( $test['field_stability_test_score_ect']['und'][0]['value'] == ''  ) {
+			  		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_ect", "Please enter an ECT Score result.");
+			  	}elseif ( $test['field_stability_test_score_ect']['und'][0]['value'] <> 'ECTX' && $test['field_depth']['und'][0]['value'] == '') {
+			  	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for test result.");
+			  	}
 				break;
-				case 'CTM':
-				if ( $ct_score <11 || $ct_score >20  ){
-	        form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
-						', which means the CT Score should be between 11 and 20 (inclusive).'));
-				}				
-				break;
-				case 'CTH':
-				if ( $ct_score <21 || $ct_score >30  ){
-	        form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
-						', which means the CT Score should be between 21 and 30 (inclusive).'));
-				}				
-				break;
-			}
-	  }
+				case 'CT':
+		      if ( !isset( $test['field_stability_test_score_ct']['und'][0]['value']  ) || ($test['field_stability_test_score_ct']['und'][0]['value'] == '' ) ){
+					   	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_ct", "Please enter a CT test score result.");
+					}elseif( (!isset($test['field_depth']['und'][0]['value']) || $test['field_depth']['und'][0]['value'] == '') &&  $test['field_stability_test_score_ct']['und'][0]['value'] <> 'CTN' ){ 
+						form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , "Please enter a value for depth.");
+					}elseif ( isset( $test['field_ct_score']['und'][0]['value'] )){
+				    $test_score_ct = $test['field_stability_test_score_ct']['und'][0]['value'];
+		        $ct_score = $test['field_ct_score']['und'][0]['value'];
+						if ( $ct_score <> ''){
+		      	switch ( $test['field_stability_test_score_ct']['und'][0]['value']){
+		      		case 'CTE':
+		        			if ( $ct_score <1 || $ct_score >10  ){
+	                	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
+					      		', which means the CT Score should be between 1 and 10 (inclusive).'));
+			        	  }
+			       	break;
+				      case 'CTM':
+				        if ( $ct_score <11 || $ct_score >20  ){
+	                form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
+						      ', which means the CT Score should be between 11 and 20 (inclusive).'));
+				        	}				
+				      	break;
+				      	case 'CTH':
+				        	if ( $ct_score <21 || $ct_score >30  ){
+	                	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
+						      	', which means the CT Score should be between 21 and 30 (inclusive).'));
+				        	}				
+				      	break;
+			      	} // end switch CT result type
+						}  // end if ct score is not empty
+		      } // end "if" we have full CT test results
+          break;
+					case 'RB':
+				    if ( $test['field_stability_test_score_rb']['und'][0]['value'] == ''  ) {
+				  		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_rb", "Please enter a Rutschblock test result.");
+				  	}elseif ( $test['field_stability_test_score_rb']['und'][0]['value'] <> 'RB7' && $test['field_depth']['und'][0]['value'] == '') {
+				  	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Rutschblock test result.");
+				  	}					
+					break;
+					case 'ST':
+			      if ( $test['field_stability_test_score_st']['und'][0]['value'] == ''  ) {
+			    		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_st", "Please enter a Shovel Shear test result.");
+			    	}elseif ( $test['field_stability_test_score_st']['und'][0]['value'] <> 'STN' && $test['field_depth']['und'][0]['value'] == '') {
+			  	    form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Shovel Shear test result.");
+			  	  }										
+					break;
+					case 'SB':
+			      if ( $test['field_stability_test_score_sb']['und'][0]['value'] == ''  ) {
+			  	  	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_sb", "Please enter a Stuffblock test result.");
+			     	}elseif ( $test['field_stability_test_score_sb']['und'][0]['value'] <> 'SBN' && $test['field_depth']['und'][0]['value'] == '') {
+			    	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Stuffblock test result.");
+			    	}		
+					break;
+					case 'PST':
+				  	if ( !isset( $test['field_depth']['und'][0]['value'] ) || $test['field_depth']['und'][0]['value'] == ''  ){ 
+					    form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Propagation Saw test result.");
+					  }
+					  if ( !isset ($test['field_data_code_pst']['und'][0]['value'])){
+						  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_data_code_pst", "Please enter a Data Code value for PST result.");
+					  }
+					  if ( !isset ($test['field_length_of_saw_cut']['und'][0]['value']) || $test['field_length_of_saw_cut']['und'][0]['value'] == ''){
+						  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_saw_cut", "Please enter a Length of Saw Cut for PST result.");
+					  }
+						if (!isset( $test['field_length_of_isolated_col_pst']['und'][0]['value'] ) || $test['field_length_of_isolated_col_pst']['und'][0]['value'] == '' ){
+							form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_isolated_col_pst", "Please enter a Length of Isolated column for PST result.");
+						}
+					
+					break;
+			
+		    } // end swith test->type
+				// this added section makes sure that Stability test type is set.
+	  }elseif ( is_numeric($key) && isset($test['field_depth']['und'][0]['value']) && $test['field_depth']['und'][0]['value'] <> ''){
+			form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_type", "Please enter a Stability Test Type.");
+		} // end key is_numeric and test type is not null
+		
+	} // end foreach test result
+	
+	//  validate that each layer has a top and bottom depth, at least; unless it is a 'degenerate' layer, which will get chopped off in the submit function
+	//
+	//  if it lacks the bottom depth, form_set_error on that field
+	
+	foreach($form_state['values']['field_layer']['und'] as $key=>$layer){
+		if ( is_numeric($key) && isset($layer['field_height']['und'][0]['value']) && 
+		(  (isset( $layer['field_bottom_depth']['und'][0]['value']) && ($layer['field_bottom_depth']['und'][0]['value'] <> ''))  || (isset($layer['field_hardness']['und'][0]['value']) && ($layer['field_hardness']['und'][0]['value'] <> '' )) || (isset($layer['field_grain_type']['und'][0]['value']) && ($layer['field_grain_type']['und'][0]['value'] <> '')) || (isset($layer['field_grain_size']['und'][0]['value']) && ($layer['field_grain_size']['und'][0]['value'] <> '')) )   ){// all of this test to see if it is a 'real' layer
+			// we process through error checking and set any missing fields as needed.
+			if ($layer['field_bottom_depth']['und'][0]['value'] == '' ) form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('Missing Bottom Depth value'));
+		}
+			
+		// Poor mans layer integrity check: make sure that each field_bottom_depth is below field_height, depending on measure_from
+			
+		if (is_numeric($key) && $form_state['values']['field_depth_0_from']['und'][0]['value'] <> 'top' &&
+			 	$layer['field_bottom_depth']['und'][0]['value'] >= $layer['field_height']['und'][0]['value']){
+	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be smaller than Top Depth.'));
+		}else if (is_numeric($key) && $form_state['values']['field_depth_0_from']['und'][0]['value'] == 'top' &&
+			 	$layer['field_bottom_depth']['und'][0]['value'] <= $layer['field_height']['und'][0]['value']){
+	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be greater than Top Depth.'));
+			 	}
 	}
 	return;
 }
@@ -351,7 +435,7 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs){
 	// this will be a fancy one, with compiled stab test output
-	$form['field_test']['und']['add_more']['#value'] = "Save Test";
+	$form['field_test']['und']['add_more']['#value'] = "Add Test";
 	
 
 	$x= 0;
@@ -361,17 +445,18 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 
 		if (isset($form['field_test']['und'][$next_layer])){ 
 			$form_test_shorthand = stability_test_score_shorthand_form($form['field_test']['und'][$x]);
+			$depth_val =( $form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'] <> '') ? 
+				"Depth: ".$form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value']. " ". $snowpit_unit_prefs['field_depth_units'] :	'';
+			
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
 				"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. ": ". $form_test_shorthand ." ".
-							 "Depth: ".$form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
-							" ". $snowpit_unit_prefs['field_depth_units'].
-						 "</h3>". '<div class="collapsible-content collapsed" >';
+							 $depth_val . "</h3>". '<div class="collapsible-content collapsed" >';
 			
 			
 			
 		}else { // this is the last layer, we don't need any shorthand
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
-				"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. "</h3>". '<div class="collapsible-content" >';
+				"<h3 class='collapsible-handle test-title'>Add Stability Test Result</h3>". '<div class="collapsible-content" >';
 			$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";
 			
 		 // don't put dsm here, it will break the "add another"  functionality with AJAX errors.
@@ -419,6 +504,8 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	$form['field_layer']['und']['add_more']['#value'] = "Add Layer";
 	//dsm($form['field_layer']['und']);
 	$x=0;
+	//dsm($form['field_layer']['und']);
+	
 	while(isset($form['field_layer']['und'][$x] )){
 		// Set remove button text
 		$form['field_layer']['und'][$x]['remove_button']['#value'] = "Remove Layer";
@@ -427,22 +514,24 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		$collapsed = '';
 		
 		// The next 
-
-		if (isset($form['field_layer']['und'][$next_layer])) {  // if this is not the last layer , collapse the box and set the top depth ....
+		$layer_info = '';
+		$this_hardness = '';
+		if (isset($form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value']) && ( $form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value'] <> '')
+				&& isset($form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] ) && $form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] <> '' ){  // if this is an existing layer , collapse the box and set the top depth ....
 			$collapsed = ' collapsed';
+			
 			// Set the top of the next field equal to the bottom of the last one.		
-			$form['field_layer']['und'][$next_layer]['field_height']['und'][0]['value']['#default_value'] = 
-				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'];
+			if ( isset( $form['field_layer']['und'][$next_layer])){
+				$form['field_layer']['und'][$next_layer]['field_height']['und'][0]['value']['#default_value'] = 
+					$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'];
+			}
+			$this_hardness = (isset($form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0]) && $form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0] <> '') ? 
+				', '.$form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0] 
+				: '' ;
+			$layer_info = 	$form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value'].' ' . $snowpit_unit_prefs['field_depth_units'] . ' - ' .
+				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value']. ' ' . $snowpit_unit_prefs['field_depth_units']  .  $this_hardness; 
+			
 		}
-		
-		if (isset($form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0])){ 
-			$this_hardness = $form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0];
-		}
-		if ( isset($form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value']) && $form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] !='' ){
-			$layer_info = 	$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'].' ' . $snowpit_unit_prefs['field_depth_units'] . ' - ' . 
-				$form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value']. ' ' . $snowpit_unit_prefs['field_depth_units']  . ', '. $this_hardness;
-		}else $layer_info = '';
-	
 		$form['field_layer']['und'][$x]['#prefix'] ="<div class='collapsible-container layer_num_". $x ." '>".
 			"<h3 class='collapsible-handle layer-title'>Layer " . $next_layer . ": ". $layer_info . "</h3>".
 				'<div class="collapsible-content'. $collapsed .'" >';
@@ -734,8 +823,145 @@ function snowpilot_user_has_role($roles) {
 
 function snowpilot_graph_field_trunc(&$img,$string,$x_limit){
 	
+}
+/*
+//  This function creates a pitxml based on the node information passed to it. should be compliant with the snowpilot datamodel.
+//
+//
+*/
+function snowpilot_node_write_pitxml($node){
+	$snowpilot_xmldoc = new DOMDocument('1.0', 'UTF-8');
+	$snowpilot_PitCore = $snowpilot_xmldoc->createElement("Pit_Observation"); $snowpilot_xmldoc->appendChild($snowpilot_PitCore);
+	$snowpilot_User = $snowpilot_xmldoc->createElement("User"); $snowpilot_PitCore->appendChild($snowpilot_User);
+	$snowpilot_Location = $snowpilot_xmldoc->createElement("Location"); $snowpilot_PitCore->appendChild($snowpilot_Location);
+	$snowpilot_Layer = $snowpilot_xmldoc->createElement("Layer"); // ...but we have multiple layers
+	$snowpilot_ShearTest = $snowpilot_xmldoc->createElement("Shear_Test_Result"); // Likewise, multiple shear test results
+	$snowpilot_Density = $snowpilot_xmldoc->createElement("Density_Profile");
+	$snowpilot_Temp = $snowpilot_xmldoc->createElement("Temperature_Profile");
+	
+	//PitCore Attributes: activities, aviLoc,iLayerNumber, bld, stability,avipit,incline,winDir,skiAreaPit ,bcPit, testPit,windspeed,aspect,skiBoot,measureFrom,sky,sufacePen, windloading,heightOfSnowpack,precip , serial, version,pitNotes,crownObs,timestamp,iDepth
+	$activities = $snowpilot_xmldoc->createAttribute("activities");
+	$activities->value = _generate_specifics_string($node);
+	$snowpilot_PitCore->appendChild($activities);
+	
+	dsm($node);
+	//aviLoc - or 'Pit is near avalanche at what point?'
+	$aviLoc = $snowpilot_xmldoc->createAttribute("aviLoc");
+	$aviLoc->value = isset($node->field_near_avalanche['und'][0]['value']) ? $node->field_near_avalanche['und'][0]['value'] : '' ;
+	$snowpilot_PitCore->appendChild($aviLoc);
+	// iLayerNumber
+	// this implementation assumes that the layers are in numerical order from top down; item_id is a unique id in field collections, can't use it.
+	$iLayerNumber = $snowpilot_xmldoc->createAttribute("iLayerNumber");	
+	$ids = array();
+	foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
+	$all_layers = field_collection_item_load_multiple($ids);
+	$iLayerNumber_value = 1;	
+	foreach($all_layers as $x => $layer){
+		if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1') { $iLayerNumber->value = $iLayerNumber_value ; }else{
+			$iLayerNumber_value++;
+		}
+	}
+  $snowpilot_PitCore->appendChild($iLayerNumber);
+	//
+	//bld is the build number from the snowpilot desktop app. for this case, we will use drupal version 7.xx 
+	$bld = $snowpilot_xmldoc->createAttribute("bld");
+	$bld->value = VERSION;
+	$snowpilot_PitCore->appendChild($bld);
+	//
+	// stability
+	$stability = $snowpilot_xmldoc->createAttribute("stability");
+	$stability->value = isset($node->field_stability_on_similar_slope['und'][0]['value']) ? $node->field_stability_on_similar_slope['und'][0]['value'] : '' ;
+	$snowpilot_PitCore->appendChild($stability);
+	//
+	// aviPit
+	$aviPit = $snowpilot_xmldoc->createAttribute("aviPit");
+	$aviPit->value = (isset($node->field_adjacent_to_avy['und'][0]['value'] ) && $node->field_adjacent_to_avy['und'][0]['value'] == 1  ) ? 'true' : 'false';
+	$snowpilot_PitCore->appendChild($aviPit);
+	//
+	// incline
+	$incline = $snowpilot_xmldoc->createAttribute("incline");
+	$incline->value = isset($node->field_slope_angle['und'][0]['value']) ? $node->field_slope_angle['und'][0]['value'] : '' ;
+	$snowpilot_PitCore->appendChild($incline);
+	//
+	// winDir
+	$winDir = $snowpilot_xmldoc->createAttribute("winDir");
+	$winDir->value = isset($node->field_wind_direction['und'][0]['value']) ? snowpilot_cardinal_wind_dir($node->field_wind_direction['und'][0]['value']) : '' ;
+	$snowpilot_PitCore->appendChild($winDir);
+	//
+	//skiAreaPit
+	$skiAreaPit = $snowpilot_xmldoc->createAttribute("skiAreaPit");
+	$skiAreaPit->value = (isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) && $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == 1 )? 'true' : 'false' ;
+	$snowpilot_PitCore->appendChild($skiAreaPit);
+	//
+	//
+	// bcPit        Trinary: true , false ,or '' unset
+	$bcPit = $snowpilot_xmldoc->createAttribute("bcPit");
+	if ( !isset($node->field_pit_is_representative_of_b['und'][0]['value']) ){
+		$bcPit->value = '';
+	}elseif($node->field_pit_is_representative_of_b['und'][0]['value'] == '1' ){
+		$bcPit->value = 'true';
+	}else{
+		$bcPit->value = 'false';
+	}
+	$snowpilot_PitCore->appendChild($bcPit);
+	//
+	//
+	// testpit
+	$testPit = $snowpilot_xmldoc->createAttribute("testPit");
+	$testPit->value = (isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) && $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == 1 ) ? 'true' : 'false' ;
+	$snowpilot_PitCore->appendChild($testPit);
+	//
+	//windspeed
+	$windspeed = $snowpilot_xmldoc->createAttribute("windspeed");
+	$windspeed->value = (isset($node->field_wind_speed['und'][0]['value']) ) ? $node->field_wind_speed['und'][0]['value'] : '' ;
+	$snowpilot_PitCore->appendChild($windspeed);
+	//
+	// aspect
+	$aspect = $snowpilot_xmldoc->createAttribute("aspect");
+	$aspect->value = isset($node->field_aspect['und'][0]['value']) ?  $node->field_aspect['und'][0]['value'] : '' ;
+	$snowpilot_PitCore->appendChild($aspect);
+	//
+	// skiBoot     Trinary
+	$skiBoot = $snowpilot_xmldoc->createAttribute("skiBoot");
+	if ( !isset($node->field_surface_penetration['und'][0]['value']) ){
+		$skiBoot->value = '';
+	}elseif($node->field_pit_is_penetration['und'][0]['value'] == 'boot' ){
+		$skiBoot->value = 'boot';
+	}else{
+		$skiBoot->value = 'ski';
+	}
+	$snowpilot_PitCore->appendChild($skiBoot);
+	//
+	// surfacePen - depends on whether ski or boot penetration
+	$surfacePen = $snowpilot_xmldoc->createAttribute("surfacePen");
+	if ($skiBoot->value == 'boot'){
+		$surfacePen->value = isset($node->field_boot_penetration_depth['und'][0]['value']  ) ?
+			$node->field_boot_penetration_depth['und'][0]['value'] : '' ;
+	}elseif($skiBoot->value == 'ski' ){
+		$surfacePen->value = isset($node->field_ski_penetration['und'][0]['value']  ) ?
+			$node->field_ski_penetration['und'][0]['value'] : '' ;
+	}else{
+		$surfacePen->value = '';
+	}
+	$snowpilot_PitCore->appendChild($surfacePen);
+	//
+	//  measureFrom
+	$measureFrom = $snowpilot_xmldoc->createAttribute("measureFrom");
+	$measureFrom->value = (isset($node->field_depth_0_from['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top' ) ? 'top' : 'bottom' ; 
+	$snowpilot_PitCore->appendChild($measureFrom);
 	
 	
 	
+	
+	
+	
+	$outXML = $snowpilot_xmldoc->saveXML();
+	$formatted_xml = new DOMDocument('1.0', 'UTF-8');
+	$formatted_xml->preserveWhiteSpace = false;
+	$formatted_xml->formatOutput = true;
+	$formatted_xml->loadXML($outXML);
+	$final_xml = $formatted_xml->saveXML();
+	//dsm($final_xml);
+	return $final_xml;
 }
 

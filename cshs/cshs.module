@@ -274,7 +274,7 @@ function cshs_form_select_options($element, $choices = NULL) {
     // Prepare data-parent attribute.
     $data_parent = ' data-parent="' . $parent_tid . '" ';
 
-			$term_name .= _snowpilot_option_padding($key). _tid2snowsymbols($key)."&nbsp;&nbsp;&nbsp;&nbsp;";  // a Snowpilot function
+			$term_name = "&nbsp;". _tid2snowsymbols($key)."&nbsp;&nbsp;&nbsp;&nbsp;" . $term_name;  // a Snowpilot function
 		
     $options .= '<option value="' . check_plain($key) . '"' . $selected . $data_parent . '>' . $term_name . '</option>';
   }

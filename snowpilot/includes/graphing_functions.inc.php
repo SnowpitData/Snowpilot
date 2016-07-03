@@ -476,8 +476,7 @@ function _generate_specifics_string($node) {
 	$included_fields = array( 'field_practice_pit', 'field_pit_dug_in_a_ski_area',  
 		'field_pit_is_representative_of_backcountry','field_adjacent_to_avy', 'field_near_avalanche', /* a list type field, rather than boolean */
 	  'field_collapsing_widespread', 'field_collapsing_localized', 'field_cracking', 'field_recent_activity_on_similar', 'field_recent_activity_on_differe',
-		'field_instability_rapidly_rising' , 'field_we_skiied_slope', 'field_ski_tracks_on_slope', 'field_snowmobile_tracks_on_slope', 'field_poor_pit_location', 
-		'field_supportable_crust' ); // etc
+		'field_instability_rapidly_rising' , 'field_ski_tracks_on_slope', 'field_we_skiied_slope', 'field_snowmobile_tracks_on_slope', 'field_we_snowmobiled_slope','field_poor_pit_location' ); // etc
 	
 		$specifics = array();
 	
@@ -626,15 +625,14 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			  imagettftext($img, 11, 0, $text_pos[2] , 71, $black, $value_font, $precipitation[0]['#markup'] );
 			}
 			$text_pos = imagettftext($img, 11, 0, 429, 89, $black, $label_font, "Wind: ");
-			if (isset($node->field_wind_speed['und'])){
+			if (isset($node->field_wind_direction['und'][0]['value'])){
+				$text_pos = imagettftext($img, 11 , 0, $text_pos[2]+4, 89, $black , $value_font, snowpilot_cardinal_wind_dir($node->field_wind_direction['und'][0]['value'] ));			
+			}
+			if (isset($node->field_wind_speed['und'][0]['value'])){
 				$wind_speed = field_view_field('node', $node, 'field_wind_speed');
-				$text_pos_offset = $text_pos[2];
-				$text_pos = imagettftext($img, 11 , 0, $text_pos_offset, 89, $black , $value_font, $wind_speed[0]['#markup']);
+				 imagettftext($img, 11 , 0, $text_pos[2], 89, $black , $value_font, " ".$wind_speed[0]['#markup']);
 			}
-			if (isset($node->field_wind_direction['und'])){
-				imagettftext($img, 11 , 0, $text_pos[2]+4, 89, $black , $value_font, ", ".snowpilot_cardinal_wind_dir($node->field_wind_direction['und'][0]['value'] ));
-				
-			}
+			
 			
 			imagettftext( $img, 11, 0 , 805, 17, $black, $label_font, 'Layer Notes');
 			
