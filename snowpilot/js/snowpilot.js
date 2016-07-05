@@ -10,9 +10,19 @@
 			$('table.field-multiple-table tr:last .field-name-field-bottom-depth input', context).focus();
 			
 		  $('table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value', context).blur( function() { 
-			  alert("this is the alert");
-			
+				if($('#edit-field-layer-und-2-field-bottom-depth-und-0-value', context).val() == '')
+					{ $(this).addClass('error');
+						//alert("this is the alert");
+					}
 			});
+			
+/*			$( "table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value" ).rules( "add", {
+			  minlength: 2,
+			  messages: {
+			    minlength: jQuery.validator.format("Please, at least {0} characters are necessary")
+			  }
+			});
+			
 			/*	
 				$("#edit-field-test-und-0-field-stability-comments-und-0-value").validate({
 				  rules: {
@@ -20,7 +30,7 @@
 						field_test[und][0][field_stability_comments][und][0][value]: "required",
 				    // compound rule
 				    email: {
-				      required: true,
+				      required: true,[]
 				      email: true
 				    }
 				  }

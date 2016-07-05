@@ -654,7 +654,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				//dsm($ids);
 				$test_results = field_collection_item_load_multiple($ids);
 				uasort($test_results, 'depth_val');
-				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the coulmn on the right
+				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
 				$comment_count = 0;
 				$textpos = array();
 				if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
@@ -673,7 +673,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth['und']) ){
-					// this use of imageline will need to be updated to include some kind of cluster management
+				  	// this use of imageline will need to be updated to include some kind of cluster management
 						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
 							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);
 							imagettftext($img, 9, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );

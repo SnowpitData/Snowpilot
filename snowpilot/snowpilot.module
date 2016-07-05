@@ -442,8 +442,8 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 	while (isset($form['field_test']['und'][$x])){
 		$next_layer = $x+1;
 		$form['field_test']['und'][$x]['remove_button']['#value'] = "Remove Test";
-
-		if (isset($form['field_test']['und'][$next_layer])){ 
+		//dsm($form['field_test']['und'][$x]);
+		if (isset($form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0]) && $form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0] <> ''){ 
 			$form_test_shorthand = stability_test_score_shorthand_form($form['field_test']['und'][$x]);
 			$depth_val =( $form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'] <> '') ? 
 				"Depth: ".$form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value']. " ". $snowpit_unit_prefs['field_depth_units'] :	'';
@@ -454,7 +454,7 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 			
 			
 			
-		}else { // this is the last layer, we don't need any shorthand
+		}else { // this is a new, blank stability test form, so we leave it open
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
 				"<h3 class='collapsible-handle test-title'>Add Stability Test Result</h3>". '<div class="collapsible-content" >';
 			$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";
@@ -789,7 +789,7 @@ function stability_test_score_shorthand_form($stab_test){
 		case 'CT':
 	  	$string = $stab_test['field_stability_test_score_ct']['und']['#default_value'][0];
 			if (in_array($stab_test['field_stability_test_score_ct']['und']['#default_value'][0], array('CTE','CTM', 'CTH', 'CTN'  )) && isset($stab_test['field_ct_score']['und'][0]['value']['#default_value'])){
-				$string .= $stab_test['field_ct_score']['und'][0]['value']['#default_value']. " ". $stab_test['field_shear_quality']['und']['#default_value'][0];
+				$string .= $stab_test['field_ct_score']['und'][0]['value']['#default_value'] . $shear_quality;
 			}
 		break;	
 		case 'RB':
