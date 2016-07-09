@@ -246,11 +246,18 @@
       
       // dynamic form updates
       // Layer heights:
-      $('div.layer_num_' + i + ' input[id*="-height-"]').val(depthVal);
-      if (i > 0){
-        $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(depthVal);  
+      if (SnowProfile.depthRef === "s") {
+        $('div.layer_num_' + i + ' input[id*="-height-"]').val(depthVal);
+        if (i > 0){
+          $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(depthVal);  
+        }
       }
-      
+      else if (SnowProfile.depthRef === "g") {
+        $('div.layer_num_' + i + ' input[id*="-height-"]').val(SnowProfile.pitDepth - depthVal);
+        if (i > 0){
+          $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(SnowProfile.pitDepth - depthVal);  
+        }
+      }
       // Layer Hardness:
       $('div.layer_num_' + i + ' select[id*="-hardness-"]').val(featObj.hardness());
 

@@ -275,7 +275,6 @@ var SnowProfile = {};
    * @see SnowProfile.Grid~depthScaleGrp
    */
   SnowProfile.pitDepth = SnowProfile.Cfg.DEFAULT_PIT_DEPTH;
-
     /**
      * Total depth of the snow pack (cm)
      *
@@ -285,8 +284,7 @@ var SnowProfile = {};
      * @memberof SnowProfile
      * @type {?number}
      */
-  SnowProfile.totalDepth = null;
-
+  SnowProfile.totalDepth = SnowProfile.Cfg.DEFAULT_PIT_DEPTH;
     /**
      * Maximum Y value allowed for any handle (bottom of graph area)
      *
