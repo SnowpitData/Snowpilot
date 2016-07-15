@@ -467,6 +467,7 @@
     function pitDepthChange() {
 
       var pitDepth = $("#edit-field-total-height-of-snowpack-und-0-value").val();
+      SnowProfile.totalDepth = pitDepth;
       var totalDepth = SnowProfile.totalDepth;
       if ((pitDepth.search(/^\d+$/) < 0) ||
         (pitDepth < SnowProfile.Cfg.MIN_DEPTH)) {

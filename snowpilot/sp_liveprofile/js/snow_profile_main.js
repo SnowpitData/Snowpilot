@@ -19,10 +19,6 @@
     if (SVG.supported) {
       var i;
       SnowProfile.init();
-      /*for (i = 0; i < SnowProfile.Cfg.NUM_INIT_LAYERS; i++) {
-        SnowProfile.newLayer(i * SnowProfile.Cfg.INT_INIT_LAYERS);
-      }*/
-      SnowProfile.newLayer(0);
     } else {
       alert('Your browser does not support SVG, required by the snow profile editor');
     }
@@ -35,6 +31,55 @@
     {
       SnowProfile.main();
       isInitialized = true;
+      
+      // Run initialization code for snowpits with already existing information
+      // Loop and check for existence of snowpack layers and count them, break when finished
+      var layers = 0;
+      while (true) {
+        // special case for first layer, which exist even on new pits
+        if (layers === 0){
+          if ($.trim($("[id^=edit-field-layer-und-" + layers + "-field-bottom-depth-und-0-value]").val()).length) {
+            layers++;
+          } else {
+            break;
+          }
+        } else {
+          if ($("[id^=edit-field-layer-und-" + layers + "-field-bottom-depth-und-0-value]").length) {
+            layers++;
+          } else {
+            break;
+          }
+        }
+      }
+      // Add layers to live graph to match form - first layer added at 0, change later 
+      SnowProfile.newLayer(0);
+      if (layers > 0){
+        // Set up hardness values for first layer 
+        SnowProfile.snowLayers[0].handleTouchState(true);
+        SnowProfile.snowLayers[0].features().hardness($("[id^=edit-field-layer-und-0-field-hardness-und]").val());
+        if ($("[id^=edit-field-layer-und-0-field-use-multiple-hardnesses-und]").is(":checked")) {
+            SnowProfile.snowLayers[0].slopeHandleTouchState(true);
+            SnowProfile.snowLayers[0].features().hardness2($("[id^=edit-field-layer-und-0-field-hardness2-und]").val());
+          }
+        SnowProfile.snowLayers[0].draw();
+        // Initialize any additional layers 
+        for (var i = 1; i < layers; i++) { //not initializing last layer, change later maybe?
+          if (SnowProfile.depthRef === 's'){
+            SnowProfile.newLayer($("[id^=edit-field-layer-und-" + i + "-field-height-und-0-value]").val());
+          }
+          else if (SnowProfile.depthRef === 'g'){
+            SnowProfile.newLayer(SnowProfile.pitDepth - $("[id^=edit-field-layer-und-" + i + "-field-height-und-0-value]").val());
+          }
+          SnowProfile.snowLayers[i].handleTouchState(true);
+          SnowProfile.snowLayers[i].features().hardness($("[id^=edit-field-layer-und-" + i + "-field-hardness-und]").val());
+          if ($("[id^=edit-field-layer-und-" + i + "-field-use-multiple-hardnesses-und]").is(":checked")) {
+            SnowProfile.snowLayers[i].slopeHandleTouchState(true);
+            SnowProfile.snowLayers[i].features().hardness2($("[id^=edit-field-layer-und-" + i + "-field-hardness2-und]").val());
+          }
+          SnowProfile.snowLayers[i].draw();
+          SnowProfile.snowLayers[i-1].draw();
+        }
+      }
     }
     
     // Testing form for new layers to add new layers to live profile
