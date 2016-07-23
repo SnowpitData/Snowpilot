@@ -178,39 +178,48 @@ function _h2pix($h, $all = FALSE){
 // TODO: this function will have to take into account extra-long notes entries; 
 // after three break point, we need to keep going to get them short enough; but also leave a [ More Notes ] item on jpgs; and 
 // and for pdf output, an extra sheet of paper
-//
+// $short : boolean - whether long texts will be truncated at three lines ( for png or jpg output; or full, for pdf output .... )
 
-function _output_formatted_notes($string, $font){
-	$box0 = imagettfbbox(9,0,$font,$string);
-	if ( $box0[2] < 940 ){  
-		return array('0' => $string);
-	}else{
-		
-		$breakpoint0 = round (strlen($string)/2) ; 
-		// lets move the break point to the next space:
-		while ( substr($string, $breakpoint0, 1) != ' '){
-			$breakpoint0++;
-		}
-		$part1 = substr($string, 0, $breakpoint0); $box1 = imagettfbbox(9,0,$font,$part1);
-		$part2 = substr($string, $breakpoint0); $box2 = imagettfbbox(9,0,$font,$part2);
-		if ($box1[2] < 900 && $box2[2] <900){
-			return array( '0' => $part1 , '1' => $part2 );
-		}else{
-			$breakpoint1 = round ( strlen($string)/3 );
-			$breakpoint2 = $breakpoint1*2;
-			while ( substr($string, $breakpoint1, 1) != ' '){
-				$breakpoint1++;
+function _output_formatted_notes($string, $font , $short = TRUE){
+
+	  $pointer = 0;
+  	$last_space = 0 ;
+		while ( substr($string ,$pointer) <> '' ){
+
+			//dsm(substr($string, $pointer, 1));
+	  	if (substr($string, $pointer, 1) == ' ' ) {
+	  		$line = imagettfbbox(9,0,$font,substr($string, 0, $pointer));
+	  		if ( $line[2] < 935){ 
+	  			$last_space = $pointer;
+					$pointer ++;		
+	  		}else{ 
+	  			$parts[] = substr($string, 0, $last_space);
+		  		$string = substr( $string, $last_space);
+					$pointer = 0;
+					$last_space = 0 ;
+	  		}
+	  	}else{
+	  		$pointer++;
+	  	}		
+			//
+			// This is for the case where we are finally at the end of the string
+			//
+			if ( substr($string, $pointer) == '') {
+			  $parts[] = substr($string, 0, $pointer);
+				$string = '' ; 
+		  }	
+			//
+			//  This makes sure that there is enough room at the end of the fourth line to include " [ ... more notes ]". which will be added in the main function, not this helper function
+			//
+			if ( $short && isset ($parts) && count ( $parts ) > 4 ){
+				$line = imagettfbbox(9,0,$font,$parts[3]);
+				while ( $line[2] > 800 ){
+					$parts[3] = substr($parts[3],0, strlen($parts[3]) -1 );
+					$line = imagettfbbox(9,0,$font,$parts[3]);
+				}
 			}
-			while ( substr($string, $breakpoint2, 1) != ' '){
-				$breakpoint2++;
-			}
-			$part3_1 = substr($string, 0, $breakpoint1);
-			$part3_2 = substr($string, $breakpoint1, $breakpoint2 - $breakpoint1);
-			$part3_3 = substr($string, $breakpoint2);
-			return array( '0' => $part3_1 , '1' => $part3_2, '2' => $part3_3 );
 		}
-		 
-	}
+	return $parts;
 }
 
 function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
@@ -414,6 +423,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 		// If so we 'continue 3; to skip the last processing in the foreach loop, so test->y_position is never set.
 		//
 		$test->multiple = 1;
+		$depth_true = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
 		foreach ( $test_results as $test_compare){
 			if ( ($test->item_id != $test_compare->item_id) &&
 				( $test->field_stability_test_type == $test_compare->field_stability_test_type  ) &&
@@ -452,21 +462,19 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 					$test->multiple = 0; $test_compare->multiple +=1; continue 3;	
 					break;
 				}
-			}
+			} // end of "yes, this could be a repeated test" processing
+			//reminder: $depth_true is the user-entered depth of test result ( or 0 )
+			if ( isset($test_compare->y_position) && ($test_compare->y_position + 20 > snowpit_graph_pixel_depth($depth_true, $pit_depth , $measure_from ))){			
+				$test->y_position = ($test_compare->y_position + 20);			
+			}else{
+				$prev_y_val = $test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
+				 snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
+			}	
 			
-		}	
-		$depth_true = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
-		if ( $prev_y_val){			
-			$test->y_position = ($prev_y_val + 20 > snowpit_graph_pixel_depth($depth_true, $pit_depth , $measure_from ))
-				 ? $prev_y_val+20
-				: snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from) ;
-			$prev_y_val = $prev_y_val+20 ;
 			
-		}else{
-			$test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
-			$prev_y_val = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
-		}
-	}
+		}	// end of looping through test-comparision
+
+	} // end of looping through test results in general
 	return $test_results;
 }
 
@@ -607,7 +615,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			}
 			$text_pos = imagettftext($img, 11, 0, 429, 17, $black, $label_font, "Stability on similar slopes: ");
 			if(isset($node->field_stability_on_similar_slope['und'])){
-				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, $node->field_stability_on_similar_slope['und'][0]['value'] );
+				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
+				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, $similar_stability[0]['#markup'] );
 			}
 			$text_pos  = imagettftext($img, 11, 0, 429, 35, $black, $label_font, "Air Temperature: ");
 			if(isset($node->field_air_temp['und'])){
@@ -638,10 +647,14 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			
 			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
 			if ( isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' ){ 
-				$notes_lines = _output_formatted_notes($node->body['und'][0]['safe_value'], $value_font );
+				$notes_lines = _output_formatted_notes($node->body['und'][0]['safe_value'], $value_font);
 				foreach($notes_lines as $x => $line){
-					imagettftext($img, 9, 0, $textpos[2], 779 + $x * 20 ,$black, $value_font,$line);
-					
+					if ($x <= 3 ){
+					  imagettftext($img, 9, 0, $textpos[2], 779 + $x * 19 ,$black, $value_font,$line);
+					}else {
+						imagettftext($img, 9, 0, 870, 779 + 3 * 19 ,$red_layer, $value_font, "[ ... more notes ]");
+						break;
+					}
 				}
 			}
 //			dsm($node);
