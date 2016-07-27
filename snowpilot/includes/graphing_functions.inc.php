@@ -49,6 +49,7 @@ function snowpilot_layers_density_xlate(&$all_layers){
 	
 				}
 				// make sure the bottom line of the last layer is in the right spot
+				// TODO: updated so that the last layer is at least 20 pixels tall, if it is  a 'hanging' layer, i.e., not stuck ot the bottom of the graph
 				if ( $x == count($all_layers) - 1 ){ 	$all_layers[$x]->y_val_xlate	= $all_layers[$x]->y_val; }
 				
 			}
@@ -64,6 +65,52 @@ function snowpilot_collision_check_down($layerx, $layery){
 	}
 	return FALSE;
 	
+}
+
+function cg_max($cg){
+	$max = NULL;
+	$min = NULL;
+	foreach ($cg as $key => $test){
+		$min = $test->y_val > $min ? $test->y_val : $min;
+	}
+	$max = count($cg)*20 +$min;
+	
+	return $max;
+	
+} 
+
+
+function st_collision_check_down($test_x, $test_y, &$cg = array(), $measure_from = 'bottom'){
+//	dsm (cg_max($cg));
+	if (  isset ( $test_x->collision_flag) && $test_x->collision_flag == TRUE && $test_y->y_position <= cg_max($cg) ){
+		$test_y->collision_flag = TRUE;
+		$cg[] = $test_x;
+		return TRUE;
+			
+	}elseif ( ($test_x->y_position+20 >= $test_y->y_position))  { // better
+		$test_y->collision_flag = TRUE;
+		$test_x->collision_flag = TRUE;
+		$cg[] = $test_x; $cg[] = $test_y;
+		return TRUE;
+	}
+	return FALSE;
+	
+}
+//
+// _strip_dupe_tests - this function strips out the 
+// 
+	
+
+function _strip_dupe_tests(&$test_results, $pit_depth, $measure_from ){
+	foreach ($test_results as $x => $test){
+		if ( $test->multiple > 0){
+		  $test->y_val = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from );
+			$simple_test_results[] = $test;
+	  }else{
+			// dont set y_val, dont set str[]
+	  }
+	}
+	return $simple_test_results;
 }
 
 
@@ -416,14 +463,16 @@ function snowpit_graph_pixel_depth($depth, $pit_depth, $meas_from = 'bottom'){
 
 
 function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_from = 'bottom'){
-	$prev_y_val = 0;
-	foreach ($test_results as $test){
+
+	//dsm($test_results);
+	foreach ($test_results as $x => $test){
 		//
 		// We need to see if there are multiple test scores that are identical and indicate as "2x", etc. 
 		// If so we 'continue 3; to skip the last processing in the foreach loop, so test->y_position is never set.
 		//
 		$test->multiple = 1;
 		$depth_true = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
+		$test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
 		foreach ( $test_results as $test_compare){
 			if ( ($test->item_id != $test_compare->item_id) &&
 				( $test->field_stability_test_type == $test_compare->field_stability_test_type  ) &&
@@ -438,44 +487,60 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
  					  if (( $test->field_ec_score == $test_compare->field_ec_score) &&
 							  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 								( $test->field_fracture_character == $test_compare->field_fracture_character)
- 						) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}
+ 						) {$test->multiple += 1; $test_compare->multiple = 0; unset($test_compare); continue 3;	}
  					break;
 					case 'CT':
 				  if (( $test->field_ct_score == $test_compare->field_ct_score) &&
 						  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_fracture_character == $test_compare->field_fracture_character)
-					) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}
+					) {$test->multiple += 1; $test_compare->multiple = 0;  unset($test_compare); continue 3;	}
 					case 'PST':
 				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
 						  ( $test->field_length_of_saw_cut == $test_compare->field_length_of_saw_cut) &&
 							( $test->field_data_code_pst == $test_compare->field_data_code_pst)
-					) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}
+					) {$test->multiple += 1; $test_compare->multiple = 0;  unset($test_compare); continue 3;	}
 					break;
 					case 'RB':
 				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
 					  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_release_type == $test_compare->field_release_type)
-					) {$test->multiple = 0; $test_compare->multiple +=1; continue 3;	}				
+					) {$test->multiple += 1; $test_compare->multiple =0;  unset($test_compare); continue 3;	}				
 					break;
 					case 'ST':
 					case 'SB':
-					$test->multiple = 0; $test_compare->multiple +=1; continue 3;	
+					$test->multiple += 1; $test_compare->multiple =0 ;  unset($test_compare); continue 3;	
 					break;
-				}
+				} 
 			} // end of "yes, this could be a repeated test" processing
-			//reminder: $depth_true is the user-entered depth of test result ( or 0 )
-			if ( isset($test_compare->y_position) && ($test_compare->y_position + 20 > snowpit_graph_pixel_depth($depth_true, $pit_depth , $measure_from ))){			
-				$test->y_position = ($test_compare->y_position + 20);			
-			}else{
-				$prev_y_val = $test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
-				 snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
-			}	
-			
-			
 		}	// end of looping through test-comparision
-
+	 		
 	} // end of looping through test results in general
-	return $test_results;
+	// now we begin to set the y_position
+	$st_cg = array();
+  $simple_test_results = _strip_dupe_tests($test_results, $pit_depth, $measure_from );
+
+	// loop through it again to set the y_position to correct height
+	foreach ( $simple_test_results as $x => $test){
+  	if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
+  		$test->collision_flag = TRUE;
+			$test->y_position = $simple_test_results[$x - 1]->y_position +20;
+
+    }else{
+  	 if ( count ($st_cg)){
+			 //dsm($st_cg);
+  		 //st_write_xlate_group( $st_cg, $test_results);
+	  	 $st_cg = array();
+		
+  	 }else{ // this is a singluar item, write straight acrose
+  		 $test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from );
+		
+	   }
+	  }
+	 } // end of second looping through
+	 // stability test write xlate group
+	 //dsm($test_results);
+	 $test_results = $simple_test_results;
+	return $simple_test_results;
 }
 
 
@@ -656,17 +721,20 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						break;
 					}
 				}
-			}
-//			dsm($node);
-			
+			}			
 			//  write stability tests column and comments 
 			//  TODO : expand into its own function
 			if (isset($node->field_test['und'])){
 				$ids = array();
 				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];}
-				//dsm($ids);
+				
 				$test_results = field_collection_item_load_multiple($ids);
 				uasort($test_results, 'depth_val');
+				//
+				// reversing the order of the test results makes it work when outputting the Stability test results on the graph when measuring from top
+				if ( $snowpit_unit_prefs['field_depth_0_from'] == 'top'){
+				  $test_results = array_reverse($test_results);
+				}
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
 				$comment_count = 0;
 				$textpos = array();
