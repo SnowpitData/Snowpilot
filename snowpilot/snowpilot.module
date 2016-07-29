@@ -111,7 +111,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		case 'user_profile_form':
 			// this works, but needs to be expanded to include all/any fields that are not filled in, but should be.
 			//$form['field_fracture_category']['#attributes']['class'][] = 'error';
-			dsm($form);
+			dsm($form['field_loaction']);
 		break;
 					
 	} // end switch

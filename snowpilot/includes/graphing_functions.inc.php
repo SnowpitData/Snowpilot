@@ -49,8 +49,11 @@ function snowpilot_layers_density_xlate(&$all_layers){
 	
 				}
 				// make sure the bottom line of the last layer is in the right spot
-				// TODO: updated so that the last layer is at least 20 pixels tall, if it is  a 'hanging' layer, i.e., not stuck ot the bottom of the graph
-				if ( $x == count($all_layers) - 1 ){ 	$all_layers[$x]->y_val_xlate	= $all_layers[$x]->y_val; }
+				// most of this should be taken care of in the snowpilot_write_xlations function
+				// the only case handled here, is if this is a non-collided layer.
+				if ( count ($cg) == 0 ) { 
+					$layer->y_val_xlate = $layer->y_val; 
+				}
 				
 			}
 			
@@ -123,11 +126,33 @@ function snowpilot_write_xlations($cg, &$all_layers){
 		
 		if ( $x > 0 ) { $all_layers[$x-1]->y_val_xlate = _cg_stats($cg, 'cg_top') + 20 * $counter; }
 		// make sure the bottom line of the last layer is in the right spot
-		if ( $x == count($all_layers) - 1 ){ 	$all_layers[$x]->y_val_xlate	= $all_layers[$x]->y_val; }
+		if ( $x == count($all_layers) - 1 ){ 	// this is the last layer ...
+			if ( _cg_stats($cg, 'cg_bottom') < 751) {
+				//since this is the last layer in the whole group, we can rely upon it being also the last layer in the collision group ( $cg )
+			  $all_layers[$x]->y_val_xlate	= _cg_stats($cg, 'cg_bottom');
+      }	else{
+      	// this collision group bumps into the bottom of the snowpit, below 751 pixels
+				// basically, a lot of thin layers near the ground on a bottom_up snowpit
+				// TODO bump this collision group upwards, into, hopefully, empty space above DONE
+				// TODO : there is the possibility that this cg bumps into one that is above it in the stack;
+				//        we need to check for this case
+				// move the entire CG upwards by $span above 751 and then re-ripple down from there at 20 intervals
+				$new_span_top = 751 - _cg_stats($cg,'span');
+				$countery = 0; 
+				foreach ( $cg as $y => $cgy_layer){
+					// time to reset everything according to the bottom of the cg based at 751
+					//$cgy_layer->y_val_xlate
+					$all_layers[$y-1]->y_val_xlate = $all_layers[$y]->y_val_top_xlate = $countery * 20 + $new_span_top ;
+					
+					$countery++;
+				}
+				// we can rely on the bottom of the4 last layer of the collision group being pasted to the bottom of the graph. 
+				$all_layers[$y]->y_val_xlate = 751;
+      }
+		}
 		//dsm($all_layers);		
 		$counter ++;											
 	}		
-																									
 	return $all_layers;
 }
 
@@ -168,7 +193,7 @@ function _cg_stats($cg, $stat = NULL, $global_min = 157 , $global_max = 751){
 	$length = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2;
 	//dsm($length); //dsm($span);
 	$cg_top = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2 + $first_item[0]['y_val_top']  - $span/2 ;
-	$cg_bottom = ($last_item['y_val'] - $first_item[0]['y_val_top']) + $first_item[0]['y_val_top'] + $span/2 ;
+	$cg_bottom = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2 + $first_item[0]['y_val_top'] + $span/2 ;
 	
 	
 	
@@ -190,8 +215,9 @@ function _cg_stats($cg, $stat = NULL, $global_min = 157 , $global_max = 751){
 }
 
 
-function _h2pix($h, $all = FALSE){
-	$h2pix = 
+function _h2pix($h, $scale = 'linear', $all = FALSE){
+	if ( $scale <> 'exponential'){
+	  $h2pix = 
 		array(
 			'F-' => 423,
 			'F' => 399,
@@ -210,8 +236,29 @@ function _h2pix($h, $all = FALSE){
 			'K+' => 87,
 			'I-' => 63,
 			'I' => 39,
+			'I+' => 15,
 			//'' => 451
-		); 
+		); }else{
+			'F-' => 439,
+			'F' => 435,
+			'F+' => 427,
+			'4F-' => 411,
+	 		'4F' => 399,
+			'4F+' => 387,
+			'1F-' => 366,
+			'1F' => 351,
+			'1F+' => 329,
+			'P-' => 285,
+			'P' => 255,
+			'P+' => 223,
+			'K-' => 149,
+			'K' => 111,
+			'K+' => 97,
+			'I-' => 82,
+			'I' => 63,
+			'I+' => 15,
+			//'' => 451		
+		}
 		if ($all){
 			return $h2pix;
 		}else{
@@ -219,9 +266,6 @@ function _h2pix($h, $all = FALSE){
 		}
 }
 
-// breaks $node->body into 1, 2, or 3 lines depending on how long it is
-// a fairly simpllistic algorithm: if the whole thing is too long for the line, chop it into ( at a space )
-// if the pieces are still too long, chop it in thirds
 // TODO: this function will have to take into account extra-long notes entries; 
 // after three break point, we need to keep going to get them short enough; but also leave a [ More Notes ] item on jpgs; and 
 // and for pdf output, an extra sheet of paper
@@ -678,7 +722,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			if (isset($node->field_wind_loading['und'])){
 				imagettftext($img, 11, 0, $text_pos[2], 89, $black, $value_font, $node->field_wind_loading['und'][0]['value'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 429, 17, $black, $label_font, "Stability on similar slopes: ");
+			$text_pos = imagettftext($img, 11, 0, 429, 17, $black, $label_font, "Stab. on sim. slopes: ");
 			if(isset($node->field_stability_on_similar_slope['und'])){
 				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
 				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, $similar_stability[0]['#markup'] );
@@ -784,7 +828,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				}
 			}
 			//
-			//  Prep for the 2 Cycles trhough layers 
+			//  Prep for the 2 Cycles through layers 
 			// 
 			
 			if ( isset($node->field_layer['und'])){
@@ -839,7 +883,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				// Ouptut grain sizes
 					$textpos = imagettftext($img, 10, 0, 584, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
 				
-				// calculate & ouput layer moisture	
+				// calculate & output layer moisture	
 					if ( isset($layer->field_water_content['und'] )){
 						$moisture = $layer->field_water_content['und'][0]['value'];
 				 	 	imagettftext($img, 10, 0, $textpos[2]+5, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
@@ -867,7 +911,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					snowpilot_draw_layer_polygon($img, $layer, $blue_outline, FALSE);  // the outline
 					// this mark the layer if its a critical layer, and save some 
 					if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1'){
-						$x_redline = _h2pix($layer->field_hardness['und'][0]['value']); $y_redline_top = $layer->y_val_top; $y_redline_bottom = $layer->y_val; /// 
+						$x_redline = _h2pix($layer->field_hardness['und'][0]['value']); 
+					  if ( isset ( $layer->field_hardness2['und'][0]['value'])) $x_redline_bottom = _h2pix($layer->field_hardness2['und'][0]['value']);
+						
+						$y_redline_top = $layer->y_val_top; $y_redline_bottom = $layer->y_val; /// 
 						$concern_delta = $layer->item_id;
 						imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
 							$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value']. ': Problematic Layer');
@@ -887,8 +934,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						imageline($img, $x_redline, $y_redline_top+1, 446, $y_redline_top+1, $red_layer );
 					break;
 					case 'bottom':
-						imageline($img, $x_redline, $y_redline_bottom-2, 446, $y_redline_bottom-2, $red_layer );
-						imageline($img, $x_redline, $y_redline_bottom-1, 446, $y_redline_bottom-1, $red_layer );
+						imageline($img, $x_redline_bottom, $y_redline_bottom-2, 446, $y_redline_bottom-2, $red_layer );
+						imageline($img, $x_redline_bottom, $y_redline_bottom-1, 446, $y_redline_bottom-1, $red_layer );
 					break;
 				}
 			}
@@ -911,7 +958,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						$x--;
 					}
 
-				}else{ /// Temperature unites = 'F'
+				}else{ /// Temperature units = 'F'
 					$pixels_per_degree = -433/18 ;
 					$x= 32; while ($x >=14 ){  // tickmarks
 						imageline($img, 447 - $pixels_per_degree * ( $x - 32), 132, 447-$pixels_per_degree * ($x-32) , 140, $black );
