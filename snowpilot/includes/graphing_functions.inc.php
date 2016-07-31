@@ -1,7 +1,18 @@
 <?php
 
-function snowpilot_layers_density_xlate(&$all_layers){
+function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
 	usort($all_layers, 'layer_depth_val');
+	//if this is a measure-from-top pit, flip the order of layers, and the top and bottom of each layer
+	if ( $snowpit_unit_prefs['field_depth_0_from'] == 'top') {
+		array_reverse($all_layers);
+		foreach ( $all_layers as $layer){
+			$top = $layer->y_val_top;
+      $bottom = $layer->y_val;
+			$layer->y_val_top = $bottom;
+			$layer->y_val = $top;	
+		}
+	}
+	
 	$global_min = $all_layers[0]->y_val_top; $all_layers[max(array_keys($all_layers))]->y_val ;  $global_max = 751; // this max and min are pixel depths
 	
 	//dsm($all_layers);
@@ -215,7 +226,7 @@ function _cg_stats($cg, $stat = NULL, $global_min = 157 , $global_max = 751){
 }
 
 
-function _h2pix($h, $scale = 'linear', $all = FALSE){
+function _h2pix($h, $all = FALSE, $scale = 'linear'){
 	if ( $scale <> 'exponential'){
 	  $h2pix = 
 		array(
@@ -238,7 +249,9 @@ function _h2pix($h, $scale = 'linear', $all = FALSE){
 			'I' => 39,
 			'I+' => 15,
 			//'' => 451
-		); }else{
+		); 
+	}else{
+		  $h2pix = array(
 			'F-' => 439,
 			'F' => 435,
 			'F+' => 427,
@@ -257,8 +270,9 @@ function _h2pix($h, $scale = 'linear', $all = FALSE){
 			'I-' => 82,
 			'I' => 63,
 			'I+' => 15,
-			//'' => 451		
-		}
+			//'' => 451
+			);		
+	}
 		if ($all){
 			return $h2pix;
 		}else{
@@ -275,26 +289,34 @@ function _output_formatted_notes($string, $font , $short = TRUE){
 
 	  $pointer = 0;
   	$last_space = 0 ;
+		
 		while ( substr($string ,$pointer) <> '' ){
 
 			//dsm(substr($string, $pointer, 1));
-	  	if (substr($string, $pointer, 1) == ' ' ) {
+			//  a linebreak character.
+			if(substr($string, $pointer, 1) == '
+'){  	  	$parts[] = substr($string, 0, $pointer);
+		  		$string = substr( $string, $pointer+1);
+					$pointer = 0;
+					$last_space = 0 ;
+			}elseif (substr($string, $pointer, 1) == ' ' ) {
 	  		$line = imagettfbbox(9,0,$font,substr($string, 0, $pointer));
-	  		if ( $line[2] < 935){ 
+	  		if ( $line[2] < 935 ){ 
 	  			$last_space = $pointer;
-					$pointer ++;		
+					$pointer ++;	
 	  		}else{ 
 	  			$parts[] = substr($string, 0, $last_space);
-		  		$string = substr( $string, $last_space);
+		  		$string = substr( $string, $last_space+1);
 					$pointer = 0;
 					$last_space = 0 ;
 	  		}
 	  	}else{
 	  		$pointer++;
-	  	}		
+	  	}
 			//
 			// This is for the case where we are finally at the end of the string
 			//
+			
 			if ( substr($string, $pointer) == '') {
 			  $parts[] = substr($string, 0, $pointer);
 				$string = '' ; 
@@ -313,7 +335,7 @@ function _output_formatted_notes($string, $font , $short = TRUE){
 	return $parts;
 }
 
-function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
+function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE, $hardness_scale ){
 	if ( !isset($layer->field_hardness['und'][0])){ // error checking in case that hardness is not set
 			$pink_problem = imagecolorallocate($img,254, 240, 240);
 			$dark_pink = imagecolorallocate($img, 142, 47, 11); //#8c2e0b , the border for warning messages
@@ -331,7 +353,7 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
 	if ( $layer->field_use_multiple_hardnesses['und'][0]['value'] == '1' &&
 		isset ($layer->field_hardness2['und'][0]['value'])){	
 			$hness2 = $layer->field_hardness2['und'][0]['value'];
-			$points = array(_h2pix($hness), $layer->y_val_top,  447 , $layer->y_val_top, 447, $layer->y_val, _h2pix($hness2), $layer->y_val);
+			$points = array(_h2pix($hness, FALSE, $hardness_scale), $layer->y_val_top,  447 , $layer->y_val_top, 447, $layer->y_val, _h2pix($hness2, FALSE, $hardness_scale), $layer->y_val);
 			if ($filled) {
 				imagefilledpolygon($img, $points, 4, $color);
 			}else{
@@ -339,9 +361,9 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE){
 			}
 		}else{
 			if ($filled) {
-				imagefilledrectangle($img, _h2pix($hness), $layer->y_val, 446 , $layer->y_val_top, $color) ;
+				imagefilledrectangle($img, _h2pix($hness, FALSE, $hardness_scale), $layer->y_val, 446 , $layer->y_val_top, $color) ;
 			}else{
-				imagerectangle($img, _h2pix($hness), $layer->y_val, 447 , $layer->y_val_top, $color );
+				imagerectangle($img, _h2pix($hness, FALSE, $hardness_scale), $layer->y_val, 447 , $layer->y_val_top, $color );
 			}
 		}
 	}
@@ -633,8 +655,7 @@ function snowpilot_snowpit_graph_header_write($node){
 	// also add user account info to this:
 	$user_account = user_load($node->uid);
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');
-	$pit_depth_arr = _snowpilot_find_pit_depth($node);
-	$pit_depth = $pit_depth_arr['und'][0]['value'];
+	$pit_depth = _snowpilot_find_pit_depth($node);
 // Image Variables
 $width = 994;
 $height = 840;
@@ -850,7 +871,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 				$keyed_all_layers = $all_layers;
 									
-				snowpilot_layers_density_xlate($keyed_all_layers);
+				snowpilot_layers_density_xlate($keyed_all_layers, $snowpit_unit_prefs);
 				// this solo line goes across the top of the top layer. Could be programmed later if we decide to include the 'headspace' above the top of the pit
 				imageline($img, 483, $keyed_all_layers[0]->y_val_top, 667, $keyed_all_layers[0]->y_val_top, $black);
 				///
@@ -907,12 +928,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						  imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
 					  }
 					}
-					snowpilot_draw_layer_polygon($img, $layer, $purple_layer, TRUE);  // the fill
-					snowpilot_draw_layer_polygon($img, $layer, $blue_outline, FALSE);  // the outline
+					snowpilot_draw_layer_polygon($img, $layer, $purple_layer, TRUE, $snowpit_unit_prefs['hardnessScaling']);  // the fill
+					snowpilot_draw_layer_polygon($img, $layer, $blue_outline, FALSE, $snowpit_unit_prefs['hardnessScaling']);  // the outline
 					// this mark the layer if its a critical layer, and save some 
 					if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1'){
-						$x_redline = _h2pix($layer->field_hardness['und'][0]['value']); 
-					  if ( isset ( $layer->field_hardness2['und'][0]['value'])) $x_redline_bottom = _h2pix($layer->field_hardness2['und'][0]['value']);
+						$x_redline = _h2pix($layer->field_hardness['und'][0]['value'], FALSE, $snowpit_unit_prefs['hardnessScaling']); 
+					  if ( isset ( $layer->field_hardness2['und'][0]['value'])) $x_redline_bottom = _h2pix($layer->field_hardness2['und'][0]['value'], FALSE, $snowpit_unit_prefs['hardnessScaling']);
 						
 						$y_redline_top = $layer->y_val_top; $y_redline_bottom = $layer->y_val; /// 
 						$concern_delta = $layer->item_id;
@@ -927,7 +948,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			if (isset($concern_delta)){
 				switch ($all_layers[$concern_delta]->field_concern['und'][0]['value']){
 					case 'entire layer':
-						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $red_layer, TRUE);			  
+						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $red_layer, TRUE, $snowpit_unit_prefs['hardnessScaling']);			  
 					break;
 					case 'top':
 						imageline($img, $x_redline, $y_redline_top+2, 446, $y_redline_top+2, $red_layer );
@@ -992,7 +1013,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			$x = 0;
 			while ( $x <= $pit_depth){
 				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']));
-				
 				imageline($img, 660 , $y_val, 667, $y_val,$black);
 				imageline($img, 511 , $y_val, 518, $y_val,$black);
 				imageline($img, 14 , $y_val, 22, $y_val, $black);
@@ -1001,7 +1021,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				imagettftext($img, 10, 0, 456, $y_val+5, $black, $label_font, $x );
 				$x+=10;
 			}
-			
+		
 			// Now we make the 5cm tick marks
 			$x = 5;
 			while ( $x <= $pit_depth){
@@ -1015,6 +1035,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				//imagettftext($img, 10, 0, 638, round(snowpit_graph_pixel_depth($x, $node, 'bottom'))+5, $black, $label_font, $x );
 				$x+=10;
 			}
+			
 			//
 			
 	imagettftext($img, 10, 0 , 742, 122, $black ,$label_font, "Stability tests");
@@ -1029,7 +1050,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imagerectangle($img, 14, 140, 447,751, $black );
 	
 	//the tickmarks for hardness across the bottom and top, and labels
-	foreach ( _h2pix(NULL, TRUE) as $hardness => $pixels ){
+	foreach ( _h2pix(NULL, TRUE, $snowpit_unit_prefs['hardnessScaling'] ) as $hardness => $pixels ){
 		if ( substr($hardness, -1 ) != '+' && substr($hardness, -1) != '-' ){
 			imageline( $img , $pixels, 140, $pixels, 156, $black);
 			imageline( $img, $pixels, 734, $pixels, 751, $black);

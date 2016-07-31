@@ -670,19 +670,20 @@ function snowpilot_cardinal_wind_dir($degrees){
 
 function _snowpilot_find_pit_depth($node){
 	if (isset($node->field_total_height_of_snowpack['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top'){
-		return $node->field_total_height_of_snowpack['und'][0]['value'];
+		$max =  $node->field_total_height_of_snowpack['und'][0]['value'];
 	}else{
 		$ids = array();
 		$max = 0;
 		foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
 		$all_layers = field_collection_item_load_multiple($ids);
 		foreach ($all_layers as $layer){
-			if ($layer->field_height > $max ) $max = $layer->field_height ;
-			if ($layer->field_bottom_depth > $max ) $max = $layer->field_bottom_depth ;	
+			if ($layer->field_height['und'][0]['value'] > $max ) $max = $layer->field_height['und'][0]['value'] ;
+			if ($layer->field_bottom_depth['und'][0]['value'] > $max ) $max = $layer->field_bottom_depth['und'][0]['value'] ;	
 		}
-		return $max;
+		
 	}
 	
+	return $max;
 }
 
 
