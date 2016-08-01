@@ -12,7 +12,7 @@
 
 	// snowpilot_unit_prefs_get will return unit prefs, an array,
 	//input is user object
-	// $ouput_format = 'drupal' (default): 'avsic' or 'drupal' - indicates the keys of the array, which format to follow inteh return array 
+	// $ouput_format = 'drupal' (default): 'avsic' or 'drupal' - indicates the keys of the array, which format to follow in the return array 
 	// return is $unit_prefs = array('hardnessScaling' => 'linear|exponential', 'rhoUnits' =>'kgsper' etc.)
 	// or is array( 'field_temp_units' => 'C' , 'field_depth_units' => 'in', 'field_depth_0_from' => 'top' )  
 	// type is node or user, where to draw the data from 

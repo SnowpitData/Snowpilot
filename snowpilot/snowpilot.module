@@ -66,7 +66,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					snowpilot_snopit_prof_unit_prefs_set($form, $snowpit_unit_prefs);	
 				}
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
-				$snowpit_unit_prefs = array_merge(snowpilot_unit_prefs_get($node, 'node'), $snowpit_unit_prefs);  
+				$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
 				//dsm($snowpit_unit_prefs);
 				
 			}
@@ -94,7 +94,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['field_density_profile']['und']['add_more']['#value'] = "Add Density";
 			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
 			$form['title']['#maxlength'] = 22;
-			
+			$form['title']['#description'] = 'Name must be < 22 characters.';
 
 		} // end case node->type == snowpit prof
 		break;
@@ -111,7 +111,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		case 'user_profile_form':
 			// this works, but needs to be expanded to include all/any fields that are not filled in, but should be.
 			//$form['field_fracture_category']['#attributes']['class'][] = 'error';
-			dsm($form['field_loaction']);
 		break;
 					
 	} // end switch
@@ -542,8 +541,9 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		// this block hides the last layer entry form where the bottom of the previous one was "zero depth"
 		//
 
-		if ( isset($form['field_layer']['und'][$x]) && ($snowpit_unit_prefs['field_depth_0_from'] <> 'top') &&
-			$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] === '0'){
+		if ( isset($form['field_layer']['und'][$x]) && 
+			   ($snowpit_unit_prefs['field_depth_0_from'] <> 'top') &&
+			   $form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] == '0'){
 			unset ($form['field_layer']['und'][$x+1]);
 			unset($form['field_layer']['und']['add_more']);
 			$form['field_layer']['und'][$x]['#suffix'] = $form['field_layer']['und'][$x]['#suffix'].'<h3 class ="snowpilot-snowpit-bottom">Bottom of Snowpack</h3>';

@@ -72,6 +72,14 @@ function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
 
 }
 
+function _temp_profile_find_min_temp($all_temps,$min_temp = -10 ){
+
+	foreach($all_temps as $temp){
+		if ($min_temp > $temp->field_temp_temp['und'][0]['value']) $min_temp = $temp->field_temp_temp['und'][0]['value'];	
+	}
+	return $min_temp;
+		
+}
 
 function snowpilot_collision_check_down($layerx, $layery){
 	if (($layerx->y_val_top_xlate + 20 > $layery->y_val-20) || $layery->y_val_top+20 >$layery->y_val){
@@ -968,23 +976,27 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				$ids = array();
 				foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
 				$all_temps = field_collection_item_load_multiple($ids);
-				//dsm($all_temps);
+
 				uasort($all_temps, 'depth_val');
-				//dsm($all_temps);
+				$min_temp = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 12 : -8 ;
+				$min_temp = _temp_profile_find_min_temp($all_temps, $min_temp) - 2 ;
+
 				if ($snowpit_unit_prefs['field_temp_units'] == 'C'){
-					$pixels_per_degree =  -433/10 ;
-					$x= 0; while ($x >=-10 ){ //  tickmarks
+					$pixels_per_degree =  433/$min_temp ;
+					$increment = ($min_temp < -14 )? 2 : 1;
+					$x= 0; while ($x >=$min_temp ){ //  tickmarks
 						imageline($img, 447 - $pixels_per_degree * $x, 132, 447-$pixels_per_degree * $x, 140, $black );
 						imagettftext($img, 9, 0, 441 - $pixels_per_degree * $x, 130, $black, $label_font, $x  );
-						$x--;
+						$x = $x - $increment;
 					}
 
 				}else{ /// Temperature units = 'F'
-					$pixels_per_degree = -433/18 ;
-					$x= 32; while ($x >=14 ){  // tickmarks
+					$pixels_per_degree = 433/$min_temp ;
+					$increment = $min_temp < 5 ? 2 : 1;
+					$x= 32; while ($x >=$min_temp ){  // tickmarks
 						imageline($img, 447 - $pixels_per_degree * ( $x - 32), 132, 447-$pixels_per_degree * ($x-32) , 140, $black );
 						imagettftext($img, 9, 0, 441 - $pixels_per_degree * ( $x - 32), 130, $black, $label_font, $x  );
-						$x = $x-2;
+						$x = $x - $increment;
 					}
 
 				} // end temp units toggle
@@ -994,11 +1006,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				foreach($all_temps as $x=> $temp){
 					$cx =  ($snowpit_unit_prefs['field_temp_units'] == 'C') ?  447 - $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value']) :
 					447 - $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value'] - 32);
-					if( $cx >= 15 && $cx <= 447 ){
+					//dsm($cx);
+					if( $cx >= 14 && $cx <= 447 ){
 						// draw point
 						imagefilledellipse($img, $cx, snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ), 6, 6, $red_layer );
 					// draw line
-						if (($prev_x <=447 && $prev_x >=15 ) && $prev_y){ 
+						if (($prev_x <=447 && $prev_x >=14 ) && $prev_y){ 
 							imageline($img, $cx, snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ) , $prev_x, $prev_y, $red_layer); 
 						}
 					}
@@ -1007,9 +1020,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 				}
 				
-			} // and of drawingthe temperature profile
+			} // end of drawing the temperature profile
 						
-			// cycle through and make tick marks
+			// cycle through and make depth tick marks
 			$x = 0;
 			while ( $x <= $pit_depth){
 				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']));

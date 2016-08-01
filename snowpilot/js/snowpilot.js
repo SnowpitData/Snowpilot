@@ -16,6 +16,13 @@
 					}
 			});
 			
+    /*  $('#edit-field-layer', context).once('open', function () {
+        $('#edit-field-layer', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
+          $(this).parent().find('div.collapsible-content').toggle('slow');
+          event.stopPropagation();
+        });
+      });
+			
 /*			$( "table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value" ).rules( "add", {
 			  minlength: 2,
 			  messages: {
