@@ -9,6 +9,26 @@
 			//
 			$('table.field-multiple-table tr:last .field-name-field-bottom-depth input', context).focus();
 			
+      // Detect blur event for SnowPilot form inputs 
+      $('#edit-field-layer', context).once('snowpilot_module', function () {
+        $('#edit-field-layer', context).delegate( 'input', 'blur', function (event) {
+
+          // Find layer number
+          var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
+          var layerNum = parseInt(layerString, 10);
+ 
+          // Bottom Depth was changed
+          if($(this).parents('.field-name-field-bottom-depth').length)
+          {
+            alert("Bottom depth is " + $(this).val() + " for layer number " + layerNum);
+          }
+          
+          // Stop Event 
+          event.stopPropagation();
+          
+        });
+      });
+      
 		  $('table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value', context).blur( function() { 
 				if($('#edit-field-layer-und-2-field-bottom-depth-und-0-value', context).val() == '')
 					{ $(this).addClass('error');
