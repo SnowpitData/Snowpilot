@@ -18,9 +18,17 @@
           var layerNum = parseInt(layerString, 10);
  
           // Bottom Depth was changed
-          if($(this).parents('.field-name-field-bottom-depth').length)
-          {
-            alert("Bottom depth is " + $(this).val() + " for layer number " + layerNum);
+          if($(this).parents('.field-name-field-bottom-depth').length) {
+            //alert("Bottom depth is " + $(this).val() + " for layer number " + layerNum);
+            
+            // When bottom depth is changed, update next layers top depth
+            $('div.layer_num_' + (layerNum + 1) + ' input[id*="-height-"]').val($(this).val());
+          }
+          
+          // Top Depth was changed
+          if($(this).parents('.field-name-field-height').length) {
+            // When top depth is changed, update previous layers bottom depth
+            $('div.layer_num_' + (layerNum - 1) + ' input[id*="-bottom-depth-"]').val($(this).val());
           }
           
           // Stop Event 
