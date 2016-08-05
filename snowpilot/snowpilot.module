@@ -95,6 +95,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
 			$form['title']['#maxlength'] = 22;
 			$form['title']['#description'] = 'Name must be < 22 characters.';
+			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
 
 		} // end case node->type == snowpit prof
 		break;
@@ -112,7 +113,16 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			// this works, but needs to be expanded to include all/any fields that are not filled in, but should be.
 			//$form['field_fracture_category']['#attributes']['class'][] = 'error';
 		break;
-					
+		// change 'sticky node' to 'snowpit locked, submitted to avscience DB'
+		case 'node_admin_content':
+		  $form['admin']['options']['operation']['#options']['sticky'] = 'Snowpit Profile is LOCKED for editing (disallow user editing)';
+		  $form['admin']['options']['operation']['#options']['unsticky'] = 'UNLOCK Snowpit Profile (allow user edit)';
+		break;
+		case'node_type_form':
+			if($form_state['build_info']['args'][0]->type == 'snowpit_profile'){
+			  $form['workflow']['node_options']['#options']['sticky']= 'LOCK Snowpit Profile after the first time user saves.';
+			}
+		break;
 	} // end switch
 	return;
 }
@@ -211,6 +221,7 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 		$group_name = taxonomy_term_load($snowpit_unit_prefs['field_professional_affiliation'])->name;
 		
 	  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
+		//dsm($form['field_snowpit_visibility']['und']['#options']);
 	}
 	
 }
@@ -554,6 +565,81 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	}
 }
 
+/**
+ * Implements hook_node_access_records().
+ */
+function snowpilot_node_access_records($node) {
+  $grants = array();
+ 
+  // Make sure we have the correct content type.
+  if ($node->type == 'snowpit_profile') {
+    // 
+  if (!($node->sticky)) {
+        // If 
+      $grants[] = array(
+        'nid' => $node->nid,
+        'realm' => 'snowpit_unlocked',
+        'gid' => $node->uid,
+        'grant_view' => 1,
+        'grant_update' => 1,
+        'grant_delete' => 1,
+        'priority' => 1
+      );
+    }
+  }
+	if ($node->field_snowpit_visibility['und'][0]['value'] == 'group'){
+		$user = user_load($node->uid);
+		$user_group = $user->field_professional_affiliation['und'][0]['tid'];
+		// if u$user-> group is not something like unaffiliated, or education , then ......
+    $grants[] = array(
+      'nid' => $node->nid,
+      'realm' => 'snowpit_group',
+      'gid' => $user_group,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 1
+    );
+	}elseif ($node->field_snowpit_visibility['und'][0]['value'] == 'public'){
+    $grants[] = array(
+      'nid' => $node->nid,
+      'realm' => 'all',
+      'gid' => 0,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 1
+    );
+
+	}else{ // visibility is hidden
+    // we don't actually have to add a permission for this
+	}				
+  return $grants;
+}
+
+function snowpilot_node_grants($account, $op) {
+ 
+  $grants = array();
+  // Set default grants condition. 
+	$grants['snowpit_unlocked'] = array(0);
+    // Make sure the user is logged in.
+	$grants['all'] = array(0);
+  
+	if ($account->uid) {
+		$current_user = user_load($account->uid);
+    $grants['snowpit_unlocked'] = array( $account->uid );
+  
+		
+	  if ( isset( $current_user->field_professional_affiliation['und'][0]['tid']) ){
+	  	$affiliation = $current_user->field_professional_affiliation['und'][0]['tid'];
+	  	$grants['snowpit_group'] = array($affiliation);
+  	}
+	}
+	
+	
+  return $grants;
+}
+
 
 function snowpilot_node_view($node, $view_mode){
 	if ($node->type == 'snowpit_profile'){
@@ -561,6 +647,7 @@ function snowpilot_node_view($node, $view_mode){
 		$prefs = snowpilot_unit_prefs_get($node, 'node'); 
 		//$node->content['field_air_temp'][0]['#markup'] = $node->content['field_air_temp']['#items'][0]['value']. $prefs['field_temp_units'];
 	}
+	// dsm($node->field_snowpit_visibility);
 	return $node;
 }		
 

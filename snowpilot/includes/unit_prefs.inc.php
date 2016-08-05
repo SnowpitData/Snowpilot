@@ -128,6 +128,7 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 		// depending on whether using CSHS or normal Hierarchichal select widget for these, it is represented different in the form
 		$form['field_loaction']['und']['#default_value'][0] = $snowpit_unit_prefs['field_loaction_0'];
 		$form['field_loaction']['und']['#default_value'][1] = $snowpit_unit_prefs['field_loaction_1'];
+
 		////////
 	//	$form['field_loaction']['und'][0]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_0'];
 	//	$form['field_loaction']['und'][1]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_1'];

@@ -82,6 +82,12 @@ form .field-multiple-table th.field-label,
 form .field-multiple-table td {
     padding-left: 10px;
 }
+
+#main-menu ul.links li.menu-514{
+	float: right;
+	margin-right: 100px;
+	padding-right: 0px;
+}
 /*
 		alignment of snowpit list blocks
 		also in responsive.css ~ lines 60
