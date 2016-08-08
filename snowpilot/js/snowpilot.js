@@ -19,7 +19,11 @@
  
           // Bottom Depth was changed
           if($(this).parents('.field-name-field-bottom-depth').length) {
-            //alert("Bottom depth is " + $(this).val() + " for layer number " + layerNum);
+            // Add error class to any bottom depth field without a value 
+            if($(this).val() == '') {
+              $(this).addClass('error');
+              console.log("Error class added: " + $(this) + $(this).val());
+            }
             
             // When bottom depth is changed, update next layers top depth
             $('div.layer_num_' + (layerNum + 1) + ' input[id*="-height-"]').val($(this).val());
@@ -37,12 +41,12 @@
         });
       });
       
-		  $('table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value', context).blur( function() { 
+		  /*$('table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value', context).blur( function() { 
 				if($('#edit-field-layer-und-2-field-bottom-depth-und-0-value', context).val() == '')
 					{ $(this).addClass('error');
 						//alert("this is the alert");
 					}
-			});
+			});*/
 			
     /*  $('#edit-field-layer', context).once('open', function () {
         $('#edit-field-layer', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
