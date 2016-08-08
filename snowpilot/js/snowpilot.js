@@ -17,26 +17,28 @@
           var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
           var layerNum = parseInt(layerString, 10);
  
-          // Bottom Depth was changed
+          // Bottom Depth was blurred
           if($(this).parents('.field-name-field-bottom-depth').length) {
             // Add error class to any bottom depth field without a value 
             if($(this).val() == '') {
               $(this).addClass('error');
+              console.log('error class added');
+            } else {
+              $(this).removeClass('error');
+              console.log('error class removed');
             }
             
             // When bottom depth is changed, update next layers top depth
             $('div.layer_num_' + (layerNum + 1) + ' input[id*="-height-"]').val($(this).val());
           }
           
-          // Top Depth was changed
+          // Top Depth was blurred
           if($(this).parents('.field-name-field-height').length) {
             // When top depth is changed, update previous layers bottom depth
             $('div.layer_num_' + (layerNum - 1) + ' input[id*="-bottom-depth-"]').val($(this).val());
           }
           
-          // Stop Event 
           event.stopPropagation();
-          
         });
       });
       
