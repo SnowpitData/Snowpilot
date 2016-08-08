@@ -22,7 +22,6 @@
             // Add error class to any bottom depth field without a value 
             if($(this).val() == '') {
               $(this).addClass('error');
-              console.log("Error class added: " + $(this) + $(this).val());
             }
             
             // When bottom depth is changed, update next layers top depth
