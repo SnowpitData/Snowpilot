@@ -20,7 +20,10 @@ function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
     /// first, lets check to make sure thaere is a 'next' layer down there, and if there is a collision with it
 				
 	   if (  $x == 0 ) {   //the first layer is a special case
-		 	$layer->y_val_top_xlate = $global_min;		
+		 	$layer->y_val_top_xlate = $global_min;	
+			// We have to do this incase this is a one-layer pit
+			// This $layer->y_val_xlate value will be overwritten if the pit has multiple layers; we need to make sure it is at least 20 pixels high ( hence ternary function )
+			$layer->y_val_xlate =	$layer->y_val> $layer->y_val_top_xlate +20 ? $layer->y_val : $layer->y_val_top_xlate +20  ;
 			continue;
 		 }
 		 $cg = array();
@@ -352,7 +355,7 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE, $ha
 			
 			$points = array(15, $layer->y_val_top,  447 , $layer->y_val_top, 447, $layer->y_val, 15, $layer->y_val);
 			imagefilledpolygon($img, $points, 4, $pink_problem) ;
-			imagettftext($img, 13, 0, 35, ($layer->y_val - $layer->y_val_top)/2 + $layer->y_val_top, $black, $value_font, 'No Hardness specified, please Update Snowpit');///
+			imagettftext($img, 13, 0, 35, ($layer->y_val - $layer->y_val_top)/2 + $layer->y_val_top, $black, $value_font, 'No Hardness specified');
 			imagepolygon($img,$points, 4, $dark_pink);
 			
 			
@@ -659,7 +662,7 @@ function _generate_specifics_string($node) {
 }
 
 
-function snowpilot_snowpit_graph_header_write($node){	
+function snowpilot_snowpit_graph_header_write($node, $format='jpg'){	
 	// also add user account info to this:
 	$user_account = user_load($node->uid);
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');
@@ -797,6 +800,21 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			}			
 			//  write stability tests column and comments 
 			//  TODO : expand into its own function
+			$comment_count = 0;
+			$textpos = array();
+			if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
+				$textpos = imagettftext($img, 9 , 0, 645, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
+				$comment_count = 1;
+			}
+			if ( isset( $node->field_surface_penetration['und'] )  && ( $node->field_surface_penetration['und'][0]['value'] == 'boot' ) && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
+				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 645 ;
+					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PF'.$node->field_boot_penetration_depth['und'][0]['value']  );
+					$comment_count = 1;
+			}elseif(isset( $node->field_surface_penetration['und'] )  && isset($node->field_ski_penetration['und'][0]['value']) &&( $node->field_surface_penetration['und'][0]['value'] == 'ski' ) &&  (  $node->field_ski_penetration['und'][0]['value'] != '' ) ){
+				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 645 ;
+					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'SP'.$node->field_ski_penetration['und'][0]['value']  );
+					$comment_count = 1;
+			}
 			if (isset($node->field_test['und'])){
 				$ids = array();
 				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];}
@@ -809,21 +827,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				  $test_results = array_reverse($test_results);
 				}
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
-				$comment_count = 0;
-				$textpos = array();
-				if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
-					$textpos = imagettftext($img, 9 , 0, 645, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
-					$comment_count = 1;
-				}
-				if ( isset( $node->field_surface_penetration['und'] )  && ( $node->field_surface_penetration['und'][0]['value'] == 'boot' ) && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
-					$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 645 ;
-						imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PF'.$node->field_boot_penetration_depth['und'][0]['value']  );
-						$comment_count = 1;
-				}elseif(isset( $node->field_surface_penetration['und'] )  && ( $node->field_surface_penetration['und'][0]['value'] == 'ski' ) && (  $node->field_ski_penetration['und'][0]['value'] != '' )){
 					
-				}
-					
-				imagettftext( $img, 11, 0 , 645, $comment_count*13 + 20, $black, $label_font, 'Stability Test Notes');
+				imagettftext( $img, 11, 0 , 645, $comment_count*13 + 17, $black, $label_font, 'Stability Test Notes');
 				
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth['und']) ){
@@ -893,11 +898,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 					
 				// Calculate grain type image(s) for this layer
-				$grain_type_image ='';
-				if ( isset($layer->field_grain_type['und'])){
-					$grain_type_image = isset($layer->field_grain_type['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type['und'][0]['tid']);
-				}	
-				$secondary_grain_type = '';
+				  $grain_type_image ='';
+			  	if ( isset($layer->field_grain_type['und'])){
+			  		$grain_type_image = isset($layer->field_grain_type['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type['und'][0]['tid']);
+			  	}	
+			  	$secondary_grain_type = '';
 					if (isset($layer->field_grain_type_secondary['und'])){
 						$secondary_grain_type_image = isset($layer->field_grain_type_secondary['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type_secondary['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type_secondary['und'][0]['tid']);
 						$secondary_grain_type = ' ('. $secondary_grain_type_image . ')';
@@ -1099,9 +1104,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imagepng($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.png');
 	snowpilot_snowpit_crop_layers_write($img,$node->nid);
 // Destroy GD image
-imagedestroy($img);
-
-return;
+//imagedestroy($img);
+if ($format == 'jpg') {
+	return $img;
+}else{
+  return $img;}
 }
 
 function snowpilot_snowpit_crop_layers_write($img,$nid){
