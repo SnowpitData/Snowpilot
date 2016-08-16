@@ -606,6 +606,24 @@ body.page-node-add-snowpit-profile #main{
 	padding-top: .3em;
 	
 }
+
+#edit-actions2{
+	float: right;
+	position:relative;
+	top: 23px;
+	z-index: 200;
+	
+}
+
+#edit-submit--2{
+	background-color: green;
+	color: #fff;
+}
+
+#edit-delete--2{
+	background-color: #fef5f1;
+	color: #8c2e0b;
+}
 /*
  			Nice good green color: #5db978;
 			

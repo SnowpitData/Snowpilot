@@ -128,8 +128,15 @@ function st_collision_check_down($test_x, $test_y, &$cg = array(), $measure_from
 
 function _strip_dupe_tests(&$test_results, $pit_depth, $measure_from ){
 	foreach ($test_results as $x => $test){
+		
+		if ( !isset($test->field_depth['und'][0]['value'])){ // in case of CTN ( and some other test results), depth may not be set.	
+			$depth_field = ($measure_from == 'bottom') ? 0 : $pit_depth;
+		}else {
+			$depth_field = $test->field_depth['und'][0]['value'];
+		}
+		
 		if ( $test->multiple > 0){
-		  $test->y_val = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from );
+		  $test->y_val = snowpit_graph_pixel_depth($depth_field, $pit_depth, $measure_from );
 			$simple_test_results[] = $test;
 	  }else{
 			// dont set y_val, dont set str[]
@@ -608,9 +615,12 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
   		 //st_write_xlate_group( $st_cg, $test_results);
 	  	 $st_cg = array();
 		
-  	 }else{ // this is a singluar item, write straight acrose
-  		 $test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from );
-		
+  	 }else{ // this is a singluar item, write straight across
+			 if ( ! ( isset ($test->field_depth['und'][0]['value']))){  // in case of CTN or other test results with no depth value, set y_position
+			 	$test->y_position =  $measure_from == 'bottom' ? snowpit_graph_pixel_depth( 0, $pit_depth, $measure_from) : $pit_depth ;		
+			 }else{
+  	  	 $test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from );
+		   }
 	   }
 	  }
 	 } // end of second looping through
@@ -754,7 +764,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			if (isset($node->field_wind_loading['und'])){
 				imagettftext($img, 11, 0, $text_pos[2], 89, $black, $value_font, $node->field_wind_loading['und'][0]['value'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 429, 17, $black, $label_font, "Stab. on sim. slopes: ");
+			$text_pos = imagettftext($img, 11, 0, 429, 17, $black, $label_font, "Stability: ");
 			if(isset($node->field_stability_on_similar_slope['und'])){
 				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
 				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, $similar_stability[0]['#markup'] );
@@ -815,6 +825,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'SP'.$node->field_ski_penetration['und'][0]['value']  );
 					$comment_count = 1;
 			}
+			
 			if (isset($node->field_test['und'])){
 				$ids = array();
 				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];}
@@ -827,11 +838,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				  $test_results = array_reverse($test_results);
 				}
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
-					
+
 				imagettftext( $img, 11, 0 , 645, $comment_count*13 + 17, $black, $label_font, 'Stability Test Notes');
 				
 				foreach ( $test_results as $x => $test){
-					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->field_depth['und']) ){
+					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->y_position) ){
 				  	// this use of imageline will need to be updated to include some kind of cluster management
 						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
 							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);

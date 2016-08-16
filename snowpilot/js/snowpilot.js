@@ -149,7 +149,12 @@
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-0 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).hide();
 				
-			});			 
+			});			
+			/// show message : don't you want to enter a layer of greatest concern? message:
+			$('ul.horizontal-tabs-list li.horizontal-tab-button-2 a' ).click( function() {
+				alert("Don't you want to set a layer of greatest concern?");
+				
+			}); 
 			
 			/////////////////////////////
 			// hide the Measurement Unit Prefs fieldset

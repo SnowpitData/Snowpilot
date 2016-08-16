@@ -30,10 +30,10 @@ function snowpilot_menu(){
 		
 	);
 
-	$items['snowpit/%node/download/%format'] = array(
+	$items['snowpit/%node/download'] = array(
 		'title' => 'Download snowpit jpg',
 		'page callback' => 'snowpilot_node_snowpit_download',
-		'page arguments' => array(1,3),
+		'page arguments' => array(1),
 		'access callback' => 'node_access',
 		'access arguments' => array( 'view', 1),
 		'type' => MENU_CALLBACK,
@@ -43,8 +43,6 @@ function snowpilot_menu(){
 
 function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 
-	global $user;
-
 	if ( node_access('update', $node)){
 		// if node is not locked for editing, and there is NOT a snowpit in the avscience db which would include the same serial #, then we cna save and lock it!
 		if ( !$node->sticky && !snowpilot_avscience_pit_exists($node) ){
@@ -52,15 +50,16 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			$node_wrapper = entity_metadata_wrapper('node', $node);
 			$node_wrapper->sticky->set(true);
 			$node_wrapper->save();
+			watchdog('snowpilot', "Snowpit $node->nid set to LOCKED.");
 			// and save it to the avscience db
-			$success_flag = snowpilot_avscience_pite_write($node);
+			if ( snowpilot_avscience_pit_write($node)) {
+				watchdog('snowpilot', "Snowpit $node->nid sucessfully saved to avscience db.");
+			}
 			//
 		}
 	}
 	if (node_access('view', $node)){
-		if ( $format == 'pdf'){
-			//watchdog('snowpilot' , 'pdf format for: '. $node->nid ." , user: ". $user->uid );
-		}
+	  $format = (isset($format) && $format <> '' ) ? $format : 'jpg';
     $snowpit_name_local = $node->title . '-' .date ('d-M').'.'.$format;
     header('Content-Disposition: attachment; filename="'. $snowpit_name_local .'"');
 	
@@ -121,8 +120,7 @@ function snowpilot_avscience_pit_write($node){
 function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
-	
-	
+
 	//
 	//  We will pester the user on all pages if preferences aren't set
 	//
@@ -182,7 +180,13 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['title']['#maxlength'] = 22;
 			$form['title']['#description'] = 'Name must be 22 characters or less.';
 			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
-
+			$form['field_precipitation']['und']['#options']['_none'] = '' ;
+			// copy actions to new item
+			$form['actions2'] = $form['actions'];
+      $form['actions2']['submit']['#value'] = "Save Snowpit and Preview";
+			$form['actions2']['delete']['#value'] = 'Delete Snowpit';
+			$form['actions2']['#weight'] = -100;
+			//dsm($form['actions2']);
 		} // end case node->type == snowpit prof
 		break;
 		case 'user_login':
@@ -321,7 +325,19 @@ function snowpilot_lock_professional_affil(&$form){
 	  && !in_array($form['field_professional_affiliation']['und']['#default_value'][0], $top_level_prof_affil )
 	  && !snowpilot_user_has_role('administrator') ){
 		$form['field_professional_affiliation']['#access'] = FALSE ; 
-		dsm($form['field_professional_affiliation']);
+		
+		$term = taxonomy_term_load($form['field_professional_affiliation']['und']['#default_value'][0] );
+		$form['field_professional_affiliation_display'] = array( 
+			'#type' => 'container',
+			'#weight' => '5',
+			'und' =>array(
+				0 => array(
+					'markup' => array( '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label> <div class="inner"> ' . $term->name.' </div> </div>',
+				  ),
+				),
+			),
+		
+		);
 	}
 }
 
@@ -570,10 +586,10 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 		}else { // this is a new, blank stability test form, so we leave it open
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
 				"<h3 class='collapsible-handle test-title'>Add Stability Test Result</h3>". '<div class="collapsible-content" >';
-			$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";
-			
-		 // don't put dsm here, it will break the "add another"  functionality with AJAX errors.
+			$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";		 // don't put dsm here, it will break the "add another"  functionality with AJAX errors.
 	  }
+		//dsm($form['field_test']['und'][$x]);
+		$form['field_test']['und'][$x]['field_stability_comments']['und'][0]['value']['#maxlength'] = 20;
 		// here we will attempt to add a "Duplicate test" button and functionality
 
 				
@@ -655,7 +671,6 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		//
 		// this block hides the last layer entry form where the bottom of the previous one was "zero depth"
 		//
-		watchdog( 'snowpilot', "The height of snowpack is: ".$form['field_total_height_of_snowpack']['und'][0]['value']['#default_value']. " and bottom depth is : ".$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value']);
 
 		if ( isset($form['field_layer']['und'][$x]) && 
 		(($snowpit_unit_prefs['field_depth_0_from'] <> 'top') &&  $form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] == '0')
@@ -695,7 +710,7 @@ function snowpilot_node_access_records($node) {
       );
     }
   
-	if ($node->field_snowpit_visibility['und'][0]['value'] == 'group'){
+	if ( isset($node->field_snowpit_visibility['und'][0]['value']) && $node->field_snowpit_visibility['und'][0]['value'] == 'group'){
 		$user = user_load($node->uid);
 		if ( isset($user->field_professional_affiliation['und'][0]['tid'])){
 	  	$user_group = $user->field_professional_affiliation['und'][0]['tid'];
@@ -930,7 +945,6 @@ function layer_depth_val( $a , $b){
 
 function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 	$string = '';
-	//dsm($test);
 	//
 	// Let's calculate what the Fracture Character or shear quality part of the string will be
 	//
@@ -944,9 +958,12 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 	//
 	//  
 	//
+	
 	switch ($test->field_stability_test_type['und'][0]['value']){
 		case 'ECT':
-				$string = $test->field_stability_test_score['und'][0]['value'] . $test->field_ec_score['und'][0]['value'] . $fracture;	
+				$string = $test->field_stability_test_score['und'][0]['value'] ;
+				$string .= isset ($test->field_ec_score['und'][0]['value']) ? $test->field_ec_score['und'][0]['value'] : '';
+				$string .= $fracture;	
 		break;
 		case 'PST':
 		if ( isset ($test->field_length_of_saw_cut['und'][0]['value']) && 
@@ -1220,6 +1237,14 @@ function snowpilot_node_write_pitxml($node){
 		$precipitation->value = $node->field_precipitation['und'][0]['value'];
 	}
 	$snowpilot_PitCore->appendChild($precipitation);
+	//
+	//  Precipitation RATE, a new field for snowpilot_xml format
+	//
+	$precip_rate = $snowpilot_xmldoc->createAttribute('precip_rate');
+	if ( isset ( $node->field_precipitation_rate['und'][0]['value']) ){
+		$precip_rate->value = $node->field_precipitation_rate['und'][0]['value'];
+	}
+	$snowpilot_PitCore->appendChild($precip_rate);
 	//
 	//  Serial number - must be unique to this pit
 	//  To maintain continuity with the desktop app, it should be username + timestamp ( unix, w/ milliseconds) of posting the item
