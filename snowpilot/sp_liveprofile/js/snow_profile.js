@@ -450,6 +450,18 @@ var SnowProfile = {};
    * @type {Array.<SnowProfile.Layer>}
    */
   SnowProfile.snowLayers = [];
+  
+  /**
+  * Snowpit Stability Tests
+  *
+  * An object to hold the strings created by the SnowPilot form that represent
+  * the stability tests performed on a snowpit.  Each test is indexed in the object
+  * by the associated test number from the SnowPilot form.  
+  *
+  * @memberof SnowProfile
+  * @type {Object}
+  */
+  SnowProfile.stabilityTests = {};
 
   /**
    * Make the handle visible if it has not been touched.
@@ -563,8 +575,8 @@ var SnowProfile = {};
           (SnowProfile.Cfg.HANDLE_SIZE / 2);
       bandRight = leftSide + (SnowProfile.Cfg.HARD_BAND_WD * (tmp + 1)) +
           (SnowProfile.Cfg.HANDLE_SIZE / 2);
-      if ((x >= (bandLeft - (SnowProfile.Cfg.HARD_BAND_WD / 2))) &&
-         (x < (bandRight - (SnowProfile.Cfg.HARD_BAND_WD / 2)))) {
+      if ((x >= (bandLeft )) &&
+         (x < (bandRight ))) {
         code = SnowProfile.CAAML_HARD[i][0];
         break;
       }
@@ -672,6 +684,134 @@ var SnowProfile = {};
 
       // Position the features description in the center of its area.
       SnowProfile.snowLayers[i].features().layout(featureTop, featureBottom);
+    }
+  };
+  
+  /**
+   * Used to create data object for feature descriptions from 
+   * the SnowPilot web form 
+   *
+   * @method
+   * @memberof SnowProfile
+   * @param {number} [layernum] The snow profile layer index we are interested in
+   * @returns {object} data object for use with featObj.describe(data) method.
+   */
+  SnowProfile.getSnowPilotData = function (layerNum) {
+    
+    //var primaryShape = translateShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-]").val());
+    var primaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-] > div > select")[0].value);
+    var primarySubShape = ""; // currently unused
+    //var secondaryShape = translateShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
+    var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
+    var secondarySubShape = ""; // currently unused
+    
+    
+    var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
+    var sizeMax = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-max-]").val();
+    if (sizeMax === "_none") {
+      sizeMax = "";
+    }
+    
+    var stabTest = "";
+    
+    var tempData = {
+              primaryGrainShape: primaryShape,
+              primaryGrainSubShape: primarySubShape,
+              secondaryGrainShape: secondaryShape,
+              secondaryGrainSubShape: secondarySubShape,
+              grainSizeMin: sizeMin,
+              grainSizeMax: sizeMax,
+              comment: stabTest
+    };
+    
+    return tempData;
+  };
+  
+  function translateShape(shapeCode) {
+    
+    switch (shapeCode) {
+      case "33":
+        return "PP";
+        break;
+      case "34":
+        return "DF";
+        break;
+      case "35":
+        return "RG";
+        break;
+      case "36":
+        return "FC";
+        break;
+      case "37":
+        return "DH";
+        break;
+      case "38":
+        return "SH";
+        break;
+      case "39":
+        return "MF";
+        break;
+      case "40":
+        return "IF";
+        break;
+      case "41":
+        return "MM";
+        break;
+      default:
+        return "";
+    }
+  }
+  
+  /**
+   * Checks the fields of one of the stability tests to see if there is 
+   * enough information to construct a complete stability test string,
+   * and if there is calls the appropriate method to put string on the live
+   * profile
+   *
+   * @method
+   * @memberof SnowProfile
+   * @param {number} [testNum] The stability test number to check fields 
+   */
+  SnowProfile.checkStabilityTest = function (testNum) {
+    var scoreType, scoreValue;
+    var testType = $("select[id^=edit-field-test-und-" + testNum + "-field-stability-test-type]").val();
+    var shearQuality = $('select[id^=edit-field-test-und-' + testNum + '-field-shear-quality]').val();
+    var testDepth = $('input[id^=edit-field-test-und-' + testNum + '-field-depth]').val();
+    
+    switch(testType){
+      case "ECT":
+        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ect]').val();
+        scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ec-score]').val();
+        break;
+      case "CT":
+        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ct]').val();
+        scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ct-score]').val();
+        break;
+      case "RB":
+        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-rb]').val();
+        scoreValue = "";
+        break;
+      case "PST":
+        console.log("ATTN: How should these display?");
+        break;
+      case "SB":
+        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-sb]').val();
+        scoreValue = "";
+        break;
+      case "ST":
+        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-st]').val();
+        scoreValue = "";
+        break;
+    }
+    
+    if (testType != "_none" && scoreType != "_none" && shearQuality != "_none" && testDepth != ""){
+      var testString = scoreType + scoreValue + ", " + shearQuality + " @ " + testDepth;
+      
+      SnowProfile.stabilityTests[testNum] = testString;
+      
+      for(var num in SnowProfile.stabilityTests){
+        console.log("Stability Test " + num + " = " + SnowProfile.stabilityTests[num]);
+      }
     }
   };
 
