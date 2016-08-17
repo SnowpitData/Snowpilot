@@ -160,28 +160,27 @@
 			// Hide live Profile initially, and on clicking "Core Info" tab (...-button-0 a ), but show on clicking all other tabs
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-0.selected' ).each( function() {
 				$('#edit-field-graph-canvas', context).hide();
-				
 			});		
-			
+      
+			// Layers Tab
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-1 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).show();
-				
 			});
+      // Stability Tests Tab
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-2 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).show();
-				
 			});
+      // Temp Profile Tab
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-3 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).show();
-				
 			});			
+      // Density Tab
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-4 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).show();
-				
 			});		
+      // Core Info Tab
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-0 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).hide();
-				
 			});			 
 			
 			/////////////////////////////
