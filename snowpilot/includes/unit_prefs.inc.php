@@ -20,6 +20,8 @@
 
 function snowpilot_unit_prefs_get($entity, $type = 'user'){
 
+  $state_name = (_helper_cleaner($entity, 'field_loaction','tid') <> '') ? taxonomy_term_load( _helper_cleaner($entity, 'field_loaction','tid'))->name : '';
+	$range_name = (_helper_cleaner($entity, 'field_loaction','tid', 1) <> '') ? taxonomy_term_load( _helper_cleaner($entity, 'field_loaction','tid', 1 ))->name : '';
 		$unit_prefs = array( 
 		
 		
@@ -53,7 +55,7 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			
 			
 			'field_utm_zone' => _helper_cleaner($entity, 'field_utm_zone'),
-			'field_zone' => _helper_cleaner($entity, 'field_utm_zone'),
+			'zone' => _helper_cleaner($entity, 'field_utm_zone'),
 			
 			'field_north' => _helper_cleaner($entity, 'field_north'),
 			'north' => _helper_cleaner($entity, 'field_north'),
@@ -72,10 +74,10 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			///////
 			
 			'field_loaction_0' => _helper_cleaner($entity, 'field_loaction','tid'),
-			'state' => _helper_cleaner($entity, 'field_loaction','tid'), // this needs a conversion function to the state/province name
+			'state' => $state_name, // this needs a conversion function to the state/province name
 		
 		  'field_loaction_1' => _helper_cleaner($entity, 'field_loaction','tid', '1'),
-			'range' =>  _helper_cleaner($entity, 'field_loaction','tid', '1'),  // this will need a conversion function to the name of the range
+			'range' =>  $range_name,  // this will need a conversion function to the name of the range
 	  );
 	
 			//////

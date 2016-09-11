@@ -22,9 +22,11 @@
 /* @import "theme-B.css"; */
 
 #header {
-    background-color: #ff8600;
-    background-image: -moz-linear-gradient(center top , #febf4c 0%, #ff8600 100%);
-		
+	background: #1b2d3d; /* Old browsers */
+	background: -moz-linear-gradient(top, #1b2d3d 0%, #26496a 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, #1b2d3d 0%,#26496a 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, #1b2d3d 0%,#26496a 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1b2d3d', endColorstr='#26496a',GradientType=0 ); /* IE6-9 */
 }
 
 .header__logo{
@@ -32,38 +34,52 @@
 }
 
 #navigation {
-    padding: 10px 2px;
-    background-color: #ff8600;
+    padding: 0 2px;
+		border-top: 1px solid #4a657f;
+    background-color: #c76b23;
+		border-bottom: 8px solid #26496a;/* #b3bac0;*/
+		height: 3.7em;
     /*background-image: -moz-linear-gradient(center top , #febf4c 0%, #ff8600 100%);
 		*/
 }
 
 #navigation ul.links {
-    color: #68696b;
+    /* color: #68696b; */
     font-size: 1.1em;
 }
 
 #navigation ul.links li a{
-	color: #68696b;
+	color: #ffffff;
 }
 
 #main-menu ul.links li{
     float: left;
     list-style: none;
-    padding: 2 4px;
-    margin: 1px 1px;
+    padding: 0 4px 2px 4px;
+    margin: 0 1px;
+}
+
+#main-menu{
+		border-bottom: 2px solid #4a657f;
+		height: 2.9em;
+}
+
+#content{
+	padding-top:15px;
+}
+
+#content a{
+	color: #c76b23;
 }
 
 #main-menu a {
     color: #333;
-    background: #ccc;
-    background: rgba(255, 255, 255, 0.7);
     float: left;
     height: 2.4em;
-    line-height: 2.4em;
-    padding: 0 0.8em;
+    line-height: 2.6em;
+    padding: 0 0.8em .1em 0.8em;
     text-decoration: none;
-    text-shadow: 0 1px #eee;
+  /*  text-shadow: 0 1px #eee;
     -khtml-border-radius-topleft: 8px;
     -khtml-border-radius-topright: 8px;
     -moz-border-radius-topleft: 8px;
@@ -72,10 +88,14 @@
     -webkit-border-top-right-radius: 8px;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
+	*/
 }
 
 #main-menu li a.active, #main-menu li.active-trail a {
-    background: #ffffff;
+    background: #254766;
+		border-top: 2px solid #b5c1cc;
+		border-left: 2px solid #b5c1cc;
+		border-right: 3px solid #b5c1cc;
 }
 
 form .field-multiple-table th.field-label,
@@ -88,6 +108,54 @@ form .field-multiple-table td {
 	margin-right: 100px;
 	padding-right: 0px;
 }
+
+
+header#header .header__region{
+	float: right;
+	display: block;
+	clear: none;
+	width: 400px;
+}
+
+header#header .header__region h2{
+	margin: .1em;
+	color: #ffffff;
+	font-size: 1.3em;
+}
+
+nav#secondary-menu{
+	position: relative;
+	top: 35px;
+	left: 310px;
+}
+
+#secondary-menu ul.links a,
+#header a.ctools-modal-snowpilot-login-style{
+	color: #ffffff;
+	
+}
+
+/*
+//
+//  format the Snowpilot login link to modal boxon the top of all pages for anonymous users
+*/
+
+#modal-content .form-item-pass,
+#modal-content .form-item-name{
+	margin: .2em 0;
+}
+
+div.ctools-modal-content div.popups-title {
+	background-color: #ff8600;
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+
+div.ctools-modal-content .form-item label {
+	width: 10em;
+}
+
+
 /*
 		alignment of snowpit list blocks
 		also in responsive.css ~ lines 60
@@ -214,7 +282,7 @@ pre {
 
 /* default text input field width: depths, etc.   */
 .form-field-type-field-collection input.form-text{
-	width: 35px;
+	width: 45px;
 }
 
 .form-field-type-field-collection .field-name-field-comments input.form-text{
@@ -461,8 +529,8 @@ fieldset.group-stability {
 
 #google-map{
 	background-color: #fff;
-	width: 300px;
-	height: 200px;
+	width: 650px;
+	height: 350px;
 	
 }
 
@@ -500,8 +568,8 @@ fieldset.group-weather {
 }
 
 form#views-exposed-form-snowpit-list-page .views-exposed-widget.views-submit-button{
-	clear: both;
-	
+/*	clear: both;
+	*/
 }
 	
 #edit-field-latitude{
@@ -552,31 +620,7 @@ body.node-type-snowpit-profile ul.tabs-primary{
 	display: block;
 	
 }
-/*
-//
-//  format the Snowpilot login link to modal boxon the top of all pages for anonymous users
-*/
 
-header#header .header__region{
-	float: right;
-	display: block;
-	clear: none;
-}
-
-#modal-content .form-item-pass,
-#modal-content .form-item-name{
-	margin: .2em 0;
-}
-
-div.ctools-modal-content div.popups-title {
-	background-color: #ff8600;
-	padding-top: 1px;
-	padding-bottom: 1px;
-}
-
-div.ctools-modal-content .form-item label {
-	width: 10em;
-}
 /*
 //  scrunch header on add/edit snowpit pages
 //
@@ -596,8 +640,8 @@ body.page-node-edit.node-type-snowpit-profile #navigation,
 body.page-node-add-snowpit-profile #navigation{
 	position:absolute;
 	left: 250px;
-	top: -40px;
-	width: 70%;
+	top: -47px;
+	width: 45%;
 	background: transparent;
 }
 
@@ -605,6 +649,19 @@ body.page-node-edit.node-type-snowpit-profile #main,
 body.page-node-add-snowpit-profile #main{
 	padding-top: .3em;
 	
+}
+
+body.page-node-edit.node-type-snowpit-profile #main-menu ul.links li.menu-514,
+body.page-node-add-snowpit-profile  #main-menu ul.links li.menu-514{
+	display:none;
+}
+
+body.not-logged-in #edit-uid-current-wrapper{
+	display: none;
+}
+
+#edit-field-loaction-tid-wrapper {
+    width: 450px;
 }
 
 #edit-actions2{
@@ -623,6 +680,10 @@ body.page-node-add-snowpit-profile #main{
 #edit-delete--2{
 	background-color: #fef5f1;
 	color: #8c2e0b;
+}
+
+#edit-0 {
+    display: inline-block;
 }
 /*
  			Nice good green color: #5db978;

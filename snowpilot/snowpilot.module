@@ -2,6 +2,8 @@
 
 include_once('includes/unit_prefs.inc.php');
 include_once('includes/graphing_functions.inc.php');
+include_once('includes/export_xml.inc.php');
+include_once('includes/dropdown.theme.inc');
 
 //function snowpilot_menu_alter(){
 	//}
@@ -42,7 +44,6 @@ function snowpilot_menu(){
 }
 
 function snowpilot_node_snowpit_download($node, $format = 'jpg'){
-
 	if ( node_access('update', $node)){
 		// if node is not locked for editing, and there is NOT a snowpit in the avscience db which would include the same serial #, then we cna save and lock it!
 		if ( !$node->sticky && !snowpilot_avscience_pit_exists($node) ){
@@ -60,25 +61,36 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 	}
 	if (node_access('view', $node)){
 	  $format = (isset($format) && $format <> '' ) ? $format : 'jpg';
-    $snowpit_name_local = $node->title . '-' .date ('d-M').'.'.$format;
+    $snowpit_name_local = $node->title . '-' . date ('d-M', strtotime($node->field_date_time['und'][0]['value']) ).'.'.$format;
     header('Content-Disposition: attachment; filename="'. $snowpit_name_local .'"');
-	
+	 // header('Location: /node/'.$node->nid);
 		switch ($format){
 			case 'png':
 			  header('Content-type: image/png', NULL, 0);
 				imagepng(snowpilot_snowpit_graph_header_write($node));
 				break;
 			case 'pdf':
-			case'jpg':
+			case 'jpg':
 	      header('Content-type: image/jpeg');
 		    imagejpeg(snowpilot_snowpit_graph_header_write($node, 'jpg'), NULL, 100);
-				break;
+			break;
+			case 'xml':
+				header('Content-type: application/xml');
+				echo snowpilot_node_write_pitxml($node);
+			break;
+			case 'caaml':
+				header('Content-type: application/xml');
+				echo snowpilot_node_write_caaml($node);
+			break;
 			}
+			//drupal_goto('node/'.$node->nid);
+			
 	  // drupal_goto('sites/default/files/snowpit-profiles/graph-'. $node->nid .'.jpg');
   }else{
   	drupal_access_denied();
   }
 }
+
 
 function snowpilot_avscience_pit_exists($node){
 	$avsci_db_info = array(
@@ -135,25 +147,53 @@ function snowpilot_init(){
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
 	//	
-	
+	global $user;
 	switch($form_id ){
 		case 'snowpit_profile_node_form':
 		$node = $form_state['node'];
     if ($node->type == 'snowpit_profile'){ // this might be rendundant for the switch/case above.
-			global $user;
-			$account = user_load($user->uid);
-			$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
+
 			
+			// these are one-off text changes that don't seem to require their own function
+			$form['#submit'][] = 'snowpilot_snowpit_profile_node_form_submit';
+			$form['#validate'][] = 'snowpilot_snowpit_profile_node_form_validate';
+			$form['actions']['submit']['#value'] = 'Save and Preview';
+			$form['field_density_profile']['und']['add_more']['#value'] = "Add Density";
+			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
+			$form['title']['#maxlength'] = 22;
+			$form['title']['#description'] = 'Name must be 22 characters or less.';
+			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
+			$form['field_precipitation']['und']['#options']['_none'] = '' ;
+			// copy actions to new item
+			$form['actions2'] = $form['actions'];
+      $form['actions2']['submit']['#value'] = "Save Snowpit and Preview";
+			$form['actions2']['delete']['#value'] = 'Delete Snowpit';
+			$form['actions2']['#weight'] = -100;			
+	
 			if( !isset($node->nid) || isset($node->is_new) ){ // a new snowpit profile node, find $unit_prefs from $user
 				if ( snowpilot_user_unit_prefs_check($user->uid)){ // this check function verifies that we have a full set of unit preferences, etc, setup for this user. It redirects to the user /edit page if one or more are lacking
 					// set the unit prefs on the snowpit node form.
+					$account = user_load($user->uid);
+					$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
+			
 					snowpilot_snopit_prof_unit_prefs_set($form, $snowpit_unit_prefs);	
+					// Put a fake "delete" link above the rest of the 
+					$form['actions2']['pre_delete'] = array( 
+						'#type' => 'button',
+						'#weight' => '7',
+						'#value' => 'Delete Snowpit',
+					);
+					
 				}
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
+				$account = user_load($node->uid);
+				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
+			
 				$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
 				//dsm($snowpit_unit_prefs);
 				
 			}
+			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => 'Mountain Range' );
 			
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
@@ -171,22 +211,9 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			
 			snowpilot_set_visibility_field_options($form, $snowpit_unit_prefs);
 			
-			// these are one-off text changes that don't seem to require their own function
-			$form['#submit'][] = 'snowpilot_snowpit_profile_node_form_submit';
-			$form['#validate'][] = 'snowpilot_snowpit_profile_node_form_validate';
-			$form['actions']['submit']['#value'] = 'Save and Preview';
-			$form['field_density_profile']['und']['add_more']['#value'] = "Add Density";
-			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
-			$form['title']['#maxlength'] = 22;
-			$form['title']['#description'] = 'Name must be 22 characters or less.';
-			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
-			$form['field_precipitation']['und']['#options']['_none'] = '' ;
-			// copy actions to new item
-			$form['actions2'] = $form['actions'];
-      $form['actions2']['submit']['#value'] = "Save Snowpit and Preview";
-			$form['actions2']['delete']['#value'] = 'Delete Snowpit';
-			$form['actions2']['#weight'] = -100;
-			//dsm($form['actions2']);
+
+			
+			
 		} // end case node->type == snowpit prof
 		break;
 		case 'user_login':
@@ -195,9 +222,13 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		break;
 		case 'views_exposed_form':
 			if( $form['#id'] == 'views-exposed-form-snowpit-list-page'){
-				$form['field_loaction_tid']['#size'] = '3';
-				//dsm($form);
-			}
+				//$form['field_loaction_tid']['#size'] = '3';
+				$form['uid_current']['#options'] = array( 'All' => 'All Snowpits', 1 => 'Just my snowpits');
+				if ( $user->uid == 0 ){
+					$form['uid_current']['#access'] = FALSE;
+					
+				}
+			}			
 		break;
 		case 'user_profile_form':
 			// this works, but needs to be expanded to include all/any fields that are not filled in, but should be.
@@ -205,6 +236,13 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			
 			// LOCK the Professional Affiliation field after the user has selected something
 			snowpilot_lock_professional_affil($form);
+			//
+			// Clean up the timezone list in a subsequent function, after_build
+	
+		  if (isset($form['#user']->timezone)) {
+		      // edit timezone list
+		      $form['#after_build'][] = 'snowpilot_timezone_modify';
+		    }
 		break;
 		// change 'sticky node' to 'snowpit locked, submitted to avscience DB'
 		case 'node_admin_content':
@@ -216,10 +254,22 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			  $form['workflow']['node_options']['#options']['sticky']= 'LOCK Snowpit Profile after the first time user saves.';
 			}
 		break;
+		case 'user_pass':
+	  	// unset($form_state['submit']); //????
+			
+		  $form['#submit'][] = 'snowpilot_user_pass_submit';
+		
+		break;
 	} // end switch
 	return;
 }
-
+//
+//
+function snowpilot_user_pass_submit($form, &$form_state){
+	  global $language;
+	  drupal_set_message( t("<b>Please check your SPAM folder!</b> If you add <a href = 'mailto:admin@snowpilot.org'>admin@snowpilot.org</a> to your contacts or whitelist, your spam filter is less likely to flag these emails from Snowpilot. <br />" ) );
+	  return;
+}
 
 /**
  * A modal login callback.
@@ -282,6 +332,47 @@ function snowpilot_login_success($js, $action) {
   }
   print ajax_render($commands);
   exit;
+}
+
+//
+//  Sets timezone list reasonably
+//
+function snowpilot_timezone_modify($form, &$form_state){
+  $zonelist = timezone_identifiers_list();
+  $zones = array();
+	dsm($form);
+  
+  foreach ($zonelist as $zone) {
+    // Only use certain cities
+    if ($zone == 'America/New_York' 
+		  || $zone == 'America/Chicago' 
+		  || $zone == 'America/Denver' 
+		  || $zone == 'America/Los_Angeles' 
+		  || $zone == 'America/Anchorage' 
+			|| $zone == 'America/Argentina/Mendoza'
+			|| $zone == 'Europe/London'
+			|| $zone == 'Europe/Paris'
+			|| $zone == 'Europe/Zurich'
+			|| $zone == 'Europe/Stockholm'
+			|| $zone == 'Europe/Berlin'
+			|| $zone == 'Asia/Kabul'
+			|| $zone == 'Asia/Karachi'
+			|| $zone == 'Asia/Kolkata'
+			|| $zone == 'Asia/Kathmandu'
+			|| $zone == 'Pacific/Auckland'
+				
+		){
+      // Get timezone abbreviation
+        $dateTime = new DateTime(); 
+        $dateTime->setTimeZone(new DateTimeZone($zone)); 
+        $zonename = $dateTime->format('T'); 
+        $zones[$zone] = t('@name - @zone: @date', array('@name' => $zonename, '@zone' => t(str_replace('_', ' ', $zone)), '@date' => format_date(REQUEST_TIME, 'custom', variable_get('date_format_short_no', 'H:i') . ' O', $zone)));
+    }
+  }
+
+  $form['timezone']['timezone']['#options'] = $zones;
+  return $form;
+	
 }
 
 function snowpilot_snowpit_set_frac_cat(&$form, $snowpit_unit_prefs){
@@ -390,14 +481,15 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	                form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
 						      ', which means the CT Score should be between 11 and 20 (inclusive).'));
 				        	}				
-				      	break;
-				      	case 'CTH':
+				      break;
+				      case 'CTH':
 				        	if ( $ct_score <21 || $ct_score >30  ){
 	                	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
 						      	', which means the CT Score should be between 21 and 30 (inclusive).'));
 				        	}				
-				      	break;
+				      break;
 			      	} // end switch CT result type
+
 						}  // end if ct score is not empty
 		      } // end "if" we have full CT test results
           break;
@@ -439,6 +531,21 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 					break;
 			
 		    } // end swith test->type
+				//
+				//  Check to see if test depth is inside pit depth
+				//
+				if ( ( ( isset ( $test['field_stability_test_score_ct']['und'][0]['value'] )  && $test['field_stability_test_score_ct']['und'][0]['value'] <> 'CTN' && $test['field_stability_test_type']['und'][0]['value'] == 'CT' )
+					|| ( isset ( $test['field_stability_test_score_ect']['und'][0]['value'] )  && $test['field_stability_test_score_ect']['und'][0]['value'] <> 'ECTX' && $test['field_stability_test_type']['und'][0]['value'] == 'ECT' )
+					||	(isset ( $test['field_stability_test_score_rb']['und'][0]['value'] ) && $test['field_stability_test_score_rb']['und'][0]['value'] <> 'RB7' && $test['field_stability_test_type']['und'][0]['value'] == 'RB' )
+					|| ( isset ($test['field_stability_test_score_st']['und'][0]['value'] ) && $test['field_stability_test_score_st']['und'][0]['value'] <> 'STN' && $test['field_stability_test_type']['und'][0]['value'] == 'ST' )
+					|| ( isset ($test['field_stability_test_score_sb']['und'][0]['value'] ) && $test['field_stability_test_score_sb']['und'][0]['value'] <> 'SBN' && $test['field_stability_test_type']['und'][0]['value'] == 'SB' )
+					|| ( $test['field_stability_test_type']['und'][0]['value'] == 'PST'  )
+						
+				  ) && ( $test['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']))){	
+					form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Test Result depth must be less than less than total snow height.");
+		  	}
+				
+				
 				// this  section makes sure that Stability test type is set.
 	  }elseif ( is_numeric($key) && isset($test['field_depth']['und'][0]['value']) && $test['field_depth']['und'][0]['value'] <> ''){
 			form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_type", "Please enter a Stability Test Type.");
@@ -470,7 +577,40 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 		  &&	$layer['field_bottom_depth']['und'][0]['value'] <= $layer['field_height']['und'][0]['value'] ){
 	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be greater than Top Depth.'));
 		}
+	} // end loop through layers 
+	
+	// Loop through temperature collection items for server-side error checking
+	foreach($form_state['values']['field_temp_collection']['und'] as $key=>$temp_item){
+		
+		if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' ){
+			
+			if ( isset( $temp_item['field_temp_temp']['und'][0]['value'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && $temp_item['field_temp_temp']['und'][0]['value'] > 0 ){ 
+				form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack measurement should be 0&deg; C or less.'));
+			}
+		}elseif ( isset ( $temp_item['field_temp_temp']['und'][0]['value'] ) 
+		  && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) 
+		  && $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
+			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack temperature measurement should be 32&deg; F or less.'));
+		}
+		if ( isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric($temp_item['field_depth']['und'][0]['value'] ) &&  $temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+//			dsm( $temp_item);
+			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
+		}
 	}
+	// Loop through density collection items for server-side error checking
+	foreach($form_state['values']['field_density_profile']['und'] as $key=>$density_item){
+
+		if ( isset( $density_item['field_density_top']['und'][0]['value'] ) && is_numeric( $density_item['field_density_top']['und'][0]['value'] ) && $density_item['field_density_top']['und'][0]['value'] > 1000 ){ 
+			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_density_top", t('Density values should be 1000 kg/m-3 or less.'));
+		}
+		// This checks for Depth item integrity with the HoS or Layers that have been entered
+		if ( isset ($density_item['field_depth']['und'][0]['value']) && is_numeric($density_item['field_depth']['und'][0]['value'] ) &&  $density_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+//			dsm( $temp_item);
+			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Density Measurement depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
+		}
+	}
+
+
 	return;
 }
 
@@ -499,11 +639,11 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 				||
 			(($test['field_stability_test_type']['und'][0]['value'] == 'ST') && !isset($test['field_stability_test_score_st']['und'][0]['value']))
 				||
-			(($test['field_stability_test_type']['und'][0]['value'] == 'PST') && !isset($test['	field_data_code_pst']['und'][0]['value']))
+			(($test['field_stability_test_type']['und'][0]['value'] == 'PST') && !isset($test['field_data_code_pst']['und'][0]['value']))
 
 			){
 				
-		  unset($form_state['values']['field_test']['und'][$key]);  // chop off this layer		
+		  unset($form_state['values']['field_test']['und'][$key]);  // chop off this test result		
 			// verified that this works
 		  }
 		}
@@ -631,9 +771,18 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	$form['field_layer']['und']['#title'] = "Snowpack Layers"; // 
 	// Add more button:
 	$form['field_layer']['und']['add_more']['#value'] = "Add Layer";
-	//dsm($form['field_layer']['und']);
+
+/*	$form['field_layer']['und']['clear_layers']= array(
+		'#type' => 'submit',
+		'#name' => 'field_clear_layers',
+		'#value' => 'Clear All Layers',
+		'#attributes' => array( 'class' => array( 0 => 'field-clear-layers-submit'), ),
+		'#limit_validation_errors' => array( 0 => array ( 0 => 'field_layer', 1 => 'und' ), ),
+		'#submit' => array('field_clear_layers_submit'),
+		'#ajax' => array('callback' => 'field_add_more_js' ,'wrapper' => 'field-layer-add-more-wrapper', 'effect' => 'fade'),		
+		'#weight' => 20,
+	);*/
 	$x=0;
-	//dsm($form['field_layer']['und']);
 	
 	while(isset($form['field_layer']['und'][$x] )){
 		// Set remove button text
@@ -686,6 +835,10 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		//$form['field_layer']['und'][$x]['#pre_render'][] = 'snowpilot_graintypes_tweak';
 		$x++;
 	}
+}
+function field_clear_layers_submit($form, &$form_state){
+	watchdog('snowpilot' , 'clear layers functi is hit');
+	dsm($form);
 }
 
 /**
@@ -910,12 +1063,28 @@ function _snowpilot_find_pit_depth($node){
 			if ($layer->field_height['und'][0]['value'] > $max ) $max = $layer->field_height['und'][0]['value'] ;
 			if ($layer->field_bottom_depth['und'][0]['value'] > $max ) $max = $layer->field_bottom_depth['und'][0]['value'] ;	
 		}
-		
 	}
-	
 	return $max;
 }
-
+//
+//  This function returns the maximum depth of a snowpit ( if known ) for $form  ( = form_state )
+//    if the snowpit depth cannot be determined, either because no layers are given, or no total height of snowpack is given
+//    then this functio nreturns 1000 ,assumed to be the max possible anyone would dig!!!
+function _raw_max_pit_depth( $form ){
+	if ( isset ( $form['field_total_height_of_snowpack']['und'][0]['value']) && $form['field_total_height_of_snowpack']['und'][0]['value'] > 0 ){
+	  return $form['field_total_height_of_snowpack']['und'][0]['value']; 
+	}elseif ( isset ( $form['field_layer']['und']) ){
+		$max = 0 ;
+		foreach ( $form['field_layer']['und'] as $layer ){
+			//dsm($layer);
+			if ( isset($layer['field_height']['und'][0]['value'] ) && $layer['field_height']['und'][0]['value'] > $max  ) {  $max = $layer['field_height']['und'][0]['value']; }
+			//if ( $layer['field_bottom_depth']['und'][0]['value'] > $max ) $max = $layer['field_bottom_depth']['und'][0]['value'];
+		}
+		return $max;
+	}else{
+		return 1000;
+	}	
+}
 
 function depth_val($a,$b){
 	$a_depth = isset($a->field_depth['und'][0]['value']) ? $a->field_depth['und'][0]['value'] : 0; 
@@ -1056,238 +1225,5 @@ function snowpilot_user_has_role($roles) {
 
 function snowpilot_graph_field_trunc(&$img,$string,$x_limit){
 	
-}
-/*
-//  This function creates a pitxml based on the node information passed to it. should be compliant with the snowpilot datamodel.
-//
-//
-*/
-function snowpilot_node_write_pitxml($node){
-	$snowpilot_xmldoc = new DOMDocument('1.0', 'UTF-8');
-	$snowpilot_PitCore = $snowpilot_xmldoc->createElement("Pit_Observation"); $snowpilot_xmldoc->appendChild($snowpilot_PitCore);
-	$snowpilot_User = $snowpilot_xmldoc->createElement("User"); $snowpilot_PitCore->appendChild($snowpilot_User);
-	$snowpilot_Location = $snowpilot_xmldoc->createElement("Location"); $snowpilot_PitCore->appendChild($snowpilot_Location);
-	$snowpilot_Layer = $snowpilot_xmldoc->createElement("Layer"); // ...but we have multiple layers
-	$snowpilot_ShearTest = $snowpilot_xmldoc->createElement("Shear_Test_Result"); // Likewise, multiple shear test results
-	$snowpilot_Density = $snowpilot_xmldoc->createElement("Density_Profile");
-	$snowpilot_Temp = $snowpilot_xmldoc->createElement("Temperature_Profile");
-	
-	//PitCore Attributes: activities, aviLoc,iLayerNumber, bld, stability,avipit,incline,winDir,skiAreaPit ,bcPit, testPit,windspeed,aspect,skiBoot,measureFrom,sky,sufacePen, windloading,heightOfSnowpack,precip , serial, version,pitNotes,crownObs,timestamp,iDepth
-	$activities = $snowpilot_xmldoc->createAttribute("activities");
-	$activities->value = _generate_specifics_string($node);
-	$snowpilot_PitCore->appendChild($activities);
-	
-	//aviLoc - or 'Pit is near avalanche at what point?'
-	$aviLoc = $snowpilot_xmldoc->createAttribute("aviLoc");
-	$aviLoc->value = isset($node->field_near_avalanche['und'][0]['value']) ? $node->field_near_avalanche['und'][0]['value'] : '' ;
-	$snowpilot_PitCore->appendChild($aviLoc);
-	// iLayerNumber
-	// this implementation assumes that the layers are in numerical order from top down; item_id is a unique id in field collections, can't use it.
-	$iLayerNumber = $snowpilot_xmldoc->createAttribute("iLayerNumber");	
-	$iDepth = $snowpilot_xmldoc->createAttribute("iDepth");
-	$ids = array();
-	foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
-	$all_layers = field_collection_item_load_multiple($ids);
-	$iLayerNumber_value = 1;	
-	$iLayerNumber->value = '';
-	foreach($all_layers as $x => $layer){
-		if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1') { 
-			
-			$iLayerNumber->value = $iLayerNumber_value ; 
-			$iDepth->value = 	($layer->field_concern['und'][0]['value'] == 'top') ? $layer->field_height['und'][0]['value'] : $node->field_bottom_depth['und'][0]['value'] ;
-			break; 
-		}else{
-			$iLayerNumber_value++;
-		}
-	}
-  $snowpilot_PitCore->appendChild($iLayerNumber);
-	$snowpilot_PitCore->appendChild($iDepth);
-	//
-	//bld is the build number from the snowpilot desktop app. for this case, we will use drupal version 7.xx 
-	$bld = $snowpilot_xmldoc->createAttribute("bld");
-	$bld->value = VERSION;
-	$snowpilot_PitCore->appendChild($bld);
-	//
-	// stability
-	$stability = $snowpilot_xmldoc->createAttribute("stability");
-	//dsm($node->field_stability_on_similar_slope['und'][0]['value']);
-	$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope');
-	$stability->value = isset($node->field_stability_on_similar_slope['und'][0]['value']) ? $similar_stability[0]['#markup'] : '' ;
-	$snowpilot_PitCore->appendChild($stability);
-	//
-	// aviPit
-	//
-	$aviPit = $snowpilot_xmldoc->createAttribute("aviPit");
-	$crownObs = $snowpilot_xmldoc->createAttribute("crownObs");
-
-	$aviPit->value = (isset($node->field_adjacent_to_avy['und'][0]['value'] ) && $node->field_adjacent_to_avy['und'][0]['value'] == 1  ) ? 'true' : 'false';
-	$snowpilot_PitCore->appendChild($aviPit);
-	$crownObs->value = $aviPit->value;
-	$snowpilot_PitCore->appendChild($crownObs); // CrownObs is a synonym for aviPit in the avscience_db
-	//
-	//
-	//  aviLoc - location of pit relative to the Avalanche: crown, flank, none ( unlike desktop app, this will only be populated in the case of aviPit == true )
-	//
-	$aviLoc = $snowpilot_xmldoc->createAttribute("aviLoc");
-	if (isset($node->field_adjacent_to_avy['und'][0]['value']) && ($node->field_adjacent_to_avy['und'][0]['value'] == 1) && isset($node->field_near_avalanche['und'][0]['value'] ) ){
-	  $aviLoc->value = $node->field_near_avalanche['und'][0]['value'] ;
-	}else{
-		$aviLoc->value = '';
-	}
-	$snowpilot_PitCore->appendChild($aviLoc);
-	
-	// incline
-	$incline = $snowpilot_xmldoc->createAttribute("incline");
-	$incline->value = isset($node->field_slope_angle['und'][0]['value']) ? $node->field_slope_angle['und'][0]['value'] : '' ;
-	$snowpilot_PitCore->appendChild($incline);
-	//
-	// winDir
-	$winDir = $snowpilot_xmldoc->createAttribute("winDir");
-	$winDir->value = isset($node->field_wind_direction['und'][0]['value']) ? snowpilot_cardinal_wind_dir($node->field_wind_direction['und'][0]['value']) : '' ;
-	$snowpilot_PitCore->appendChild($winDir);
-	//
-	//skiAreaPit
-	$skiAreaPit = $snowpilot_xmldoc->createAttribute("skiAreaPit");
-	$skiAreaPit->value = (isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) && $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == 1 ) ? 'true' : 'false' ;
-	$snowpilot_PitCore->appendChild($skiAreaPit);
-	//
-	//
-	// bcPit        Trinary: true , false ,or '' unset
-	// we leavre unset if the 'skiAreaPit' variable is unset, or false
-	
-	$bcPit = $snowpilot_xmldoc->createAttribute("bcPit");
-	if ( !isset($node->field_pit_is_representative_of_b['und'][0]['value']) || !isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) || $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == 0){
-		$bcPit->value = '';
-	}elseif($node->field_pit_is_representative_of_b['und'][0]['value'] == '1' ){
-		$bcPit->value = 'true';
-	}else{
-		$bcPit->value = 'false';
-	}
-	$snowpilot_PitCore->appendChild($bcPit);
-	//
-	// testpit
-	//
-	$testPit = $snowpilot_xmldoc->createAttribute("testPit");
-	$testPit->value = (isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) && $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == 1 ) ? 'true' : 'false' ;
-	$snowpilot_PitCore->appendChild($testPit);
-	//
-	//windspeed
-	$windspeed = $snowpilot_xmldoc->createAttribute("windspeed");
-	$wind_speed = field_view_field('node', $node, 'field_wind_speed');
-	$windspeed->value = (isset($node->field_wind_speed['und'][0]['value']) ) ? $wind_speed[0]['#markup'] : '' ;
-	$snowpilot_PitCore->appendChild($windspeed);
-	//
-	// aspect
-	$aspect = $snowpilot_xmldoc->createAttribute("aspect");
-	$aspect->value = isset($node->field_aspect['und'][0]['value']) ?  $node->field_aspect['und'][0]['value'] : '' ;
-	$snowpilot_PitCore->appendChild($aspect);
-	//
-	// skiBoot   - Surface Penetration  
-	// set whether dki or boot penetration is used; and identify the value of each
-	$skiBoot = $snowpilot_xmldoc->createAttribute("skiBoot");
-	$surfacePen = $snowpilot_xmldoc->createAttribute("surfacePen");
-	if ( !isset($node->field_surface_penetration['und'][0]['value']) ){
-		$skiBoot->value = '';
-	}elseif($node->field_surface_penetration['und'][0]['value'] == 'boot' ){
-		$skiBoot->value = 'boot';
-		$surfacePen->value = isset($node->field_boot_penetration_depth['und'][0]['value']  ) ?
-			$node->field_boot_penetration_depth['und'][0]['value'] : '' ;
-	}else{
-		$skiBoot->value = 'ski';
-		$surfacePen->value = isset($node->field_ski_penetration['und'][0]['value']  ) ?
-			$node->field_ski_penetration['und'][0]['value'] : '' ;
-	}
-	$snowpilot_PitCore->appendChild($skiBoot);
-	$snowpilot_PitCore->appendChild($surfacePen);
-	//
-	//  measureFrom
-	$measureFrom = $snowpilot_xmldoc->createAttribute("measureFrom");
-	$measureFrom->value = (isset($node->field_depth_0_from['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top' ) ? 'top' : 'bottom' ; 
-	$snowpilot_PitCore->appendChild($measureFrom);
-	//
-	// Sky coverage
-	//
-	$skyCoverage = $snowpilot_xmldoc->createAttribute('sky');
-	if (isset($node->field_sky_cover['und'])){
-		$sky_cover = field_view_field('node', $node, 'field_sky_cover'); 
-		$skyCoverage->value = $sky_cover[0]['#markup'];
-	}
-	$snowpilot_PitCore->appendChild($skyCoverage);
-	//
-	//  Wind Loading
-	//
-	$windLoading = $snowpilot_xmldoc->createAttribute('windLoading');
-	if (isset ( $node->field_wind_loading['und'][0]['value'])){
-		$windLoading->value = $node->field_wind_loading['und'][0]['value'];
-	}
-	$snowpilot_PitCore->appendChild($windLoading);
-	//
-	//  heightof Snowpack
-	//
-	$HoSnowpack = $snowpilot_xmldoc->createAttribute('heightOfSnowpack');
-	if (isset ( $node->field_total_height_of_snowpack['und'][0]['value'])){
-		$HoSnowpack->value = $node->field_total_height_of_snowpack['und'][0]['value'];
-	}
-	$snowpilot_PitCore->appendChild($HoSnowpack);
-	//
-	//  Precipitation
-	//
-	$precipitation = $snowpilot_xmldoc->createAttribute('precip');
-	if ( isset ( $node->field_precipitation['und'][0]['value']) ){
-		$precipitation->value = $node->field_precipitation['und'][0]['value'];
-	}
-	$snowpilot_PitCore->appendChild($precipitation);
-	//
-	//  Precipitation RATE, a new field for snowpilot_xml format
-	//
-	$precip_rate = $snowpilot_xmldoc->createAttribute('precip_rate');
-	if ( isset ( $node->field_precipitation_rate['und'][0]['value']) ){
-		$precip_rate->value = $node->field_precipitation_rate['und'][0]['value'];
-	}
-	$snowpilot_PitCore->appendChild($precip_rate);
-	//
-	//  Serial number - must be unique to this pit
-	//  To maintain continuity with the desktop app, it should be username + timestamp ( unix, w/ milliseconds) of posting the item
-	//  php microtime won't work here; we jsut use a millisecond timestamp padded with 0
-	//
-	$serial_num = $snowpilot_xmldoc->createAttribute('serial');
-	$account = user_load($node->uid);
-	$serial_num->value = $account->name . $node->created . '000';
-	$snowpilot_PitCore->appendChild($serial_num);
-	//
-	//  version - this will include drupal bld number ( starting at 7.5x ) and then also include the snowpilot.module version, and the browser type and version (similar to desktop app)
-	//  I don't think browser type is directly supported within drupal, need browsecap module (?)
-	//
-	$web_version = $snowpilot_xmldoc->createAttribute('version');
-	$snowpilot_version = '0.1'; // this will need to be read from the module version eventually
-	$web_version->value = VERSION.'-'.$snowpilot_version ; // and then we'll need to append the browser and OS if we can.
-	$snowpilot_PitCore->appendChild($web_version);
-	//
-	// Pit Notes- a potentially long text field, with wierd foregin characters and illegal characters
-	//
-	$pit_notes = $snowpilot_xmldoc->createAttribute('pitNotes');
-	if ( isset( $node->body)){
-		$pit_notes->value = $node->body['und'][0]['safe_value'];
-	}
-	$snowpilot_PitCore->appendChild($pit_notes);
-	//
-	//  timestamp
-	//
-	$timestamp=$snowpilot_xmldoc->createAttribute('timestamp');
-	$timestamp->value = $node->created . '000';
-	$snowpilot_PitCore->appendChild($timestamp);
-	//
-	// 
-	//
-	
-	
-	$outXML = $snowpilot_xmldoc->saveXML();
-	$formatted_xml = new DOMDocument('1.0', 'UTF-8');
-	$formatted_xml->preserveWhiteSpace = false;
-	$formatted_xml->formatOutput = true;
-	$formatted_xml->loadXML($outXML);
-	$final_xml = $formatted_xml->saveXML();
-	//dsm($final_xml);
-	return $final_xml;
 }
 

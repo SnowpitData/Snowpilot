@@ -29,7 +29,7 @@
         <?php endif; ?>
       </div>
     <?php endif; ?>
-
+    <?php print render($page['header']); ?>
     <?php if ($secondary_menu): ?>
       <nav class="header__secondary-menu" id="secondary-menu" role="navigation">
         <?php print theme('links__system_secondary_menu', array(
@@ -46,7 +46,7 @@
       </nav>
     <?php endif; ?>
 
-    <?php print render($page['header']); ?>
+
 
   </header>
 

@@ -23,14 +23,22 @@ function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
 		 	$layer->y_val_top_xlate = $global_min;	
 			// We have to do this incase this is a one-layer pit
 			// This $layer->y_val_xlate value will be overwritten if the pit has multiple layers; we need to make sure it is at least 20 pixels high ( hence ternary function )
-			$layer->y_val_xlate =	$layer->y_val> $layer->y_val_top_xlate +20 ? $layer->y_val : $layer->y_val_top_xlate +20  ;
+			if ($layer->y_val > $layer->y_val_top_xlate +20 ){ /// We have a first layer that is thick enough ( > 20 px )
+			  $layer->y_val_xlate =	$layer->y_val  ;
+				
+			}else{ /// OK, we have a very narrow first layer
+				$layer->y_val_xlate = $layer->y_val_top_xlate +20;
+				$layer->collision_flag = TRUE;
+			}
 			continue;
 		 }
+		 
 		 $cg = array();
-		 if (snowpilot_collision_check_down($all_layers[$x-1], $layer ) ){
+		 //
+		 // We might have a collision group under one of two circumstances: the layer is less than 20px high, or the layer from above ( if there is one) bumps into it
+		 if ( isset ( $all_layers[$x-1] ) && snowpilot_collision_check_down($all_layers[$x-1] , $layer )  ){
 				$layer->collision_flag = TRUE;
-				//$all_layers[$x-1]->collision_flag = TRUE;
-				//$cg[$x-1] = array ('y_val' => $all_layers[$x-1]->y_val , 'y_val_top' => $all_layers[$x-1]->y_val_top );
+
 				$cg[$x] = array ('y_val' => $layer->y_val , 'y_val_top' => $layer->y_val_top );
 				//
 				//  Loop here to look for conflicts between the cg and the layer(s) above
@@ -56,7 +64,7 @@ function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
 				if ( isset($all_layers[$x-1]->collision_flag) && $all_layers[$x-1]->collision_flag == TRUE){ // layer above IS a collision, make it 20 pixels high, and set that to the top of current layer too		
 					$all_layers[$x-1]->y_val_xlate = $all_layers[$x-1]->y_val_top_xlate + 20;
 					$layer->y_val_top_xlate =	$all_layers[$x-1]->y_val_xlate;
-				}else{   // layer obove is not a collision, write it all straight across
+				}else{   // layer above is not a collision, write it all straight across
 				
 					$layer->y_val_top_xlate = $layer->y_val_top;
 					$all_layers[$x-1]->y_val_xlate = $layer->y_val_top;	
@@ -85,7 +93,7 @@ function _temp_profile_find_min_temp($all_temps,$min_temp = -10 ){
 }
 
 function snowpilot_collision_check_down($layerx, $layery){
-	if (($layerx->y_val_top_xlate + 20 > $layery->y_val-20) || $layery->y_val_top+20 >$layery->y_val){
+	if (($layerx->y_val_top_xlate + 20 > $layery->y_val-20)  || $layery->y_val_top+20 >$layery->y_val ){
 		return TRUE;
 	}
 	return FALSE;
@@ -138,6 +146,7 @@ function _strip_dupe_tests(&$test_results, $pit_depth, $measure_from ){
 		if ( $test->multiple > 0){
 		  $test->y_val = snowpit_graph_pixel_depth($depth_field, $pit_depth, $measure_from );
 			$simple_test_results[] = $test;
+			
 	  }else{
 			// dont set y_val, dont set str[]
 	  }
@@ -389,79 +398,6 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE, $ha
 	
 }
 
-function _snowpilot_option_padding($tid){
-	$tid2spaces = array(
-		'33' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Precipitation particles
-		'34' => '', // Decomposing & fragmented PP
-		'35' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Rounded Grains
-		'36' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Faceted crystals
-		'37' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // depth hoar
-		'38' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // surface hoar
-		'39' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // melt forms
-		'40' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // ice formations
-		'41' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // machine made snow
-		
-		// Precipitation Particles types
-		'42' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //PP -> columns
-		'43' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // PP -> Needles
-		'44' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // PP -> plates
-		'45' => '&nbsp;', // PP -> stellars, dendrites
-		'46' => '&nbsp;&nbsp;&nbsp;', // irregular crystals
-		'47' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // graupel
-		'48' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Hail
-		'49' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Ice pellets
-		'50' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // rime
-		
-		// Decomposing and fragmented precip particles
-		'104' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // partly decomposed PP
-		'78' => '&nbsp;', // wind-broken precip particles
-		//  Rounded grain types
-		'79' => '&nbsp;&nbsp;&nbsp;&nbsp;', // small rounded particles
-		'80' => '&nbsp;&nbsp;&nbsp;&nbsp;', //large rounded particles
-		'81' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //Wind packed
-		'82' => '&nbsp;', // faceted rounded particles
-		// Faceted crystal types
-		'105' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Solid faceted particles
-		'83' => '&nbsp;', // Near surface faceted particles
-		'84' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',  // Rounding faceted particles 
-		
-		// Surface Hoar types
-		'90' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // surface hoar crystals
-		'91' => '&nbsp;', // cavity or crevasse hoar
-		'92' => '&nbsp;&nbsp;&nbsp;&nbsp;', // Rounding surface hoar
-		// Depth Hoar types
-		'85' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Hollow cups
-		'86' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //Hollow Prizms
-		'87' => '&nbsp;&nbsp;&nbsp;&nbsp;', // Chains of depth hoar
-		'88' => '&nbsp;', // large striated crystals
-		'89' => '&nbsp;&nbsp;&nbsp;', // rounding depth Hoar
-		
-		// Melt forms types
-		'93' => '&nbsp;',// clustered rounded grains
-		'94' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //rounded polycrystals
-		'95' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // Slush
-		'96' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', //Melt-freeze crust
-		
-		// Ice Formations
-		'97' => '&nbsp;&nbsp;&nbsp;&nbsp;',// Ice Layer
-		'98' => '&nbsp;',// Ice column
-		'99' => '&nbsp;&nbsp;&nbsp;',// Basal Ice
-		'100' => '&nbsp;',//  Rain crust
-		'101' => '&nbsp;&nbsp;&nbsp;',// Sun crust
-		
-		// Machine made snow types
-		'102' => '&nbsp;', // rounded Polycrystalline particles
-		'103' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', // crushed Ice Particles  
-		
-	);
-	if ( is_numeric($tid) && isset($tid2spaces[$tid])){
-	  return $tid2spaces[$tid];
-	}else{
-		return '';
-	}
-}
-
-
 function _tid2snowsymbols($tid = NULL, $all = FALSE){
 	
 	
@@ -539,7 +475,7 @@ function _tid2snowsymbols($tid = NULL, $all = FALSE){
 
 
 function snowpit_graph_pixel_depth($depth, $pit_depth, $meas_from = 'bottom'){
-	$pixels_per_cm = 594 / (int) $pit_depth ;
+	$pixels_per_cm = (int) 594 / $pit_depth ;
 	
 	$h = ($meas_from == 'top') ? (157 + $depth * $pixels_per_cm) : (751 - $depth * $pixels_per_cm );
 	return $h; 
@@ -574,10 +510,12 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
  						) {$test->multiple += 1; $test_compare->multiple = 0; unset($test_compare); continue 3;	}
  					break;
 					case 'CT':
-				  if (( $test->field_ct_score == $test_compare->field_ct_score) &&
+				  
+					if (( $test->field_ct_score == $test_compare->field_ct_score) &&
 						  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_fracture_character == $test_compare->field_fracture_character)
 					) {$test->multiple += 1; $test_compare->multiple = 0;  unset($test_compare); continue 3;	}
+					break;
 					case 'PST':
 				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
 						  ( $test->field_length_of_saw_cut == $test_compare->field_length_of_saw_cut) &&
@@ -617,7 +555,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 		
   	 }else{ // this is a singluar item, write straight across
 			 if ( ! ( isset ($test->field_depth['und'][0]['value']))){  // in case of CTN or other test results with no depth value, set y_position
-			 	$test->y_position =  $measure_from == 'bottom' ? snowpit_graph_pixel_depth( 0, $pit_depth, $measure_from) : $pit_depth ;		
+			 	$test->y_position =  $measure_from == 'bottom' ? snowpit_graph_pixel_depth( 0, $pit_depth, $measure_from) :  snowpit_graph_pixel_depth( $pit_depth, $pit_depth, $measure_from) ;		
 			 }else{
   	  	 $test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from );
 		   }
@@ -702,20 +640,15 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
       imagettftext($img, 11, 0, 14, 17, $black, $value_font, $node->title);
 			// Location information
       if ( isset ($node->field_loaction['und'][0]['tid'])){
-				$term_obj = taxonomy_term_load($node->field_loaction['und'][0]['tid']);
-				$loc_name = $term_obj->name;
-				$parents = taxonomy_get_parents($node->field_loaction['und'][0]['tid']);
-				$parents_name = '';
-				foreach($parents as $parent ){
-					$parents_name .= $parent->name;
+				$term_obj_region = taxonomy_term_load($node->field_loaction['und'][0]['tid']);
+				imagettftext($img, 11, 0, 14, 53, $black, $value_font, $term_obj_region->name); 
+				if ( isset ( $node->field_loaction['und'][1]['tid'] )){
+					$term_obj_region = taxonomy_term_load($node->field_loaction['und'][1]['tid']);
+					
+					imagettftext($img, 11, 0, 14, 35, $black, $value_font, $term_obj_region->name);
+					
 				}
-				
-				if ( isset ($parents_name)){
-			    imagettftext($img, 11, 0, 14, 35, $black, $value_font, $parents_name);
-				}
-				if ( isset ($loc_name)){
-        	imagettftext($img, 11, 0, 14, 53, $black, $value_font, $loc_name); 
-				}
+
 			}
       $text_pos = imagettftext($img, 11, 0, 14, 71, $black, $label_font, 'Elevation: ');
 			if (isset($node->field_elevation['und'])){
@@ -730,7 +663,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			$specifics = _generate_specifics_string($node);
 			imagettftext($img, 9, 0, $text_pos[2], 107, $black, $value_font, $specifics );
 			// Observer
-			imagettftext($img, 11, 0, 183 , 17, $black,  $value_font, $user_account->name . " (". $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value'].")");
+			imagettftext($img, 11, 0, 183 , 17, $black,  $value_font, $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value']);
 			imagettftext($img, 11, 0, 183, 35, $black, $value_font, date('D M j H:i Y (T) ', 
 			strtotime($node->field_date_time['und'][0]['value']." ". $node->field_date_time['und'][0]['timezone_db']))); //Date / Time of observation
 
@@ -831,6 +764,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];}
 				
 				$test_results = field_collection_item_load_multiple($ids);
+				// Here we go ahead and set a value for no-release type test results: ECTX, CTN, etc
+				foreach($test_results as $test) {
+					if ( !isset($test->field_depth['und'][0]['value'] ) ){
+						$test->field_depth['und'][0]['value'] = ($snowpit_unit_prefs['field_depth_0_from'] == 'top') ? $pit_depth : 0 ;
+					}
+				}
 				uasort($test_results, 'depth_val');
 				//
 				// reversing the order of the test results makes it work when outputting the Stability test results on the graph when measuring from top
@@ -850,7 +789,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						}
 						if ( count($test->field_stability_comments) ){
 							if ( $comment_count < 5 ){
-								imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test->field_depth['und'][0]['value'].': '.$test->field_stability_comments['und'][0]['safe_value'] );
+								$test_depth = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
+								imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'] );
 								$comment_count++;
 							}else{
 								imagettftext($img, 7, 0, 645, $comment_count*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes ... ]' );
@@ -952,6 +892,13 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						  imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
 					  }
 					}
+					// write density measurements that are from the 'Layers' tab into the rho column ( in addition to Densities )
+					if ( isset ( $layer->field_density_top['und'][0]['value'] )){
+						imageline($img, 667, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']), 707, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']),$black);
+						imagettftext($img, 8, 0, 669, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])-5,$black, $label_font, $layer->field_density_top['und'][0]['value']);
+						
+					}
+					
 					snowpilot_draw_layer_polygon($img, $layer, $purple_layer, TRUE, $snowpit_unit_prefs['hardnessScaling']);  // the fill
 					snowpilot_draw_layer_polygon($img, $layer, $blue_outline, FALSE, $snowpit_unit_prefs['hardnessScaling']);  // the outline
 					// this mark the layer if its a critical layer, and save some 
@@ -972,7 +919,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			if (isset($concern_delta)){
 				switch ($all_layers[$concern_delta]->field_concern['und'][0]['value']){
 					case 'entire layer':
-						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $red_layer, TRUE, $snowpit_unit_prefs['hardnessScaling']);			  
+						//snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $red_layer, TRUE, $snowpit_unit_prefs['hardnessScaling']);
+						//full-on red layer was too much; withdrawn for now; in favor of perhaps diagonal lines of red indicating layer of concern ( all layer ) in future
+						// 
 					break;
 					case 'top':
 						imageline($img, $x_redline, $y_redline_top+2, 446, $y_redline_top+2, $red_layer );
@@ -1110,9 +1059,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	
 	// Output the png image
 	$filename = 'graph-'.$node->nid ;
-	imagejpeg($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.jpg',100);
+	imagejpeg($img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.jpg',100);
 	
-	imagepng($img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.png');
+	imagepng($img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.png');
 	snowpilot_snowpit_crop_layers_write($img,$node->nid);
 // Destroy GD image
 //imagedestroy($img);
@@ -1128,5 +1077,5 @@ function snowpilot_snowpit_crop_layers_write($img,$nid){
 	//$new_img = imagescale($new_img,350);
 	$filename = 'layers-'.$nid ;
 	
-	imagepng($new_img, '/Users/snowpilot/Sites/snowpilot/sites/default/files/snowpit-profiles/'.$filename. '.png');	
+	imagepng($new_img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.png');	
 }
