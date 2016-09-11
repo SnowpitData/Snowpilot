@@ -539,6 +539,10 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 						if (!isset( $test['field_length_of_isolated_col_pst']['und'][0]['value'] ) || $test['field_length_of_isolated_col_pst']['und'][0]['value'] == '' ){
 							form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_isolated_col_pst", "Please enter a Length of Isolated column for PST result.");
 						}
+						if ( isset( $test['field_length_of_isolated_col_pst']['und'][0]['value'] ) && isset($test['field_length_of_saw_cut']['und'][0]['value']) && ($test['field_length_of_saw_cut']['und'][0]['value'] > $test['field_length_of_isolated_col_pst']['und'][0]['value']) ){
+							form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_isolated_col_pst", "The Length of Saw Cut value should be less than the Length of Isolated Column");
+							
+						}
 					
 					break;
 			
