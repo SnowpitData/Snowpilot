@@ -789,7 +789,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						}
 						if ( count($test->field_stability_comments) ){
 							if ( $comment_count < 5 ){
-								$test_depth = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
+								$test_depth = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value']+0 : 0 ;
 								imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'] );
 								$comment_count++;
 							}else{
@@ -877,7 +877,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				// Output Layer comments
 					if (isset($concern_delta) && ($concern_delta == $layer->item_id) ){
 						if ($comment_counter < 5){
-					  	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value'].": Problematic Layer");
+					  	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,rtrim($layer->field_bottom_depth['und'][0]['value'], ' .0').'-'.rtrim($layer->field_height['und'][0]['value'], ' .0').": Problematic Layer");
 						  $comment_counter++;
 					  }else{
 							imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');

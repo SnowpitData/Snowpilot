@@ -593,29 +593,28 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	
 	// Loop through temperature collection items for server-side error checking
 	foreach($form_state['values']['field_temp_collection']['und'] as $key=>$temp_item){
-		$this_temp = $temp_item['field_temp_temp'];
-		if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' && is_array($this_temp['und'])){
+
+		if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' && is_numeric($key)){
 			if ( isset( $temp_item['field_temp_temp'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && $temp_item['field_temp_temp']['und'][0]['value'] > 0  ){ 
 				form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack measurement should be 0&deg; C or less.'));
 			}
-		}elseif ( is_array($this_temp['und'])  
+		}elseif ( is_numeric($key)  
 			&& isset ( $temp_item['field_temp_temp']['und'][0]['value'] )
 		  && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) 
 		  && $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
 			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack temperature measurement should be 32&deg; F or less.'));
 		}
-		if ( is_array($this_temp['und']) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric($temp_item['field_depth']['und'][0]['value'] ) &&  $temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+		if ( is_numeric($key) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric($temp_item['field_depth']['und'][0]['value'] ) &&  $temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
 			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
 		}
 	}
 	// Loop through density collection items for server-side error checking
 	foreach($form_state['values']['field_density_profile']['und'] as $key=>$density_item){
-    $this_density = $density_item['field_density_top'];
-		if ( is_array($this_density['und'] )  && isset( $this_density['und'][0]['value'] ) && is_numeric( $this_density['und'][0]['value'] ) && $this_density['und'][0]['value'] > 1000 ){ 
+		if ( is_numeric($key )  && isset( $density_item['field_density_top']['und'][0]['value'] ) && is_numeric( $density_item['field_density_top']['und'][0]['value'] ) && $density_item['field_density_top']['und'][0]['value'] > 1000 ){ 
 			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_density_top", t('Density values should be 1000 kg/m-3 or less.'));
 		}
 		// This checks for Depth item integrity with the HoS or Layers that have been entered
-		if ( is_array($this_density['und'] )  && isset ($density_item['field_depth']['und'][0]['value']) && is_numeric($density_item['field_depth']['und'][0]['value'] ) &&  $density_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+		if ( is_numeric($key )  && isset ($density_item['field_depth']['und'][0]['value']) && is_numeric($density_item['field_depth']['und'][0]['value'] ) &&  $density_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
 //			dsm( $temp_item);
 			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Density Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
 		}
@@ -1086,9 +1085,9 @@ function _raw_max_pit_depth( $form ){
 	  return $form['field_total_height_of_snowpack']['und'][0]['value']; 
 	}elseif ( isset ( $form['field_layer']['und']) ){
 		$max = 0 ;
-		foreach ( $form['field_layer']['und'] as $layer ){
+		foreach ( $form['field_layer']['und'] as $key => $layer ){
 			//dsm($layer);
-			if ( isset($layer['field_height']['und'][0]['value'] ) && $layer['field_height']['und'][0]['value'] > $max  ) {  $max = $layer['field_height']['und'][0]['value']; }
+			if ( is_numeric( $key ) && isset($layer['field_height']['und'][0]['value'] ) && $layer['field_height']['und'][0]['value'] > $max  ) {  $max = $layer['field_height']['und'][0]['value']; }
 			//if ( $layer['field_bottom_depth']['und'][0]['value'] > $max ) $max = $layer['field_bottom_depth']['und'][0]['value'];
 		}
 		return $max;
@@ -1176,8 +1175,9 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 		$string = $test->multiple.'x '.$string;
 	}
 	
-	if ( isset($test->field_depth['und'][0]['value'])){
-		$string .= " @".$test->field_depth['und'][0]['value'].$snowpit_unit_prefs['field_depth_units']; 
+	if ( isset($test->field_depth['und'][0]['value']  )){
+		$final_depth = $test->field_depth['und'][0]['value'] + 0;
+		$string .= " @". $final_depth .$snowpit_unit_prefs['field_depth_units']; 
 	}
 	return $string;
 }
