@@ -3,7 +3,9 @@
 include_once('includes/unit_prefs.inc.php');
 include_once('includes/graphing_functions.inc.php');
 include_once('includes/export_xml.inc.php');
-include_once('includes/dropdown.theme.inc');
+//include_once('includes/snowpilot_mapping.php');
+//include_once('includes/snowpilot_mapping_view.php');
+
 
 //function snowpilot_menu_alter(){
 	//}
@@ -243,6 +245,9 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		      // edit timezone list
 		      $form['#after_build'][] = 'snowpilot_timezone_modify';
 		    }
+			$form['#after_build'][] = 'snowpilot_password_field';
+			
+				
 		break;
 		// change 'sticky node' to 'snowpit locked, submitted to avscience DB'
 		case 'node_admin_content':
@@ -340,7 +345,6 @@ function snowpilot_login_success($js, $action) {
 function snowpilot_timezone_modify($form, &$form_state){
   $zonelist = timezone_identifiers_list();
   $zones = array();
-	dsm($form);
   
   foreach ($zonelist as $zone) {
     // Only use certain cities
@@ -373,6 +377,14 @@ function snowpilot_timezone_modify($form, &$form_state){
   $form['timezone']['timezone']['#options'] = $zones;
   return $form;
 	
+}
+
+function snowpilot_password_field( $form, &$form_state){
+	//$form['account']['current_pass_required_values']['#value']['#pass'] = t('New Password');
+	//dsm($form['account']['pass']['pass1']['#title']);
+	$form['account']['pass']['pass1']['#title'] = t('Change Password');
+	$form['account']['pass']['pass2']['#title'] = t('Confirm New Password');
+  return $form;
 }
 
 function snowpilot_snowpit_set_frac_cat(&$form, $snowpit_unit_prefs){
@@ -581,32 +593,31 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	
 	// Loop through temperature collection items for server-side error checking
 	foreach($form_state['values']['field_temp_collection']['und'] as $key=>$temp_item){
-		
-		if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' ){
-			
-			if ( isset( $temp_item['field_temp_temp']['und'][0]['value'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && $temp_item['field_temp_temp']['und'][0]['value'] > 0 ){ 
+		$this_temp = $temp_item['field_temp_temp'];
+		if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' && is_array($this_temp['und'])){
+			if ( isset( $temp_item['field_temp_temp'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && $temp_item['field_temp_temp']['und'][0]['value'] > 0  ){ 
 				form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack measurement should be 0&deg; C or less.'));
 			}
-		}elseif ( isset ( $temp_item['field_temp_temp']['und'][0]['value'] ) 
+		}elseif ( is_array($this_temp['und'])  
+			&& isset ( $temp_item['field_temp_temp']['und'][0]['value'] )
 		  && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) 
 		  && $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
 			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack temperature measurement should be 32&deg; F or less.'));
 		}
-		if ( isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric($temp_item['field_depth']['und'][0]['value'] ) &&  $temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
-//			dsm( $temp_item);
-			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
+		if ( is_array($this_temp['und']) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric($temp_item['field_depth']['und'][0]['value'] ) &&  $temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
 		}
 	}
 	// Loop through density collection items for server-side error checking
 	foreach($form_state['values']['field_density_profile']['und'] as $key=>$density_item){
-
-		if ( isset( $density_item['field_density_top']['und'][0]['value'] ) && is_numeric( $density_item['field_density_top']['und'][0]['value'] ) && $density_item['field_density_top']['und'][0]['value'] > 1000 ){ 
+    $this_density = $density_item['field_density_top'];
+		if ( is_array($this_density['und'] )  && isset( $this_density['und'][0]['value'] ) && is_numeric( $this_density['und'][0]['value'] ) && $this_density['und'][0]['value'] > 1000 ){ 
 			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_density_top", t('Density values should be 1000 kg/m-3 or less.'));
 		}
 		// This checks for Depth item integrity with the HoS or Layers that have been entered
-		if ( isset ($density_item['field_depth']['und'][0]['value']) && is_numeric($density_item['field_depth']['und'][0]['value'] ) &&  $density_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+		if ( is_array($this_density['und'] )  && isset ($density_item['field_depth']['und'][0]['value']) && is_numeric($density_item['field_depth']['und'][0]['value'] ) &&  $density_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
 //			dsm( $temp_item);
-			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Density Measurement depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
+			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Density Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
 		}
 	}
 
