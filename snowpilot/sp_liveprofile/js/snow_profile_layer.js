@@ -73,16 +73,21 @@
     /**
      * Get or set handleTouched boolean of this snow layer
      * @param {boolean} [touchArg] - Sets whether handle has been touched
+     * @param {boolean} [isHidden] - Indicates whether to expose slope handle or not
      * @returns {boolean} Whether handle has been touched
      */
-    this.handleTouchState = function(touchArg) {
+    this.handleTouchState = function(touchArg, isHidden) {
       if (touchArg === undefined) {
         return handleTouched;
       }
       else {
         handle.stop();
         handleTouched = touchArg;
-        slopeHandle.attr('visibility','visible');
+        if (isHidden) {
+          slopeHandle.attr('visibility','hidden');
+        } else {
+          slopeHandle.attr('visibility','visible');
+        }
       }
     };
     
@@ -155,7 +160,7 @@
         mm = Math.round((SnowProfile.totalDepth - depthVal) * 10) / 10;
       }
       handleTip.setContent( mm + ', ' + SnowProfile.x2code(x));
-      //handleTip.setContent( mm + ', ' + x);
+      //handleTip.setContent( depthVal );
     }
     
     function slopeHandleTipSet(x) {
@@ -211,17 +216,21 @@
         else if (y < SnowProfile.snowLayers[i - 1].handleGetY()) {
           newY = SnowProfile.snowLayers[i - 1].handleGetY() + 1;
         }
+        // This is now a 'ghost layer' with no x (hardness) value allowed
+        newX = SnowProfile.Cfg.HANDLE_INIT_X;
       }
       else {
-
+        // Lock down all layers except the final layer 
+        newY = SnowProfile.snowLayers[i].handleGetY();
         // This layer is below the surface and above the bottom.
         // The handle depth is constrained between layers above and below.
+        /*
         if (y > SnowProfile.snowLayers[i + 1].handleGetY()) {
           newY = SnowProfile.snowLayers[i + 1].handleGetY() - 1;
         }
         else if (y < SnowProfile.snowLayers[i - 1].handleGetY()) {
           newY = SnowProfile.snowLayers[i - 1].handleGetY() + 1;
-        }
+        }*/
       }
 
       // Adjust the horizontal (hardness) position
@@ -253,9 +262,10 @@
         }
       }
       else if (SnowProfile.depthRef === "g") {
-        $('div.layer_num_' + i + ' input[id*="-height-"]').val(SnowProfile.pitDepth - depthVal);
+        var roundedDepth = (Math.round((SnowProfile.pitDepth - depthVal) * 10)) / 10;
+        $('div.layer_num_' + i + ' input[id*="-height-"]').val(roundedDepth);
         if (i > 0){
-          $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(SnowProfile.pitDepth - depthVal);  
+          $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(roundedDepth);  
         }
       }
       // Layer Hardness:
@@ -582,8 +592,12 @@
     this.draw = function() {
       i = self.getIndex();
 
-      // Set handle X from hardness
-      if (handleTouched) {
+      // Set handle X from hardness, hide unneccesary handles 
+      if (i === (SnowProfile.snowLayers.length - 1)){
+        // last layer is ghost layer 
+        handle.x(SnowProfile.Cfg.HANDLE_INIT_X);
+      }
+      else if (handleTouched) {
         handle.x(SnowProfile.code2x(featObj.hardness()));
       }
       else {
@@ -664,8 +678,7 @@
     for (i = 0; i < numLayers; i++) {
       thisHandle = SnowProfile.handlesGroup.get(i);
       //thisInsert = SnowProfile.insertGroup.get(i);
-      if (SnowProfile.snowLayers[i].depth() >= depthVal) {
-
+      if (Number(SnowProfile.snowLayers[i].depth()) >= Number(depthVal)) {
         // Insertion point found, we need to insert above snowLayers[i].
         SnowProfile.snowLayers.splice(i, 0, this);
         thisHandle.before(handle);
@@ -713,7 +726,13 @@
      */
     handle.mousedown(function() {
       handleTouched = true;
-      slopeHandle.attr('visibility','visible');
+      var i = self.getIndex();
+      i++;
+      if(i == SnowProfile.snowLayers.length) {
+        slopeHandle.attr('visibility','hidden');
+      } else {
+        slopeHandle.attr('visibility','visible');
+      }
     });
     
     slopeHandle.mousedown(function() {

@@ -4,17 +4,56 @@
   Drupal.behaviors.snowpilot = {
 
     attach: function (context, settings) {
+			
+			//$('edit-field-latitude-und-0-value', context).blur( updatePosition() );
       //
 			// place focus on last tr element in layers part of form
 			//
 			$('table.field-multiple-table tr:last .field-name-field-bottom-depth input', context).focus();
 			
-		  $('table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value', context).blur( function() { 
+      // Detect blur event for SnowPilot form inputs 
+      $('#edit-field-layer', context).once('snowpilot_module', function () {
+        $('#edit-field-layer', context).delegate( 'input', 'blur', function (event) {
+
+          // Find layer number
+          var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
+          var layerNum = parseInt(layerString, 10);
+ 
+          // Bottom Depth was blurred
+          if($(this).parents('.field-name-field-bottom-depth').length) {
+            // Add error class to any bottom depth field without a value 
+            if($(this).val() == '') {
+              $(this).addClass('error');
+              console.log('error class added');
+            } else {
+              $(this).removeClass('error');
+              console.log('error class removed');
+            }
+            
+            // When bottom depth is changed, update next layers top depth
+            $('div.layer_num_' + (layerNum + 1) + ' input[id*="-height-"]').val($(this).val());
+          }
+          
+          // Top Depth was blurred
+          if($(this).parents('.field-name-field-height').length) {
+            // When top depth is changed, update previous layers bottom depth
+            $('div.layer_num_' + (layerNum - 1) + ' input[id*="-bottom-depth-"]').val($(this).val());
+          }
+          
+          event.stopPropagation();
+        });
+      });
+      
+	    $(".save .ctools-dropdown-container-wrapper a").click(function(event) {
+	        if( !confirm('You are about to save your finished snowpit to the snowpilot AvScience database, after which iyou will no longer be able to make changes. Continue?') ) 
+	            event.preventDefault();
+	    });
+		  /*$('table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value', context).blur( function() { 
 				if($('#edit-field-layer-und-2-field-bottom-depth-und-0-value', context).val() == '')
 					{ $(this).addClass('error');
 						//alert("this is the alert");
 					}
-			});
+			});*/
 			
     /*  $('#edit-field-layer', context).once('open', function () {
         $('#edit-field-layer', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
@@ -47,52 +86,15 @@
 				  return this.optional(element) || /5/.test(value);
 				}, "Please specify the correct value for ctscore ( try 5 )");
 */
-			
+		
+			// If the layer count is greater than 1
+			// hide the select 
 			//
-			//  These functions all have to do with the 
-			//  hide "depth 0 measured from" field
-			//
-			//
-			//  default: hide the field
-			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).hide();
-			//  reset label field to show which option is chosen
-			$('#snowpit-profile-node-form #edit-field-depth-0-from label', context).text( function() {
-				return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();
-			});
-      
-			//
-			//  everytime the select option is changed, hide the dropdown and reset the label to relect !!
-			//
-			
-			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).once( function () {
-				$('#edit-field-depth-0-from select', context).change( function () {
-					$('#edit-field-depth-0-from label', context).text( function() {
-						return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();	
-					});
+			if ($('#snowpit-profile-node-form #edit-field-layer table tbody tr').length > 2 ){
 				//  hide select is here
-					$('#edit-field-depth-0-from select', context).hide();
-				} );
-			});
-      
-			// If the user just navigates away from the field ( blur ), also
-			// hide the select and set the label
-			//
-			$('#snowpit-profile-node-form #edit-field-depth-0-from select', context).blur( function () {
-				
-				$('#edit-field-depth-0-from label', context).text( function() {
-					return "measure from: " + $( "#edit-field-depth-0-from select option:selected").val();	
-				});
-				//  hide select is here
-				$('#edit-field-depth-0-from select', context).hide();
-			});
-					
-			
-			$('#snowpit-profile-node-form #edit-field-depth-0-from label', context).once('open', function () {
-					$('#edit-field-depth-0-from label', context).click(function () {
-						$('#edit-field-depth-0-from select', context).toggle('200', function() { 
-						}); // done
-					}); //
-			});
+				$('#snowpit-profile-node-form #edit-field-depth-0-from').hide();
+			}
+
 			//
 			//  end tweaks for "hide depth from ..." field
 			//
@@ -149,12 +151,7 @@
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-0 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).hide();
 				
-			});			
-			/// show message : don't you want to enter a layer of greatest concern? message:
-			$('ul.horizontal-tabs-list li.horizontal-tab-button-2 a' ).click( function() {
-				alert("Don't you want to set a layer of greatest concern?");
-				
-			}); 
+			});			 
 			
 			/////////////////////////////
 			// hide the Measurement Unit Prefs fieldset
