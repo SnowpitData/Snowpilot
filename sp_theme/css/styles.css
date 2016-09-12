@@ -135,6 +135,30 @@ nav#secondary-menu{
 	
 }
 
+#block-user-login{
+	width: 180px;
+	float: left;
+	padding: 6px;
+}
+#block-user-login h2{ 
+  color: #c76b23;
+  padding: 4px 5px 4px 20px;
+	background-color: #d4d8dc;
+	text-transform:uppercase;
+}
+
+
+#block-user-login input#edit-submit{
+  background: #c76b23 url("../images/lock.png") no-repeat 6px 11px;
+  border-radius: 6px;
+	text-align: right;
+	padding-left: 24px;
+	padding-right: 8px;
+	height: 35px;
+	color: #fff;
+	border: solid 2px #d4d8dc;
+}
+
 /*
 //
 //  format the Snowpilot login link to modal boxon the top of all pages for anonymous users
@@ -685,6 +709,14 @@ body.not-logged-in #edit-uid-current-wrapper{
 #edit-0 {
     display: inline-block;
 }
+
+#edit-pre-delete{
+	display: inline-block;
+}
+#edit_pre_delete .delete_pit_wrapper{
+	margin: 5px 8px;
+	
+}
 /*
  			Nice good green color: #5db978;
 			
@@ -733,20 +765,70 @@ body.node-type-snowpit-profile{
 	
 }
 
-/* Date display */
 .view-snowpit-list .date-display-single{
 	
 }
 
 /* graph image wrapper*/
-.view-snowpit-list .views-graph-image{
-	float: left;
+.view-snowpit-list table{
+	min-width: 980px;
+	margin: 0 auto;
+}
+.view-snowpit-list.view-display-id-block .view-content  {
 }
 
+.view-snowpit-list table td > div{
+	background-color: #fff;
+}
+#block-views-snowpit-list-block{
+	background-color: #c76b23;
+}
+
+#block-views-snowpit-list-block h2.block__title.block-title {
+	font-size: 2em;
+		color: #fff;
+    margin: 0 auto;
+    width: 350px;
+}
+
+#block-views-snowpit-list-block ul.pager a{
+	color: #fff;
+}
+.view-snowpit-list table td > div.views-field-title{
+	background-color: #5a707f;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	border-top: 7px solid #fff;
+	text-align: center; 
+}
+
+.view-snowpit-list table td > div.views-field-title,
+.view-snowpit-list table td > div.views-field-nid,
+.view-snowpit-list table td > div.views-field-field-date-time{
+  border-left: 7px solid #fff;
+  border-right: 7px solid #fff;
+}
+.view-snowpit-list table td > div.views-field-field-date-time{
+	border-bottom: 7px solid #fff;
+}
+
+
+#block-views-snowpit-list-block .view-snowpit-list table td > div.views-field-title a{
+	color: #fff;
+	text-transform: uppercase;
+	font-size: 1em;
+}
+
+.view-snowpit-list table td div.views-field {
+    width: 190px;
+}
+
+/*
 .view-snowpit-list td.col-1,
 .view-snowpit-list td.col-2{
 	width: 400px;
 }
+*/
 
 .views-graph-image img{
 	height:250px;

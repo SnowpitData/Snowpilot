@@ -149,6 +149,7 @@ function snowpilot_init(){
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
 	//	
+	
 	global $user;
 	switch($form_id ){
 		case 'snowpit_profile_node_form':
@@ -180,11 +181,18 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			
 					snowpilot_snopit_prof_unit_prefs_set($form, $snowpit_unit_prefs);	
 					// Put a fake "delete" link above the rest of the 
-					$form['actions2']['pre_delete'] = array( 
-						'#type' => 'button',
-						'#weight' => '7',
-						'#value' => 'Delete Snowpit',
-					);
+	
+						$form['actions2']['pre_delete'] 	= array( 
+								'#type' => 'container',
+								'#weight' => '5',
+								'und' =>array(
+									0 => array(
+										'markup' => array( '#markup' => '<div class = "delete_pit_wrapper"><a href = "/node/add/snowpit-profile"class = "" >Delete Snowpit</a> </div>',
+									  ),
+									),
+								),
+		
+							);
 					
 				}
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
@@ -219,8 +227,15 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		} // end case node->type == snowpit prof
 		break;
 		case 'user_login':
-			$form['name']['#description'] = t('Snowpilot username, or email address');
+		case 'user_login_block':
+			$form['name']['#description'] = ''; //t('Snowpilot username, or email address');
 			$form['pass']['#description'] ='';
+//			drupal_set_message(var_export( $form, TRUE));
+			$form['links'] = array (
+			  '#weight' => 20,
+			  '#markup' => '<a href="/user/password" title="Request new password via e-mail.">Forgot Password</a>', 
+			);
+			$form['actions']['#weight'] = 10;
 		break;
 		case 'views_exposed_form':
 			if( $form['#id'] == 'views-exposed-form-snowpit-list-page'){
@@ -384,6 +399,9 @@ function snowpilot_password_field( $form, &$form_state){
 	//dsm($form['account']['pass']['pass1']['#title']);
 	$form['account']['pass']['pass1']['#title'] = t('Change Password');
 	$form['account']['pass']['pass2']['#title'] = t('Confirm New Password');
+	// Density Units are set at kg/m-3, not available for user edit
+	$form['field_density_units']['#access'] = FALSE;
+	
   return $form;
 }
 
@@ -623,8 +641,15 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Density Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
 		}
 	}
-
-
+	//
+	// Serveside tests for Core Info tab information:
+	//
+  if ( $form_state['values']['field_elevation_units']['und'][0]['value'] == 'm'   && ($form_state['values']['field_elevation']['und'][0]['value'] > 8000 )){
+    form_set_error("field_elevation", 'The elevation in meters must be less than 8000.');
+	}
+	// addition Core Info field validation can go here:
+	//
+	
 	return;
 }
 

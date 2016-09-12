@@ -875,18 +875,14 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				 	}
 				
 				// Output Layer comments
-					if (isset($concern_delta) && ($concern_delta == $layer->item_id) ){
-						if ($comment_counter < 5){
-					  	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,rtrim($layer->field_bottom_depth['und'][0]['value'], ' .0').'-'.rtrim($layer->field_height['und'][0]['value'], ' .0').": Problematic Layer");
-						  $comment_counter++;
-					  }else{
-							imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
-					  }
-					}
+				  $layer_bottom = $layer->field_bottom_depth['und'][0]['value'] + 0 ;
+				  $layer_top = $layer->field_height['und'][0]['value'] + 0;
+
 					if (isset($layer->field_comments['und']) ){
 						if ( $comment_counter <5 ){
+
 						  imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
-							$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value']. ': '.$layer->field_comments['und'][0]['safe_value']);
+							$layer_bottom.'-'.$layer_top. ': '.$layer->field_comments['und'][0]['safe_value']);
 						  $comment_counter++;
 					  }else{
 						  imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
@@ -904,12 +900,19 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					// this mark the layer if its a critical layer, and save some 
 					if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1'){
 						$x_redline = _h2pix($layer->field_hardness['und'][0]['value'], FALSE, $snowpit_unit_prefs['hardnessScaling']); 
+						$x_redline_bottom = _h2pix($layer->field_hardness['und'][0]['value'], FALSE, $snowpit_unit_prefs['hardnessScaling']);
 					  if ( isset ( $layer->field_hardness2['und'][0]['value'])) $x_redline_bottom = _h2pix($layer->field_hardness2['und'][0]['value'], FALSE, $snowpit_unit_prefs['hardnessScaling']);
 						
 						$y_redline_top = $layer->y_val_top; $y_redline_bottom = $layer->y_val; /// 
 						$concern_delta = $layer->item_id;
-						imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
-							$layer->field_bottom_depth['und'][0]['value'].'-'.$layer->field_height['und'][0]['value']. ': Problematic Layer');
+						
+						if ($comment_counter < 5){
+						 	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font, $layer_bottom.'-'.$layer_top.": Problematic layer");
+						  $comment_counter++;
+						}elseif($comment_counter == 5){
+							imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
+						}
+						
 						$comment_counter++;
 					} 			
 								
@@ -919,7 +922,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			if (isset($concern_delta)){
 				switch ($all_layers[$concern_delta]->field_concern['und'][0]['value']){
 					case 'entire layer':
-						//snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $red_layer, TRUE, $snowpit_unit_prefs['hardnessScaling']);
+						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $pink_problem, TRUE, $snowpit_unit_prefs['hardnessScaling']);
+						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $blue_outline, FALSE, $snowpit_unit_prefs['hardnessScaling']);  // the outline
+						
 						//full-on red layer was too much; withdrawn for now; in favor of perhaps diagonal lines of red indicating layer of concern ( all layer ) in future
 						// 
 					break;
