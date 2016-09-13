@@ -111,10 +111,17 @@ form .field-multiple-table td {
 
 
 header#header .header__region{
-	float: right;
-	display: block;
-	clear: none;
-	width: 400px;
+  background-color: #c76b23;
+  clear: none;
+  display: block;
+  float: right;
+  position: relative;
+  top: 105px;
+  width: 70px;
+}
+
+header#header .header__region .block {
+    padding: 8px;
 }
 
 header#header .header__region h2{
@@ -148,7 +155,8 @@ nav#secondary-menu{
 }
 
 
-#block-user-login input#edit-submit{
+#block-user-login input.form-submit,
+form#user-login input.form-submit{
   background: #c76b23 url("../images/lock.png") no-repeat 6px 11px;
   border-radius: 6px;
 	text-align: right;
@@ -157,6 +165,21 @@ nav#secondary-menu{
 	height: 35px;
 	color: #fff;
 	border: solid 2px #d4d8dc;
+}
+
+form#user-login-form .form-item input.form-text,
+form#user-login .form-item input.form-text{
+	border-radius: 6px;
+	background-color: #FDFDFD;
+}
+
+#block-user-login .form-item label,
+#user-login .form-item label{
+	font-weight: normal;
+}
+
+#block-user-login .form-item{
+	margin: .5em 0;
 }
 
 /*
@@ -170,7 +193,7 @@ nav#secondary-menu{
 }
 
 div.ctools-modal-content div.popups-title {
-	background-color: #ff8600;
+	background-color: #c76b23;
 	padding-top: 1px;
 	padding-bottom: 1px;
 }
@@ -673,6 +696,11 @@ body.page-node-edit.node-type-snowpit-profile #main,
 body.page-node-add-snowpit-profile #main{
 	padding-top: .3em;
 	
+}
+
+#main, #header, #footer{
+	width: 1320px;
+	margin: 0 auto;
 }
 
 body.page-node-edit.node-type-snowpit-profile #main-menu ul.links li.menu-514,

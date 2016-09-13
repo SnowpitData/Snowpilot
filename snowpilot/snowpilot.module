@@ -208,7 +208,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
 			
-			snowpilot_snowpit_set_layer_titles($form, $snowpit_unit_prefs);
+			snowpilot_snowpit_set_layer_titles($form, $snowpit_unit_prefs,$form_state);
 			
 			//dsm($form_state);
 			snowpilot_snowpit_set_temp_coll_titles($form, $snowpit_unit_prefs);
@@ -233,7 +233,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 //			drupal_set_message(var_export( $form, TRUE));
 			$form['links'] = array (
 			  '#weight' => 20,
-			  '#markup' => '<a href="/user/password" title="Request new password via e-mail.">Forgot Password</a>', 
+			  '#markup' => '<a href="/user/password" title="Request new password via e-mail.">Forgot Password?</a>', 
 			);
 			$form['actions']['#weight'] = 10;
 		break;
@@ -245,7 +245,9 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					$form['uid_current']['#access'] = FALSE;
 					
 				}
-			}			
+				$form['#after_build'][] = 'snowpit_list_view_after_build';
+				//$form['field_professional_affiliation_tid'][LANGUAGE_NONE]['#options'] = get_optgroup_by_taxonomy('professional_affiliation');
+			}	
 		break;
 		case 'user_profile_form':
 			// this works, but needs to be expanded to include all/any fields that are not filled in, but should be.
@@ -281,10 +283,53 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		
 		break;
 	} // end switch
-	return;
+	return $form;
 }
 //
 //
+
+/**
+ * Generate structured (optgrouped) options from taxonomy.
+ * Use output as Form API #options array.
+ * @param string $taxonomy_name
+ * @return array
+ */
+function get_optgroup_by_taxonomy($taxonomy_name) {
+  $options = array();
+  $vocabulary = taxonomy_vocabulary_machine_name_load($taxonomy_name);
+  $vid = $vocabulary->vid;
+  $top_level = taxonomy_get_tree($vid, $parent = 0, $max_depth = NULL);
+  foreach ($top_level as $id => $term) {
+    $tid = $term->tid;
+    $children = taxonomy_get_children($tid);
+    $parents = taxonomy_get_parents($tid);
+    if (!empty($children)) {
+      //PARENT
+      $options[$term->name] = array();
+      foreach ($children as $child) {
+        $options[$term->name][$child->tid] = $child->name;
+      }
+    }
+    elseif (empty($parents)) {
+      //PARENT WITH NO CHILDREN - LONELY PARENT
+      $options[$term->name] = array();
+    }
+  }
+  return $options;
+}
+
+function snowpit_list_view_after_build($form, &$form_state){
+	//
+	$form['field_professional_affiliation_tid']['#options'] = get_optgroup_by_taxonomy('professional_affiliation');
+	
+	$form['field_professional_affiliation_tid']['#options'] = array_reverse($form['field_professional_affiliation_tid']['#options']);
+	$form['field_professional_affiliation_tid']['#options']['All'] = 'All Snowpits';
+	$form['field_professional_affiliation_tid']['#options'] = array_reverse($form['field_professional_affiliation_tid']['#options']);
+	
+	return $form;
+}
+
+
 function snowpilot_user_pass_submit($form, &$form_state){
 	  global $language;
 	  drupal_set_message( t("<b>Please check your SPAM folder!</b> If you add <a href = 'mailto:admin@snowpilot.org'>admin@snowpilot.org</a> to your contacts or whitelist, your spam filter is less likely to flag these emails from Snowpilot. <br />" ) );
@@ -595,7 +640,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 		if ( is_numeric($key) && isset($layer['field_height']['und'][0]['value']) 
 		  && (  (isset( $layer['field_bottom_depth']['und'][0]['value']) && ($layer['field_bottom_depth']['und'][0]['value'] <> ''))  || (isset($layer['field_hardness']['und'][0]['value']) && ($layer['field_hardness']['und'][0]['value'] <> '' )) || (isset($layer['field_grain_type']['und'][0]['value']) && ($layer['field_grain_type']['und'][0]['value'] <> '')) || (isset($layer['field_grain_size']['und'][0]['value']) && ($layer['field_grain_size']['und'][0]['value'] <> '')) )   ){// all of this test to see if it is a 'real' layer
 			// we process through error checking and set any missing fields as needed.
-			if ($layer['field_bottom_depth']['und'][0]['value'] == '' ) form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('Missing Bottom Depth value'));
+			if ($layer['field_bottom_depth']['und'][0]['value'] == '' ) form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('Missing Bottom Depth value.'));
 		}
 			
 		// Poor mans layer integrity check: make sure that each field_bottom_depth is below field_height, depending on measure_from
@@ -610,6 +655,19 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 			&& $layer['field_bottom_depth']['und'][0]['value'] <> ''
 		  &&	$layer['field_bottom_depth']['und'][0]['value'] <= $layer['field_height']['und'][0]['value'] ){
 	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be greater than Top Depth.'));
+		}
+		//
+		//  check that layers do not stretch outside the total raw heigth of snowpack
+		$result = _raw_max_pit_depth( $form_state['values'] );
+		if( is_numeric($key) ) { 
+			watchdog ( 'snowpilot', 'raw Max: '. $result );
+		  if( $layer['field_bottom_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']) ){
+        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be less than ' . _raw_max_pit_depth( $form_state['values']) .', the total Height of Snowpack ( available on Core Info tab).'));
+	  	}elseif ( $layer['field_height']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']) ){
+        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_height", t('The value of the Top Depth field should be less than ' . _raw_max_pit_depth( $form_state['values']) .', the total Height of Snowpack ( available on Core Info tab).'));
+	  		
+	  	}
+			//dsm( _raw_max_pit_depth( $form_state['values']));
 		}
 	} // end loop through layers 
 	
@@ -859,7 +917,6 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		//
 		// this block hides the last layer entry form where the bottom of the previous one was "zero depth"
 		//
-
 		if ( isset($form['field_layer']['und'][$x]) && 
 		(($snowpit_unit_prefs['field_depth_0_from'] <> 'top') &&  $form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] == '0')
 			|| ( ($snowpit_unit_prefs['field_depth_0_from'] == 'top')  
@@ -1091,16 +1148,24 @@ function snowpilot_cardinal_wind_dir($degrees){
 }
 
 function _snowpilot_find_pit_depth($node){
-	if (isset($node->field_total_height_of_snowpack['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top'){
+	$max = 0;
+	if (isset($node->field_total_height_of_snowpack['und'][0]['value'])){
 		$max =  $node->field_total_height_of_snowpack['und'][0]['value'];
-	}else{
+	}elseif ( isset($node->field_layer['und'])){
 		$ids = array();
-		$max = 0;
 		foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
 		$all_layers = field_collection_item_load_multiple($ids);
 		foreach ($all_layers as $layer){
 			if ($layer->field_height['und'][0]['value'] > $max ) $max = $layer->field_height['und'][0]['value'] ;
 			if ($layer->field_bottom_depth['und'][0]['value'] > $max ) $max = $layer->field_bottom_depth['und'][0]['value'] ;	
+		}
+	}
+	if ( $max == 0 ){// then lets look for stability tests  
+		$ids = array();
+		foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
+		$all_tests = field_collection_item_load_multiple($ids);
+		foreach ($all_tests as $test){
+			if ($test->field_depth['und'][0]['value'] > $max ) $max = $test->field_depth['und'][0]['value'] ;
 		}
 	}
 	return $max;
@@ -1110,19 +1175,58 @@ function _snowpilot_find_pit_depth($node){
 //    if the snowpit depth cannot be determined, either because no layers are given, or no total height of snowpack is given
 //    then this functio nreturns 1000 ,assumed to be the max possible anyone would dig!!!
 function _raw_max_pit_depth( $form ){
+	$max = 0 ;
+	//dsm($form['field_layer']);
 	if ( isset ( $form['field_total_height_of_snowpack']['und'][0]['value']) && $form['field_total_height_of_snowpack']['und'][0]['value'] > 0 ){
-	  return $form['field_total_height_of_snowpack']['und'][0]['value']; 
-	}elseif ( isset ( $form['field_layer']['und']) ){
-		$max = 0 ;
+	  $max = $form['field_total_height_of_snowpack']['und'][0]['value']; 
+	}elseif ( is_real_layers( $form['field_layer']['und']) ){ // This seems in-efficient to call a binary function to test if we want to do the loop Code Cleanup; it allows us to go to stability tests
 		foreach ( $form['field_layer']['und'] as $key => $layer ){
 			//dsm($layer);
-			if ( is_numeric( $key ) && isset($layer['field_height']['und'][0]['value'] ) && $layer['field_height']['und'][0]['value'] > $max  ) {  $max = $layer['field_height']['und'][0]['value']; }
-			//if ( $layer['field_bottom_depth']['und'][0]['value'] > $max ) $max = $layer['field_bottom_depth']['und'][0]['value'];
+			if ( is_numeric( $key ) && $layer['field_height']['und'][0]['value'] > $max  ) {  
+				$max = $layer['field_height']['und'][0]['value']; 
+			}
+			if ( is_numeric( $key ) && $layer['field_bottom_depth']['und'][0]['value'] > $max ) {
+				$max = $layer['field_bottom_depth']['und'][0]['value'];
+			}
+		}	
+			//dsm ( "max: ".$max);
+
+	}elseif ( is_real_tests ( $form['field_test']['und'])){
+		foreach ( $form['field_test']['und'] as $key => $test ){
+			if ( is_numeric( $key )  && $test['field_depth']['und'][0]['value'] > $max  ) {  
+				$max = $test['field_depth']['und'][0]['value']; 
+			}
 		}
-		return $max;
-	}else{
-		return 1000;
+	}else{   /// could potenntially expand this to temp collections and densty profiles, but there is not much snow info there!
+		$max = 1000;
 	}	
+	return $max;
+}
+
+function is_real_layers ( $layers ){
+	if ( !isset($layers)){
+		return FALSE;
+	}else
+		$ret_val = FALSE;
+		foreach ( $layers as $key => $layer ){
+			if ( is_numeric( $key ) && ($layer['field_height']['und'][0]['value'] <> '' || $layer['field_height']['und'][0]['value'] <> '' )){
+				$ret_val = TRUE;
+			}
+		}
+		return $ret_val;
+}
+
+function is_real_tests ( $tests ){
+	if ( !isset($tests)){
+		return FALSE;
+	}else
+		$ret_val = FALSE;
+		foreach ( $tests as $key => $test ){
+			if ( is_numeric( $key ) && isset($test['field_depth']['und'][0]['value'] ) && ($test['field_depth']['und'][0]['value'] <> '' )){
+				$ret_val = TRUE;
+			}
+		}
+		return $ret_val;
 }
 
 function depth_val($a,$b){
