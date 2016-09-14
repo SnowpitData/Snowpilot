@@ -454,14 +454,14 @@ var SnowProfile = {};
   /**
   * Snowpit Stability Tests
   *
-  * An object to hold the strings created by the SnowPilot form that represent
-  * the stability tests performed on a snowpit.  Each test is indexed in the object
+  * An array to hold Stability Test objects that represent
+  * the stability tests performed on a snowpit.  Each test is indexed in the array
   * by the associated test number from the SnowPilot form.  
   *
   * @memberof SnowProfile
-  * @type {Object}
+  * @type {Array}
   */
-  SnowProfile.stabilityTests = {};
+  SnowProfile.stabilityTests = [];
 
   /**
    * Make the handle visible if it has not been touched.
@@ -667,15 +667,15 @@ var SnowProfile = {};
       // height is the number of pixels to allocate for feature description
       featureBottom = Math.max(layerBottom, (featureTop + height));
 
-      // Center the layer's insert button on the top line
-      //SnowProfile.snowLayers[i].insertButton.setCy(
-      //  Math.max(layerTop, featureTop));
+      // Draw the line below the bottom of the features description, except on hidden layer
+      if (i < (SnowProfile.snowLayers.length - 1)) {
+        SnowProfile.snowLayers[i].features().lineBelowY(featureBottom);
+      }
 
-      // Draw the line below the bottom of the features description.
-      SnowProfile.snowLayers[i].features().lineBelowY(featureBottom);
-
-      // Draw the diagonal line from layerBottom to lineBelow
-      SnowProfile.snowLayers[i].setDiagLine();
+      // Draw the diagonal line from layerBottom to lineBelow, except on hidden layer
+      if (i < (SnowProfile.snowLayers.length - 1)) {
+        SnowProfile.snowLayers[i].setDiagLine();
+      }
 
       // It's possible that the bottom of the features description area is
       // below the bottom of the SVG drawing area, in which case we need to
@@ -697,22 +697,33 @@ var SnowProfile = {};
    * @returns {object} data object for use with featObj.describe(data) method.
    */
   SnowProfile.getSnowPilotData = function (layerNum) {
-    
-    //var primaryShape = translateShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-]").val());
     var primaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-] > div > select")[0].value);
-    var primarySubShape = ""; // currently unused
-    //var secondaryShape = translateShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
+    var primarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-]").val());
     var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
-    var secondarySubShape = ""; // currently unused
-    
-    
+    var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
     var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
+    if (sizeMin === "_none") {
+      sizeMin = "";
+    }
     var sizeMax = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-max-]").val();
     if (sizeMax === "_none") {
       sizeMax = "";
     }
     
-    var stabTest = "";
+    // Build array of stability test objects that fit into this layer 
+    var stabTests = [];
+    for (var i = 0; i < (SnowProfile.stabilityTests.length) ; i++) {
+      var layerTopDepth = SnowProfile.snowLayers[layerNum].depth();
+      var layerBotDepth = SnowProfile.snowLayers[layerNum + 1].depth();
+      var testDepth = SnowProfile.stabilityTests[i].depth;
+      if (SnowProfile.depthRef === "g") {
+        testDepth = SnowProfile.pitDepth - testDepth;
+      }
+      
+      if (testDepth >= layerTopDepth && testDepth < layerBotDepth) {
+        stabTests.push(SnowProfile.stabilityTests[i]);
+      }
+    }
     
     var tempData = {
               primaryGrainShape: primaryShape,
@@ -721,7 +732,7 @@ var SnowProfile = {};
               secondaryGrainSubShape: secondarySubShape,
               grainSizeMin: sizeMin,
               grainSizeMax: sizeMax,
-              comment: stabTest
+              comment: stabTests
     };
     
     return tempData;
@@ -762,57 +773,243 @@ var SnowProfile = {};
     }
   }
   
+  function translateSubShape(shapeCode) {
+    
+    switch (shapeCode) {
+      case "42":
+        return "PPco";
+        break;
+      case "43":
+        return "PPnd";
+        break;
+      case "44":
+        return "PPpl";
+        break;
+      case "45":
+        return "PPsd";
+        break;
+      case "46":
+        return "PPir";
+        break;
+      case "47":
+        return "PPgp";
+        break;
+      case "48":
+        return "PPhl";
+        break;
+      case "49":
+        return "PPip";
+        break;
+      case "50":
+        return "PPrm";
+        break;
+      case "78":
+        return "DFbk";
+        break;
+      case "79":
+        return "RGsr";
+        break;
+      case "80":
+        return "RGlr";
+        break;
+      case "81":
+        return "RGwp";
+        break;
+      case "82":
+        return "RGxf";
+        break;
+      case "83":
+        return "FCsf";
+        break;
+      case "84":
+        return "FCxr";
+        break;
+      case "85":
+        return "DHcp";
+        break;
+      case "86":
+        return "DHpr";
+        break;
+      case "87":
+        return "DHch";
+        break;
+      case "88":
+        return "DHla";
+        break;
+      case "89":
+        return "DHxr";
+        break;
+      case "90":
+        return "";
+        break;
+      case "91":
+        return "SHcv";
+        break;
+      case "92":
+        return "SHxr";
+        break;
+      case "93":
+        return "MFcl";
+        break;
+      case "94":
+        return "MFpc";
+        break;
+      case "95":
+        return "MFsl";
+        break;
+      case "96":
+        return "MFcr";
+        break;
+      case "97":
+        return "IFil";
+        break;
+      case "98":
+        return "IFic";
+        break;
+      case "99":
+        return "IFbi";
+        break;
+      case "100":
+        return "IFrc";
+        break;
+      case "101":
+        return "IFsc";
+        break;
+      case "102":
+        return "MMrp";
+        break;
+      case "103":
+        return "MMci";
+        break;
+      case "104":
+        return "DFdc";
+        break;
+      case "105":
+        return "FCso";
+        break;
+      default:
+        return "";
+    }
+  }
+  
   /**
    * Checks the fields of one of the stability tests to see if there is 
    * enough information to construct a complete stability test string,
-   * and if there is calls the appropriate method to put string on the live
-   * profile
+   * and if there is places it in SnowProfile.stabilityTests array
    *
    * @method
    * @memberof SnowProfile
-   * @param {number} [testNum] The stability test number to check fields 
+   * @param {number} [testNum] The stability test number, starting at 0 for first test
    */
-  SnowProfile.checkStabilityTest = function (testNum) {
-    var scoreType, scoreValue;
+  SnowProfile.addStabilityTest = function (testNum) {
+    var scoreType, scoreValue, testString;
     var testType = $("select[id^=edit-field-test-und-" + testNum + "-field-stability-test-type]").val();
     var shearQuality = $('select[id^=edit-field-test-und-' + testNum + '-field-shear-quality]').val();
-    var testDepth = $('input[id^=edit-field-test-und-' + testNum + '-field-depth]').val();
+    if (typeof shearQuality == "undefined") {
+      // must be fracture character instead of shear quality
+      shearQuality = $('select[id^=edit-field-test-und-' + testNum + '-field-fracture-character]').val();
+    }
+    if (shearQuality === "_none") {
+      shearQuality = "";
+    }
+    var testDepthString = $('input[id^=edit-field-test-und-' + testNum + '-field-depth]').val();
+    var testDepth = Number(testDepthString);
+    if (testDepth === 0) {
+      testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
+      testDepthString = "";
+    }
     
     switch(testType){
       case "ECT":
         scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ect]').val();
         scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ec-score]').val();
+        if (scoreType === "_none") {
+          testString = testType + " @ " + testDepthString;
+        } else if (scoreType === "ECTPV") {
+          testString = scoreType + " @ " + testDepthString;
+        } else if (scoreType === "ECTX") {
+          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
+          testString = scoreType;
+        } else {
+          testString = scoreType + scoreValue + " @ " + testDepthString;
+        }
         break;
       case "CT":
         scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ct]').val();
         scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ct-score]').val();
+        if (scoreType === "_none") {
+          testString = testType + " @ " + testDepthString;
+        } else if (scoreType === "CTV") {
+          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
+        } else if (scoreType === "CTN") {
+          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
+          testString = scoreType;
+        } else {
+          testString = scoreType + scoreValue + ", " + shearQuality + " @ " + testDepthString;
+        }
         break;
       case "RB":
         scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-rb]').val();
         scoreValue = "";
+        if (scoreType === "_none") {
+          testString = testType + " @ " + testDepthString;
+        } else if (scoreType === "RB7") {
+          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
+          testString = scoreType;
+        } else {
+          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
+        }
         break;
       case "PST":
-        console.log("ATTN: How should these display?");
+        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-data-code-pst]').val();
+        var sawCutLength = $('input[id^=edit-field-test-und-' + testNum + '-field-length-of-saw-cut]').val();
+        if (sawCutLength.length === 0) {
+          sawCutLength = "_";
+        }
+        var columnLength = $('input[id^=edit-field-test-und-' + testNum + '-field-length-of-isolated-col]').val();
+        if (columnLength.length === 0) {
+          columnLength = "_";
+        }
+        if (scoreType === "_none") {
+          testString = "PST @ " + testDepthString;
+        } else {
+          testString = "PST " + sawCutLength + "/" + columnLength + "(" + scoreType + ") @ " + testDepthString; 
+        }
         break;
       case "SB":
         scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-sb]').val();
         scoreValue = "";
+        if (scoreType === "_none") {
+          testString = testType + " @ " + testDepthString;
+        } else if (scoreType === "SBN") {
+          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
+          testString = scoreType;
+        } else {
+          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
+        }
         break;
       case "ST":
         scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-st]').val();
         scoreValue = "";
+        if (scoreType === "_none") {
+          testString = testType + " @ " + testDepthString;
+        } else if (scoreType === "STN") {
+          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
+          testString = scoreType;
+        } else {
+          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
+        }
         break;
     }
     
-    if (testType != "_none" && scoreType != "_none" && shearQuality != "_none" && testDepth != ""){
-      var testString = scoreType + scoreValue + ", " + shearQuality + " @ " + testDepth;
-      
-      SnowProfile.stabilityTests[testNum] = testString;
-      
-      for(var num in SnowProfile.stabilityTests){
-        console.log("Stability Test " + num + " = " + SnowProfile.stabilityTests[num]);
-      }
-    }
+    // Build the object to store in SnowProfile.stabilityTests
+    var testObj = { description: testString, depth: testDepth };
+    
+    // Add object to SnowProfile.stabilityTests, or overwrite if it already exists
+    if (SnowProfile.stabilityTests.length > testNum) {
+      SnowProfile.stabilityTests[testNum] = testObj;
+    } else SnowProfile.stabilityTests.push(testObj);
+    
   };
 
   /**
@@ -865,7 +1062,7 @@ var SnowProfile = {};
    * @fires ShowProfileHideControls
    * @fires ShowProfileShowControls
    */
-  SnowProfile.preview = function() {
+  /*SnowProfile.preview = function() {
 
     var saveWidth, saveHeight;
 
@@ -900,7 +1097,7 @@ var SnowProfile = {};
 
     // Prevent bubbling of this event.
     return false;
-  };
+  };*/
 
   /**
    * Create a new snow layer with associated Features object
@@ -912,6 +1109,7 @@ var SnowProfile = {};
     layer.draw();
     SnowProfile.layout();
     SnowProfile.ctrlsGroup.front();
+    SnowProfile.handlesGroup.front();
   };
 
   /**
@@ -920,7 +1118,7 @@ var SnowProfile = {};
    * Called when the "Save" button is clicked.
    * FIXME deal with other than 3 layers
    */
-  SnowProfile.export = function() {
+  /*SnowProfile.export = function() {
     var i;
     $("input[name='pit_depth']").val(SnowProfile.pitDepth);
     $("input[name='total_depth']").val(SnowProfile.totalDepth);
@@ -946,7 +1144,7 @@ var SnowProfile = {};
         .val(describe.grainSizeMax);
       $("input[name='layer[" + i +"][comment]']").val(describe.comment);
     }
-  };
+  };*/
 
   /**
    * Intercept an ENTER key and replace SUBMIT with a change event
@@ -996,14 +1194,6 @@ var SnowProfile = {};
     SnowProfile.mainGroup = SnowProfile.drawing.group()
       .attr('id', 'snow_profile_main_g');
 
-    // For debugging, show the bounding box
-    // SnowProfile.drawingBox = SnowProfile.drawing.rect(0, 0)
-    //   .style({
-    //      "fill-opacity": 0,
-    //      stroke: 'red'
-    //   });
-    // SnowProfile.mainGroup.add(SnowProfile.drawingBox);
-
     /**
      * SnowProfile drawing controls group
      *
@@ -1049,17 +1239,17 @@ var SnowProfile = {};
      * Pencil symbol used by the edit button.
      * @memberof SnowProfile
      */
-    SnowProfile.pencil = SnowProfile.drawing.defs()
+    /*SnowProfile.pencil = SnowProfile.drawing.defs()
       .path("M 16.875,4.4 C 18.60063,4.4 20,5.7993755 20,7.525 20,8.2287506 19.7675,8.8774995 19.375,9.4 L 18.125,10.65 13.75,6.275 15,5.025 C 15.5225,4.6325 16.171251,4.4 16.875,4.4 z M 1.25,18.775 0,24.4 5.625,23.15 17.1875,11.587506 12.8125,7.2125 1.25,18.775 z m 12.726251,-7.273755 -8.750001,8.75 -1.0775,-1.07749 8.749999,-8.750001 1.077502,1.077491 z")
-      .addClass('snow_profile_ctrls_edit');
+      .addClass('snow_profile_ctrls_edit');*/
 
     /**
      * Plus symbol used by the insert button.
      * @memberof SnowProfile
      */
-    SnowProfile.plus = SnowProfile.drawing.defs()
+    /*SnowProfile.plus = SnowProfile.drawing.defs()
       .path("M 19.375,13.805085 H 12.5 v -6.875 c 0,-0.345 -0.28,-0.625 -0.625,-0.625 H 8.1249998 c -0.3449999,0 -0.6249999,0.28 -0.6249999,0.625 v 6.875 H 0.62499999 c -0.345,0 -0.62499999,0.28 -0.62499999,0.625 v 3.75 c 0,0.345 0.27999999,0.625 0.62499999,0.625 H 7.4999999 v 6.875 c 0,0.344999 0.28,0.625 0.6249999,0.625 H 11.875 c 0.345,0 0.625,-0.280001 0.625,-0.625 v -6.875 h 6.875 c 0.344999,0 0.625,-0.28 0.625,-0.625 v -3.75 c 0,-0.345 -0.280001,-0.625 -0.625,-0.625 z")
-      .addClass('snow_profile_ctrls_insert');
+      .addClass('snow_profile_ctrls_insert');*/
 
     /**
      * SnowProfile drawing insert buttons group
@@ -1095,18 +1285,18 @@ var SnowProfile = {};
     var code;
 
     // Populate the grain shape <select>s in the layer description pop-up
-    for (code in SnowProfile.CAAML_SHAPE) {
+    /*for (code in SnowProfile.CAAML_SHAPE) {
       if (SnowProfile.CAAML_SHAPE.hasOwnProperty(code)) {
         $("#snow_profile_primary_grain_shape").append("<option value=\"" +
           code + "\">" + SnowProfile.CAAML_SHAPE[code].text + "</option>");
         $("#snow_profile_secondary_grain_select").append("<option value=\"" +
           code + "\">" + SnowProfile.CAAML_SHAPE[code].text + "</option>");
       }
-    }
+    }*/
 
     // Create the <select>s for the grain subshape from the CAAML_SUBSHAPE
     // table.
-    var primary_opts = "",
+    /*var primary_opts = "",
       secondary_opts = "";
     for (var shape in SnowProfile.CAAML_SUBSHAPE) {
       if (SnowProfile.CAAML_SUBSHAPE.hasOwnProperty(shape)) {
@@ -1131,11 +1321,12 @@ var SnowProfile = {};
     }
     $("#snow_profile_primary_grain_subshape").append(primary_opts);
     $("#snow_profile_secondary_grain_subshape").append(secondary_opts);
-
+    */
+    
     // Add the reference grid to the SVG drawing
     new SnowProfile.Grid();
 
-    $(document).ready(function() {
+    /*$(document).ready(function() {
 
       // When a character is entered into the snow profile total depth
       // field, replace ENTER with a change event.
@@ -1161,21 +1352,21 @@ var SnowProfile = {};
         SnowProfile.export();
       });
       
-      /*$('input[name=field_layer_add_more]').mousedown(function() {
+      $('input[name=field_layer_add_more]').mousedown(function() {
         var maxIndex = SnowProfile.snowLayers.length - 1;
         var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
         SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
         //alert(SnowProfile.snowLayers[0].depth());
-      });*/
+      });
       
       // Testing event handlers for updating editor from text input 
-      /*$("#my_test_input").change(function () {
+      $("#my_test_input").change(function () {
           SnowProfile.snowLayers[1].depth($(this).val());
           SnowProfile.snowLayers[1].draw();
           //alert($(this).val());  
-      });*/
+      });
 
-    });
+    });*/
 
 
   };  // function SnowProfile.init();

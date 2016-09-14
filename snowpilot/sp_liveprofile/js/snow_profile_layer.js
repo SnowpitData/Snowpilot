@@ -68,10 +68,16 @@
      * @type {boolean}
      */
     var handleTouched = false;
+    
+    /**
+     * Has the user touched the slope handle since this layer was created?
+     *
+     * @type {boolean}
+     */
     var slopeHandleTouched = false;
     
     /**
-     * Get or set handleTouched boolean of this snow layer
+     * Get or set handleTouched boolean of this snow layer and hides or shows slope handle.
      * @param {boolean} [touchArg] - Sets whether handle has been touched
      * @param {boolean} [isHidden] - Indicates whether to expose slope handle or not
      * @returns {boolean} Whether handle has been touched
@@ -81,7 +87,7 @@
         return handleTouched;
       }
       else {
-        handle.stop();
+        //handle.stop();
         handleTouched = touchArg;
         if (isHidden) {
           slopeHandle.attr('visibility','hidden');
@@ -121,13 +127,33 @@
       
     /**
      * New handle to adjust the slope between top and bottom of the layer.
-     *
+     * @type {Object}
      */    
     var slopeHandle = SnowProfile.drawing.circle(SnowProfile.Cfg.HANDLE_SIZE)
         .x(SnowProfile.Cfg.HANDLE_INIT_X)
         .y(SnowProfile.depth2y(depthVal + SnowProfile.Cfg.INT_INIT_LAYERS))
         .addClass("snow_profile_handle2")
         .attr('visibility', 'hidden');
+        
+    /**
+     * Toggles the primary handle shape from square to triangle 
+     * 
+     */
+    /*this.toggleHandleShape = function () {
+      if (altDepthHandle) {
+        handle = SnowProfile.drawing.rect(SnowProfile.Cfg.HANDLE_SIZE,
+          SnowProfile.Cfg.HANDLE_SIZE)
+          .x(SnowProfile.Cfg.HANDLE_INIT_X)
+          .y(SnowProfile.depth2y(depthVal))
+          .addClass("snow_profile_handle");
+      } else {
+        handle = SnowProfile.drawing.polygon('0,0 10,0 5,8')
+          .x(SnowProfile.Cfg.HANDLE_INIT_X)
+          .Y(SnowProfile.depth2y(depthVal))
+          .addClass("snow_profile_handle");
+      }
+      altDepthHandle = !altDepthHandle;
+    };*/
 
     /**
      * Tooltip that follows the handle and displays when mouse over handle.
@@ -137,6 +163,11 @@
     var handleTip = new Opentip('#' + handle.node.id, "uninitialized",
         "", {tipJoint: "bottom left"});
         
+    /**
+     * Tooltip that follows the slope handle and displays when mouse over handle.
+     *
+     * @type {object}
+     */
     var slopeHandleTip = new Opentip('#' + slopeHandle.node.id, "uninitialized",
         "", {tipJoint: "bottom left"});
 
@@ -146,25 +177,35 @@
      * @param {number} x X coordinate of the mouse
      */
     function handleTipSet(x) {
-
+      var i = self.getIndex();
       var mm;
+      
+      // Bottom layer gets depth tip
+      if (i === (SnowProfile.snowLayers.length - 1)) {
+        if (SnowProfile.depthRef === "s") {
 
-      if (SnowProfile.depthRef === "s") {
+           // Depth is referred to the snow surface
+           mm = Math.round(depthVal * 10) / 10;
+        }
+        else {
 
-         // Depth is referred to the snow surface
-         mm = Math.round(depthVal * 10) / 10;
+          // Depth is referred to the ground
+          mm = Math.round((SnowProfile.totalDepth - depthVal) * 10) / 10;
+        }
+        handleTip.setContent( "Depth: " + mm );
+      } else {
+        // Other layers get hardness tip
+        handleTip.setContent( "Primary Hardness: " + SnowProfile.x2code(x));
       }
-      else {
-
-        // Depth is referred to the ground
-        mm = Math.round((SnowProfile.totalDepth - depthVal) * 10) / 10;
-      }
-      handleTip.setContent( mm + ', ' + SnowProfile.x2code(x));
-      //handleTip.setContent( depthVal );
     }
     
+    /**
+     * Set the text information in the slope handle tooltip.
+     *
+     * @param {number} x X coordinate of the mouse
+     */
     function slopeHandleTipSet(x) {
-        slopeHandleTip.setContent(SnowProfile.x2code(x));
+        slopeHandleTip.setContent( "Secondary Hardness: " + SnowProfile.x2code(x));
     }
 
     /**
@@ -186,9 +227,9 @@
       numLayers = SnowProfile.snowLayers.length;
       var mm;
 
-      // Stop the animation
-      handle.stop();
-      handle.size(SnowProfile.Cfg.HANDLE_SIZE, SnowProfile.Cfg.HANDLE_SIZE);
+      // Stop the animation - shouldn't need, removing animation completely
+      //handle.stop();
+      //handle.size(SnowProfile.Cfg.HANDLE_SIZE, SnowProfile.Cfg.HANDLE_SIZE);
 
       // X (hardness) position is bound by the edges of the graph.
       if (x < SnowProfile.Cfg.HANDLE_MIN_X) {
@@ -216,11 +257,11 @@
         else if (y < SnowProfile.snowLayers[i - 1].handleGetY()) {
           newY = SnowProfile.snowLayers[i - 1].handleGetY() + 1;
         }
-        // This is now a 'ghost layer' with no x (hardness) value allowed
+        // This is now a hidden layer with no x (hardness) value allowed
         newX = SnowProfile.Cfg.HANDLE_INIT_X;
       }
       else {
-        // Lock down all layers except the final layer 
+        // Lock down all layers' depth except the final layer 
         newY = SnowProfile.snowLayers[i].handleGetY();
         // This layer is below the surface and above the bottom.
         // The handle depth is constrained between layers above and below.
@@ -236,6 +277,7 @@
       // Adjust the horizontal (hardness) position
       featObj.hardness(SnowProfile.x2code(newX));
       
+      // Use the main handle to adjust secondary hardness until slope handle is used
       if (!slopeHandleTouched) {
           featObj.hardness2(SnowProfile.x2code(newX));
       }
@@ -243,9 +285,10 @@
       // Adjust the vertical (depth) position
       depthVal = SnowProfile.y2depth(newY);
 
+      // Set the tooltip
       handleTipSet(newX);
 
-      // Adjust the rectangle that outlines this layer
+      // Adjust the polygon that outlines this layer
       self.setLayerOutline();
 
       // If this is not the top snow layer, update the snow layer above.
@@ -253,12 +296,13 @@
         SnowProfile.snowLayers[i - 1].setLayerOutline();
       }
       
-      // dynamic form updates
-      // Layer heights:
+      // SnowPilot form updates:
+      // Layer heights
       if (SnowProfile.depthRef === "s") {
-        $('div.layer_num_' + i + ' input[id*="-height-"]').val(depthVal);
+        var roundedDepth = Math.round(depthVal * 10) / 10;
+        $('div.layer_num_' + i + ' input[id*="-height-"]').val(roundedDepth);
         if (i > 0){
-          $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(depthVal);  
+          $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(roundedDepth);  
         }
       }
       else if (SnowProfile.depthRef === "g") {
@@ -268,7 +312,7 @@
           $('div.layer_num_' + (i-1) + ' input[id*="-bottom-depth-"]').val(roundedDepth);  
         }
       }
-      // Layer Hardness:
+      // Layer Hardness
       $('div.layer_num_' + i + ' select[id*="-hardness-"]').val(featObj.hardness());
 
       // Lay out the features
@@ -310,18 +354,14 @@
       // Adjust the horizontal (hardness) position
       featObj.hardness2(SnowProfile.x2code(newX));
 
+      // Set the tooltip
       slopeHandleTipSet(newX);
 
       // Adjust the polygon that outlines this layer
       self.setLayerOutline();
-
-      // If this is not the top snow layer, update the snow layer above.
-      //if (i !== 0) {
-      //  SnowProfile.snowLayers[i - 1].setLayerOutline();
-      //}
       
-      // dynamic form updates
-      // Use multiple hardnesses
+      // SnowPilot form updates:
+      // Use multiple hardnesses checkbox
       if(!($('div.layer_num_' + i + ' input[id*="-use-multiple-hardnesses-"]').checked)){
         $('div.layer_num_' + i + ' input[id*="-use-multiple-hardnesses-"]').attr("checked",true);
         $('div.layer_num_' + i + ' select[id*="-hardness2-"]').parent().parent().show();
@@ -343,20 +383,11 @@
      * For some reason this must be done after handle.draggable() not before.
      * @memberof handle
      */
-    if(SnowProfile.snowLayers.length != 0){
+    /*if(SnowProfile.snowLayers.length != 0){
     handle.animate({ease: SVG.easing.backInOut, duration: '1000'})
      .size(SnowProfile.Cfg.HANDLE_SIZE / 1.4, SnowProfile.Cfg.HANDLE_SIZE / 1.4)
      .loop();
-    }
-
-    /**
-     * "Insert" button
-     *
-     * Insert button at the bottom of this layer.  When clicked, another layer
-     * is inserted below this layer.
-     * @type {Object}
-     */
-    //this.insertButton = new SnowProfile.Button("insert");
+    }*/
 
     /**
      * Define a diagonal line from the bottom of this layer right to the
@@ -414,7 +445,7 @@
     };
 
     /**
-     * Make the handle visible
+     * Make the handles visible
      */
     function handleVisible() {
       handle.show();
@@ -422,7 +453,7 @@
     }
 
     /**
-     * Make the handle invisible
+     * Make the handles invisible
      */
     function handleInvisible() {
       handle.hide();
@@ -443,7 +474,6 @@
       layerOutline.remove();
       diagLine.remove();
       featObj.destroy();
-      //self.insertButton.destroy();
       SnowProfile.layout();
     }
 
@@ -575,12 +605,8 @@
       slopeHandle.y(handle.y() + (yBottom - yTop));
 
       if (handle.x() !== SnowProfile.Cfg.HANDLE_INIT_X) {
-        //layerOutline.width(SnowProfile.Cfg.DEPTH_LABEL_WD + SnowProfile.Cfg.GRAPH_WIDTH - handle.x() - (SnowProfile.Cfg.HANDLE_SIZE / 2));
         layerOutline.plot([[SnowProfile.Cfg.HANDLE_INIT_X + SnowProfile.Cfg.HANDLE_SIZE / 2,yTop], [SnowProfile.Cfg.HANDLE_INIT_X + SnowProfile.Cfg.HANDLE_SIZE / 2,yBottom], [slopeHandle.x() + SnowProfile.Cfg.HANDLE_SIZE / 2,yBottom], [handle.x() + SnowProfile.Cfg.HANDLE_SIZE / 2,yTop]]);
       }
-      //layerOutline.x(handle.x() + (SnowProfile.Cfg.HANDLE_SIZE / 2));
-      //layerOutline.y(yTop);
-      //layerOutline.height(yBottom - yTop);
       
     };
 
@@ -594,7 +620,7 @@
 
       // Set handle X from hardness, hide unneccesary handles 
       if (i === (SnowProfile.snowLayers.length - 1)){
-        // last layer is ghost layer 
+        // last layer is hidden layer, handle stays on right side of graph
         handle.x(SnowProfile.Cfg.HANDLE_INIT_X);
       }
       else if (handleTouched) {
@@ -619,7 +645,7 @@
       handleTipSet(handle.x());
       slopeHandleTipSet(slopeHandle.x());
 
-      // Adjust the rectangle that outlines this layer
+      // Adjust the polygon that outlines this layer
       self.setLayerOutline();
 
       // Adjust the outline of the layer above, if any
@@ -670,19 +696,16 @@
     var i,
       numLayers = SnowProfile.snowLayers.length,
       inserted = false,
-      thisHandle,
-      thisInsert;
+      thisHandle;
 
     // Insert this snow layer above the first snow layer that is
     // at the same depth or deeper.
     for (i = 0; i < numLayers; i++) {
       thisHandle = SnowProfile.handlesGroup.get(i);
-      //thisInsert = SnowProfile.insertGroup.get(i);
       if (Number(SnowProfile.snowLayers[i].depth()) >= Number(depthVal)) {
         // Insertion point found, we need to insert above snowLayers[i].
         SnowProfile.snowLayers.splice(i, 0, this);
         thisHandle.before(handle);
-        //thisInsert.before(self.insertButton.getButton());
         inserted = true;
         break;
       }
@@ -693,7 +716,6 @@
     if (!inserted) {
       SnowProfile.snowLayers.push(this);
       SnowProfile.handlesGroup.add(handle);
-      //SnowProfile.insertGroup.add(self.insertButton.getButton());
     }
 
     // Listen for "SnowProfileHideControls" events
@@ -747,54 +769,27 @@
      * @callback
      * @memberof handle
      */
-    handle.mouseup(function() {
+    /*handle.mouseup(function() {
       handle.x(SnowProfile.code2x(featObj.hardness()));
       slopeHandle.x(SnowProfile.code2x(featObj.hardness2()));
       self.draw();
-    });
+    });*/
+    handle.on('dragend', function(event) {
+      handle.x(SnowProfile.code2x(featObj.hardness()));
+      slopeHandle.x(SnowProfile.code2x(featObj.hardness2()));
+      self.draw();
+    })
     
+    /*
     slopeHandle.mouseup(function() {
       slopeHandle.x(SnowProfile.code2x(featObj.hardness2()));
       self.draw();
-    });
-
-    // When Insert button clicked, insert a snow layer below this one.
-    /*$(document).bind("SnowProfileButtonClick", function(evt, extra) {
-
-      if (extra.buttonObj === self.insertButton) {
-        i = self.getIndex();
-        numLayers = SnowProfile.snowLayers.length;
-        var spaceBelow;
-
-        // Is this the bottom layer?
-        if (i === (numLayers - 1)) {
-          // Inserting below the bottom layer
-          if ((depthVal + SnowProfile.Cfg.INS_INCR) >= SnowProfile.pitDepth) {
-
-            // Can't insert, no room
-            alert('No room to insert another layer!');
-            return;
-          }
-          spaceBelow = SnowProfile.pitDepth - depthVal;
-        }
-        else {
-
-          // We need space for a layer below this one.  Calculate the space
-          // available between this layer and the layer below it.
-          spaceBelow = SnowProfile.snowLayers[i + 1].depth() - depthVal;
-          if (spaceBelow < ( 2 * SnowProfile.Cfg.INS_INCR)) {
-
-            // Not enough so we need to make space below this snow layer.
-            if (!SnowProfile.snowLayers[i + 1].pushDown()) {
-
-              // Couldn't make space, insertion fails
-              return;
-            }
-          }
-        }
-        SnowProfile.newLayer(depthVal + (spaceBelow / 2));
-      }
     });*/
+    slopeHandle.on('dragend', function(event) {
+      handle.x(SnowProfile.code2x(featObj.hardness()));
+      slopeHandle.x(SnowProfile.code2x(featObj.hardness2()));
+      self.draw();
+    })
     
   }; // function SnowProfile.Layer()
 })(jQuery);

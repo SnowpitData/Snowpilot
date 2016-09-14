@@ -76,13 +76,12 @@
       grainSizeMax = "";
 
     /**
-     * User's comment about this snow layer
+     * User's comment about this snow layer - using this for stability tests.
+     * Array of Objects that describe the stability tests.
      *
-     * The comment character string entered by the user to comment
-     * on this snow layer.
-     * @type {string}
+     * @type {Array}
      */
-    var comment = "";
+    var comment;
 
     /**
      * SVG group to hold all displayable components of the feature description.
@@ -131,13 +130,13 @@
     featDescr.add(commentDescr);
 
     // For debugging, show the bounding box
-    var cdBox = SnowProfile.drawing.rect(0, 0)
-      .addClass('snow_profile_cdbox')
-      .style({
-         "fill-opacity": 0,
-         stroke: 'red'
-      });
-    featDescr.add(cdBox);
+    //var cdBox = SnowProfile.drawing.rect(0, 0)
+    //  .addClass('snow_profile_cdbox')
+    //  .style({
+    //     "fill-opacity": 0,
+    //     stroke: 'red'
+    //  });
+    //featDescr.add(cdBox);
 
     /**
      * Hardness of this snow layer.
@@ -169,13 +168,13 @@
     featDescr.add(grainSizeText);
 
     // For debugging, show the bounding box
-    var gsBox = SnowProfile.drawing.rect(0, 0)
-      .addClass('snow_profile_gsbox')
-      .style({
-         "fill-opacity": 0,
-         stroke: 'red'
-      });
-    featDescr.add(gsBox);
+    // var gsBox = SnowProfile.drawing.rect(0, 0)
+      // .addClass('snow_profile_gsbox')
+      // .style({
+         // "fill-opacity": 0,
+         // stroke: 'red'
+      // });
+    // featDescr.add(gsBox);
 
     /**
      * Group to hold the icons describing this layer's grains.
@@ -193,13 +192,13 @@
       .y(5);
 
     // For debugging, show the bounding box
-    var giBox = SnowProfile.drawing.rect(0, 0)
-      .addClass('snow_profile_gibox')
-      .style({
-         "fill-opacity": 0,
-         stroke: 'red'
-      });
-    featDescr.add(giBox);
+    // var giBox = SnowProfile.drawing.rect(0, 0)
+      // .addClass('snow_profile_gibox')
+      // .style({
+         // "fill-opacity": 0,
+         // stroke: 'red'
+      // });
+    // featDescr.add(giBox);
 
     /**
      * Y position of top of bounding box
@@ -646,25 +645,33 @@
     } // function setCommentDescr(comment)
     
     /**
-     * Set the stability test text using SnowProfile.stabilityTests
+     * Set the stability test text 
+     *
+     * @param {Array} sTests Array of objects representing stability tests
      */
-    function setStabTest() {
+    function setStabTest(sTests) {
 
       var words = [];
       commentDescr.text("");
       commentDescr.build(false);
+      
+      // Sort stability tests based on depth
+      sTests.sort(function (a, b) {
+        if (SnowProfile.depthRef === "s") {
+          return a.depth - b.depth;
+        } else {
+          return b.depth - a.depth;
+        }
+      });
 
       // Iterate through all stability tests
-      for (var num in SnowProfile.stabilityTests){
-        var testText = SnowProfile.stabilityTests[num];
+      for (var i = 0; i < sTests.length; i++) {
+        var testText = sTests[i].description;
+        var testDepth = sTests[i].depth;
         
-        // Split the stability test to get the depth value 
-        words = testText.split(' ');
-        var testDepth = Number(words[words.length -1]);
-        
-        console.log("Depth: " + testDepth);
-        
+        // Add the text to the stability test column on live graph
         commentDescr.tspan(testText).newLine();
+        //commentDescr.tspan(testText).newLine().y(SnowProfile.depth2y(testDepth));
         commentDescr.build(true);
         
       }
@@ -673,7 +680,7 @@
     /**
      * Get or set description of this snow layer
      *
-     * Called from the modal dialogue popup with data from the popup
+     * Called by jQuery listeners attached to SnowPilot web form
      * @callback
      * @param {Object} [data] - Object describing the snow layer.
      * @returns {Object} Object describing the snow layer if param omitted.
@@ -740,7 +747,7 @@
 
         // Comment description
         //setCommentDescr(comment);
-        setStabTest();
+        setStabTest(comment);
         cdBbox = commentDescr.bbox();
 
         // For debugging show the comment description bounding box
