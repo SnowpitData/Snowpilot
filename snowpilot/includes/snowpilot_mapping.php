@@ -138,10 +138,14 @@ function updatePosition(){
     var lat = parseFloat(document.getElementById('edit-field-latitude-und-0-value').value);
     var lon = parseFloat(document.getElementById('edit-field-longitude-und-0-value').value);
     if (lat && lon) {
-        var newPosition = new google.maps.LatLng(lat,lon);
-        placeMarker(newPosition);
+        //var newPosition = new google.maps.LatLng(lat,lon);
+        //placeMarker(newPosition);
+        createMarker(lat, lon);
     }
-		console.log('lat:' + lat );
 }
+
+// Add listeners to SnowPilot form for latitude and longitude inputs
+jQuery("[id^=edit-field-latitude]").blur(updatePosition);
+jQuery("[id^=edit-field-longitude]").blur(updatePosition);
 
 </script>
