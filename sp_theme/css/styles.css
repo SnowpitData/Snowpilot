@@ -29,8 +29,8 @@
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1b2d3d', endColorstr='#26496a',GradientType=0 ); /* IE6-9 */
 }
 
-.header__logo{
-	margin: 20px 5px;
+.header__logo img{
+	width: 350px;
 }
 
 #navigation {
@@ -66,6 +66,13 @@
 
 #content{
 	padding-top:15px;
+	padding-left: 30px;
+	padding-right: 30px;
+}
+
+body{
+		background-image: url('../images/investigating crown-Light-1600.jpg');
+		background-position: center top;
 }
 
 #content a{
@@ -87,7 +94,7 @@
     -webkit-border-top-left-radius: 8px;
     -webkit-border-top-right-radius: 8px;
     border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    border-top-right-radius: 8px;-1600
 	*/
 }
 
@@ -109,31 +116,66 @@ form .field-multiple-table td {
 	padding-right: 0px;
 }
 
-
-header#header .header__region{
+header.header{
+	height: 115px;
+}
+/*
+//  un -authenticated User block, "Modal Login Popup"
+*/
+header #block-block-3{
   background-color: #c76b23;
   clear: none;
   display: block;
   float: right;
   position: relative;
-  top: 105px;
-  width: 70px;
+  bottom: 40px;
+  width: 50px;
+
+    background: #c76b23 url("../images/lock.png") no-repeat scroll 6px 11px;
+    border: 2px solid #d4d8dc;
+    border-radius: 6px;
+    color: #fff;
+    padding-left: 10px;
+    padding-right: 8px;
+    text-align: right;
 }
 
-header#header .header__region .block {
+header #block-block-3 {
     padding: 8px;
 }
 
-header#header .header__region h2{
+header #block-block-3 h2{
 	margin: .1em;
 	color: #ffffff;
 	font-size: 1.3em;
 }
+/*
+// Authenticated user, name
+*/
+
+header #block-block-6{
+  clear: none;
+  display: block;
+  float: right;
+  position: relative;
+  bottom: 120px;
+  width: 240px;
+}
+
+header #block-block-6 h2,
+header #block-block-6 a{
+	color: #ffffff;
+	
+}
+
+.view-display-id-page .view-filters{
+	background-color: #c87931;
+}
 
 nav#secondary-menu{
 	position: relative;
-	top: 35px;
-	left: 310px;
+	bottom: 70px;
+	left: 196px;
 }
 
 #secondary-menu ul.links a,
@@ -143,9 +185,10 @@ nav#secondary-menu{
 }
 
 #block-user-login{
-	width: 180px;
+	width: 240px;
 	float: left;
 	padding: 6px;
+	background-color: #fff;
 }
 #block-user-login h2{ 
   color: #c76b23;
@@ -153,7 +196,6 @@ nav#secondary-menu{
 	background-color: #d4d8dc;
 	text-transform:uppercase;
 }
-
 
 #block-user-login input.form-submit,
 form#user-login input.form-submit{
@@ -167,21 +209,57 @@ form#user-login input.form-submit{
 	border: solid 2px #d4d8dc;
 }
 
+.not-logged-in #content .field-name-body .field-item {
+    margin-left: 252px;
+    padding-left: 20px;
+    width: 50%;
+}
+
 form#user-login-form .form-item input.form-text,
 form#user-login .form-item input.form-text{
-	border-radius: 6px;
-	background-color: #FDFDFD;
+    background-color: #fdfdfd;
+		background-repeat: no-repeat;
+		background-position: 3px center;
+    border-radius: 6px;
+		width: 190px;
+    height: 25px;
+    line-height: 27px;
+    padding: 2px 4px 1px 23px;
+}
+#user-login-form .form-item-name input.form-text,
+#user-login .form-item-name input.form-text{
+	background-image: url('../images/person-icon.png');
+}
+
+#user-login-form .form-item-pass input.form-text,
+#user-login .form-item-pass input.form-text{
+	background-image: url('../images/key-icon.png');
+	
 }
 
 #block-user-login .form-item label,
 #user-login .form-item label{
 	font-weight: normal;
+	padding-bottom: 3px;
 }
 
 #block-user-login .form-item{
 	margin: .5em 0;
 }
 
+/*
+// ALL block titles h2
+*/
+#content h2.block-title{
+	background: -moz-linear-gradient(top, rgba(87,107,119,0.85) 0%, rgba(125,185,232,0.85) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(87,107,119,0.85) 0%,rgba(125,185,232,0.85) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(87,107,119,0.85) 0%,rgba(125,185,232,0.85) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d9576b77', endColorstr='#d97db9e8',GradientType=0 ); /* IE6-9 */
+	background-image: url('../images/diagonal-stripes-40.png'), linear-gradient(to bottom, #e2e4e6,#f3f3f3);
+	background-repeat: no-repeat;
+	background-position: right center; 
+	
+}
 /*
 //
 //  format the Snowpilot login link to modal boxon the top of all pages for anonymous users
@@ -688,7 +766,7 @@ body.page-node-add-snowpit-profile #navigation{
 	position:absolute;
 	left: 250px;
 	top: -47px;
-	width: 45%;
+	width: 50%;
 	background: transparent;
 }
 
@@ -699,7 +777,7 @@ body.page-node-add-snowpit-profile #main{
 }
 
 #main, #header, #footer{
-	width: 1320px;
+	max-width: 1360px;
 	margin: 0 auto;
 }
 
@@ -817,6 +895,7 @@ body.node-type-snowpit-profile{
 		color: #fff;
     margin: 0 auto;
     width: 350px;
+		background: none;
 }
 
 #block-views-snowpit-list-block ul.pager a{
