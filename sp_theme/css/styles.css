@@ -636,6 +636,22 @@ fieldset.group-density{
 	width: 300px;
 }
 
+.group-layers .fieldset-wrapper > div {
+    width: 300px;
+}
+
+form.node-snowpit_profile-form .group-layers{
+	background: #fff;
+}
+
+form.node-snowpit_profile-form .tabledrag-toggle-weight-wrapper {
+    display: none;
+}
+
+form .group-snowpit{
+	background-color: #fff;
+}
+
 #edit-field-graph-canvas {
     display: inline-block;
     width: 943px;

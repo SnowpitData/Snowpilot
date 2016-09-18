@@ -141,6 +141,8 @@ function updatePosition(){
         //var newPosition = new google.maps.LatLng(lat,lon);
         //placeMarker(newPosition);
         createMarker(lat, lon);
+				var latLng = new google.maps.LatLng(lat, lon);
+				map.panTo(latLng);
     }
 }
 

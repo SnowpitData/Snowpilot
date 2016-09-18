@@ -95,14 +95,9 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 
 
 function snowpilot_avscience_pit_exists($node){
-	$avsci_db_info = array(
-	  'host' => '127.0.0.1', 
-	  'database' => 'avscience',
-	  'username' => 'root', 
-	  'password' => 'port', 
-	  'driver' => 'mysql',
-	);
-	Database::addConnectionInfo('avscience_db', 'default', $avsci_db_info);
+	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+
+	Database::addConnectionInfo('avscience_db', 'default', $test_db);
   $account = user_load($node->uid);	
 	
 	db_set_active('avscience_db');
@@ -141,7 +136,7 @@ function snowpilot_init(){
 	global $user;
 	if($user->uid <> 0){ 
 
-			snowpilot_user_unit_prefs_check($user->uid,FALSE);
+			//snowpilot_user_unit_prefs_check($user->uid,FALSE);
 
 	}
 	
@@ -180,7 +175,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
 			
 					snowpilot_snopit_prof_unit_prefs_set($form, $snowpit_unit_prefs);	
-					// Put a fake "delete" link above the rest of the 
+					// Put a fake "delete" link above the rest of the items
 	
 						$form['actions2']['pre_delete'] 	= array( 
 								'#type' => 'container',
@@ -195,6 +190,8 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 							);
 					
 				}
+				if ( $snowpit_unit_prefs['field_latitude_type'] == 'S' )	$form['field_latitude']['und'][0]['value']['#default_value'] = '-';
+				if ( $snowpit_unit_prefs['field_longitude_type'] == 'W' )	$form['field_longitude']['und'][0]['value']['#default_value'] = '-';
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
 				$account = user_load($node->uid);
 				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
@@ -203,6 +200,8 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				//dsm($snowpit_unit_prefs);
 				
 			}
+			$form['field_layer']['#prefix'] = '<div>';
+			$form['field_layer']['#suffix'] = '</div>';
 			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => 'Mountain Range' );
 			
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
@@ -282,8 +281,24 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		  $form['#submit'][] = 'snowpilot_user_pass_submit';
 		
 		break;
+		case 'user_register_form':
+			$form['account']['notify']['#default_value'] = TRUE;
+		break;
+			
 	} // end switch
 	return $form;
+}
+
+function snowpilot_user_snowpits_count($uid){
+	$query = new EntityFieldQuery();
+	
+	$query->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'snowpit_profile')
+	  ->propertyCondition('uid', $uid);
+	$result = $query->count()->execute();
+	
+	return $result;
+	
 }
 //
 //
@@ -491,18 +506,23 @@ function snowpilot_lock_professional_affil(&$form){
 	  && !in_array($form['field_professional_affiliation']['und']['#default_value'][0], $top_level_prof_affil )
 	  && !snowpilot_user_has_role('administrator') ){
 		$form['field_professional_affiliation']['#access'] = FALSE ; 
+		$ids = array();
+		foreach ( $form['field_professional_affiliation']['und']['#default_value'] as $affiliation) $ids[] = $affiliation ;
+		 
+		$terms = taxonomy_term_load_multiple( $ids );
 		
-		$term = taxonomy_term_load($form['field_professional_affiliation']['und']['#default_value'][0] );
+		$terms_list_formatted = '';
+		foreach( $terms as $tid => $term) {
+			$terms_list_formatted .= 	'<div class="inner"> ' . $term->name.' </div>';
+		}
+
 		$form['field_professional_affiliation_display'] = array( 
 			'#type' => 'container',
 			'#weight' => '5',
-			'und' =>array(
-				0 => array(
-					'markup' => array( '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label> <div class="inner"> ' . $term->name.' </div> </div>',
-				  ),
-				),
-			),
-		
+			'und' => array ( 
+			'markup' => array (
+		    '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . ' </div>',),
+			),	
 		);
 	}
 }

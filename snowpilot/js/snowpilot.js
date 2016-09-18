@@ -44,7 +44,7 @@
         });
       });
       
-	    $(".save .ctools-dropdown-container-wrapper a").click(function(event) {
+	    $(".save.warn .ctools-dropdown-container-wrapper a").click(function(event) {
 	        if( !confirm('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?') ) 
 	            event.preventDefault();
 	    });

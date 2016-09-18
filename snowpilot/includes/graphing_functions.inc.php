@@ -622,6 +622,7 @@ $height = 840;
 // Create GD Image
 
 $img = imagecreatetruecolor($width, $height);
+
 // Assign some colors
 $black = imagecolorallocate($img, 0, 0, 0);
 $white = imagecolorallocate($img, 255, 255, 255);
@@ -632,10 +633,13 @@ $pink_problem = imagecolorallocate($img,254, 240, 240);
 
 // Set background color to white
 imagefill($img, 0, 0, $white);
-// Label Y axis and draw horizontal lines
+
 $label_font = '/sites/all/libraries/fonts/Arial.ttf';
 $value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
 $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
+
+
+// Label Y axis and draw horizontal lines
 
       imagettftext($img, 11, 0, 14, 17, $black, $value_font, $node->title);
 			// Location information
@@ -920,7 +924,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			} 
 			// now that we are done drawing all the layers, we can overprint the red layer of concern
 			if (isset($concern_delta)){
-				switch ($all_layers[$concern_delta]->field_concern['und'][0]['value']){
+				$layer_part = isset($all_layers[$concern_delta]->field_concern['und'][0]['value'] ) ? $all_layers[$concern_delta]->field_concern['und'][0]['value'] : 'entire layer';
+				switch ($layer_part){
 					case 'entire layer':
 						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $pink_problem, TRUE, $snowpit_unit_prefs['hardnessScaling']);
 						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $blue_outline, FALSE, $snowpit_unit_prefs['hardnessScaling']);  // the outline
@@ -1059,8 +1064,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imagettftext($img, 10, 0 , 516,137, $black, $label_font , "Form");
 	imagettftext($img, 10, 0 , 580,137, $black, $label_font , "Size (mm)");
 	
-	//imageline($img, );
-	
+	// Snowpilot water mark logo _100
+	$sp_watermark = imagecreatefrompng(DRUPAL_ROOT.'/sites/all/themes/sp_theme/images/SnowPilot_Watermark_BlueOrange_100.png');
+	imagecopy ( $img , $sp_watermark , 35 , 170 , 0 , 0, 160 , 99);
+	imagedestroy($sp_watermark); 	
 	
 	// Output the png image
 	$filename = 'graph-'.$node->nid ;
