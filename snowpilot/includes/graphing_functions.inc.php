@@ -782,11 +782,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				}
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
 
-				imagettftext( $img, 11, 0 , 645, $comment_count*13 + 17, $black, $label_font, 'Stability Test Notes');
+				imagettftext( $img, 11, 0 , 645, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
 				
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->y_position) ){
-				  	// this use of imageline will need to be updated to include some kind of cluster management
 						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
 							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);
 							imagettftext($img, 9, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
@@ -927,8 +926,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				$layer_part = isset($all_layers[$concern_delta]->field_concern['und'][0]['value'] ) ? $all_layers[$concern_delta]->field_concern['und'][0]['value'] : 'entire layer';
 				switch ($layer_part){
 					case 'entire layer':
-						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $pink_problem, TRUE, $snowpit_unit_prefs['hardnessScaling']);
-						snowpilot_draw_layer_polygon($img, $all_layers[$concern_delta], $blue_outline, FALSE, $snowpit_unit_prefs['hardnessScaling']);  // the outline
 						
 						//full-on red layer was too much; withdrawn for now; in favor of perhaps diagonal lines of red indicating layer of concern ( all layer ) in future
 						// 

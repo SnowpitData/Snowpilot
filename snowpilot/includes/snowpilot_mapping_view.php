@@ -35,15 +35,6 @@ if ( isset ( $node->field_longitude['und'][0]['value'])){
           position: myLatLng,
           title: 'Hello World!'
         });
-
-  var image = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
-
-        var marker = new google.maps.Marker({
-          map: map,
-          position: myLatLng2,
-          title: 'Just West of here',
-          icon: image
-        });
       }
 
     </script>

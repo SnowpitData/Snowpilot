@@ -90,7 +90,7 @@
 			// If the layer count is greater than 1
 			// hide the select 
 			//
-			if ($('#snowpit-profile-node-form #edit-field-layer table tbody tr').length > 2 ){
+			if ($('#snowpit-profile-node-form #edit-field-layer table tbody tr').length > 1 ){
 				//  hide select is here
 				$('#snowpit-profile-node-form #edit-field-depth-0-from').hide();
 			}

@@ -97,7 +97,7 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 function snowpilot_avscience_pit_exists($node){
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 
-	Database::addConnectionInfo('avscience_db', 'default', $test_db);
+	Database::addConnectionInfo('avscience_db', 'default', $avsci_db_info);
   $account = user_load($node->uid);	
 	
 	db_set_active('avscience_db');
@@ -190,8 +190,11 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 							);
 					
 				}
-				if ( $snowpit_unit_prefs['field_latitude_type'] == 'S' )	$form['field_latitude']['und'][0]['value']['#default_value'] = '-';
-				if ( $snowpit_unit_prefs['field_longitude_type'] == 'W' )	$form['field_longitude']['und'][0]['value']['#default_value'] = '-';
+				// Possibly do this with JS entered inline, jed working on it
+				//drupal_add_js( , , 'inline');
+				
+				 if ( $snowpit_unit_prefs['field_latitude_type'] == 'S' )	drupal_add_js( drupal_get_path( 'module', 'snowpilot').'/js/negative_latitude.js');
+				 if ( $snowpit_unit_prefs['field_longitude_type'] == 'W' )	drupal_add_js( drupal_get_path( 'module', 'snowpilot').'/js/negative_longitude.js');
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
 				$account = user_load($node->uid);
 				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
@@ -245,7 +248,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					
 				}
 				$form['#after_build'][] = 'snowpit_list_view_after_build';
-				//$form['field_professional_affiliation_tid'][LANGUAGE_NONE]['#options'] = get_optgroup_by_taxonomy('professional_affiliation');
 			}	
 		break;
 		case 'user_profile_form':
@@ -937,6 +939,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		//
 		// this block hides the last layer entry form where the bottom of the previous one was "zero depth"
 		//
+		
 		if ( isset($form['field_layer']['und'][$x]) && 
 		(($snowpit_unit_prefs['field_depth_0_from'] <> 'top') &&  $form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] == '0')
 			|| ( ($snowpit_unit_prefs['field_depth_0_from'] == 'top')  
@@ -947,6 +950,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 			unset($form['field_layer']['und']['add_more']);
 			$form['field_layer']['und'][$x]['#suffix'] = $form['field_layer']['und'][$x]['#suffix'].'<h3 class ="snowpilot-snowpit-bottom">Bottom of Snowpack</h3>';
 		}
+		
 		//dsm($form['field_total_height_of_snowpack']['und'][0]['value']);
 		//$form['field_layer']['und'][$x]['#pre_render'][] = 'snowpilot_graintypes_tweak';
 		$x++;
@@ -1328,7 +1332,7 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 		$string = $test->multiple.'x '.$string;
 	}
 	
-	if ( isset($test->field_depth['und'][0]['value']  )){
+	if ( !in_array( $test->field_stability_test_score['und'][0]['value'], array('CTN', 'STN' , 'ECTX', 'RB7', 'SBN'  )) ){
 		$final_depth = $test->field_depth['und'][0]['value'] + 0;
 		$string .= " @". $final_depth .$snowpit_unit_prefs['field_depth_units']; 
 	}

@@ -23,10 +23,11 @@
 
 #header {
 	background: #1b2d3d; /* Old browsers */
-	background: -moz-linear-gradient(top, #1b2d3d 0%, #26496a 100%); /* FF3.6-15 */
-	background: -webkit-linear-gradient(top, #1b2d3d 0%,#26496a 100%); /* Chrome10-25,Safari5.1-6 */
-	background: linear-gradient(to bottom, #1b2d3d 0%,#26496a 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1b2d3d', endColorstr='#26496a',GradientType=0 ); /* IE6-9 */
+	
+	background: url('../images/DiagonalStripes_Large.png'), linear-gradient(to bottom, #1e506d 0%,#112f40 100%);
+	background-repeat: no-repeat;
+	background-position: right center;
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#112f40', endColorstr='#1e506d',GradientType=0 ); /* IE6-9 */
 }
 
 .header__logo img{
@@ -36,7 +37,7 @@
 #navigation {
     padding: 0 2px;
 		border-top: 1px solid #4a657f;
-    background-color: #c76b23;
+    background-color: #c87931;
 		border-bottom: 8px solid #26496a;/* #b3bac0;*/
 		height: 3.7em;
     /*background-image: -moz-linear-gradient(center top , #febf4c 0%, #ff8600 100%);
@@ -64,19 +65,20 @@
 		height: 2.9em;
 }
 
+body{
+		background-image: url('../images/investigating crown-Light-1600.jpg');
+		background-position: center top;
+}
+
 #content{
 	padding-top:15px;
 	padding-left: 30px;
 	padding-right: 30px;
 }
 
-body{
-		background-image: url('../images/investigating crown-Light-1600.jpg');
-		background-position: center top;
-}
 
 #content a{
-	color: #c76b23;
+	color: #c87931;
 }
 
 #main-menu a {
@@ -99,7 +101,7 @@ body{
 }
 
 #main-menu li a.active, #main-menu li.active-trail a {
-    background: #254766;
+    background: #1e506d;
 		border-top: 2px solid #b5c1cc;
 		border-left: 2px solid #b5c1cc;
 		border-right: 3px solid #b5c1cc;
@@ -123,7 +125,7 @@ header.header{
 //  un -authenticated User block, "Modal Login Popup"
 */
 header #block-block-3{
-  background-color: #c76b23;
+  background-color: #c87931;
   clear: none;
   display: block;
   float: right;
@@ -131,7 +133,7 @@ header #block-block-3{
   bottom: 40px;
   width: 50px;
 
-    background: #c76b23 url("../images/lock.png") no-repeat scroll 6px 11px;
+    background: #c87931 url("../images/lock.png") no-repeat scroll 6px 11px;
     border: 2px solid #d4d8dc;
     border-radius: 6px;
     color: #fff;
@@ -191,7 +193,7 @@ nav#secondary-menu{
 	background-color: #fff;
 }
 #block-user-login h2{ 
-  color: #c76b23;
+  color: #c87931;
   padding: 4px 5px 4px 20px;
 	background-color: #d4d8dc;
 	text-transform:uppercase;
@@ -199,7 +201,7 @@ nav#secondary-menu{
 
 #block-user-login input.form-submit,
 form#user-login input.form-submit{
-  background: #c76b23 url("../images/lock.png") no-repeat 6px 11px;
+  background: #c87931 url("../images/lock.png") no-repeat 6px 11px;
   border-radius: 6px;
 	text-align: right;
 	padding-left: 24px;
@@ -271,7 +273,7 @@ form#user-login .form-item input.form-text{
 }
 
 div.ctools-modal-content div.popups-title {
-	background-color: #c76b23;
+	background-color: #c87931;
 	padding-top: 1px;
 	padding-bottom: 1px;
 }
@@ -295,6 +297,40 @@ div.ctools-modal-content .form-item label {
 #block-views-snowpit-list-block h2.block-title,
 #block-views-snowpit-list-block-1 h2.block-title {
     font-size: 2.3em;
+}
+
+/*
+// snowpit list formatting
+*/
+
+#content .view-snowpit-list{
+	background-color: #c87931;
+	padding-bottom: 5px;
+}
+#content .view-snowpit-list table.views-view-grid tr {
+    border-bottom: 15px solid #c87931;
+}
+
+.view-snowpit-list .views-exposed-form {
+    border-bottom: 5px solid #1e506d;
+		padding-left: 35px;
+}
+.views-exposed-form label {
+    color: #fff;
+}
+
+.views-exposed-form .views-exposed-widget{
+	padding-left: 4px;
+	border-left: 2px solid #fcfcfc;
+	margin-bottom:0 ;
+}
+.views-exposed-form .views-exposed-widgets{
+	margin-bottom: 0;
+	line-height: 22px;
+}
+
+.view-snowpit-list .view-content {
+    padding-top: 10px;
 }
 
 
@@ -670,7 +706,7 @@ fieldset.group-stability {
 
 #google-map{
 	background-color: #fff;
-	width: 650px;
+	width: 610px;
 	height: 350px;
 	
 }
@@ -738,6 +774,12 @@ form#views-exposed-form-snowpit-list-page .views-exposed-widget.views-submit-but
 	color: blue;
 }
 
+#snowpit-profile-node-form #edit-field-depth-0-from .description{
+	position: relative;
+	bottom: 35px;
+	font-color: blue;
+}
+
 #snowpit-profile-node-form #edit-field-depth-0-from select{
 	font-size:.85em;
 	width: 70px;
@@ -770,6 +812,23 @@ body.node-type-snowpit-profile ul.tabs-primary{
 body.page-node-edit.node-type-snowpit-profile .header__logo-image,
 body.page-node-add-snowpit-profile .header__logo-image{
 	height: 45px;
+	width: 138.75px;
+}
+
+body.page-node-edit.node-type-snowpit-profile #block-block-6,
+body.page-node-add-snowpit-profile #block-block-6{
+	bottom: 60px;
+	
+}
+
+body.page-node-edit.node-type-snowpit-profile nav#secondary-menu,
+body.page-node-add-snowpit-profile nav#secondary-menu{
+	bottom: 15px;
+}
+
+body.page-node-edit.node-type-snowpit-profile header.header,
+body.page-node-add-snowpit-profile header.header{
+	height: 55px;
 }
 
 body.page-node-edit.node-type-snowpit-profile a#logo,
@@ -815,7 +874,7 @@ body.not-logged-in #edit-uid-current-wrapper{
 	position:relative;
 	top: 23px;
 	z-index: 200;
-	
+	clear: both;
 }
 
 #edit-submit--2{
@@ -873,8 +932,8 @@ body.node-type-snowpit-profile{
 //  Here is a list of views classes that correpsond to the fields in this view, for later formatting
 */
 /* Snowpit Title, shown above graph image */
-.view-snowpit-list .views-field-title a{
-	
+#content .view-snowpit-list .views-field-title a{
+	color: #fff;
 }
 /* the region-> range area*/
 .view-snowpit-list .views-snowpit-region-range{
@@ -902,11 +961,15 @@ body.node-type-snowpit-profile{
 .view-snowpit-list table td > div{
 	background-color: #fff;
 }
-#block-views-snowpit-list-block{
-	background-color: #c76b23;
+#block-views-snowpit-list-block,
+#block-views-snowpit-list-block-1{
+	background-color: #c87931;
+	padding-bottom: 10px;
+	margin-bottom: 3px;
 }
 
-#block-views-snowpit-list-block h2.block__title.block-title {
+#block-views-snowpit-list-block h2.block__title.block-title,
+#block-views-snowpit-list-block-1 h2.block__title.block-title  {
 	font-size: 2em;
 		color: #fff;
     margin: 0 auto;
@@ -914,9 +977,29 @@ body.node-type-snowpit-profile{
 		background: none;
 }
 
-#block-views-snowpit-list-block ul.pager a{
-	color: #fff;
+/*
+//  Pager formatting for snowpit List
+*/
+
+.view-snowpit-list ul.pager li.pager-current{
+	color:#fcfcfc;
 }
+
+#content .view-snowpit-list ul.pager li a{
+	display: inline-block;
+	background: #5b558e; /* Old browsers */
+	background: -moz-linear-gradient(left,  #1e506d 0%, #112f40 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(left,  #1e506d 0%,#112f40 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to right,  #1e506d 0%,#112f40 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e506d', endColorstr='#112f40',GradientType=0 ); /* IE6-9 */
+	padding: 8px 15px;
+	border-radius: 6px;
+	border: 2px solid #859c89 ;
+	color: #fcfcfc;
+	font-size: 1.1em;
+}
+
+
 .view-snowpit-list table td > div.views-field-title{
 	background-color: #5a707f;
 	padding-top: 5px;
@@ -925,9 +1008,9 @@ body.node-type-snowpit-profile{
 	text-align: center; 
 }
 
-.view-snowpit-list table td > div.views-field-title,
-.view-snowpit-list table td > div.views-field-nid,
-.view-snowpit-list table td > div.views-field-field-date-time{
+.view-snowpit-list table div.views-field-title,
+.view-snowpit-list table div.views-graph-image,
+.view-snowpit-list table div.views-field-field-date-time{
   border-left: 7px solid #fff;
   border-right: 7px solid #fff;
 }
@@ -942,10 +1025,30 @@ body.node-type-snowpit-profile{
 	font-size: 1em;
 }
 
-.view-snowpit-list table td div.views-field {
-    width: 190px;
+.view-snowpit-list table td div.views-field-title {
+		background: #1b2d3d; /* Old browsers */
+		background: -moz-linear-gradient(top, #576b77 0%, #859ca9 100%); /* FF3.6-15 */
+		background: -webkit-linear-gradient(top, #576b77 0%,#859ca9 100%); /* Chrome10-25,Safari5.1-6 */
+		background: linear-gradient(to bottom, #576b77 0%,#859ca9 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#576b77', endColorstr='#859ca9',GradientType=0 ); /* IE6-9 */
 }
 
+.view-snowpit-list table td{
+	padding: 0 10px;
+}
+
+.region-bottom{
+	min-height: 50px;
+	/*background: #1b2d3d; /* Old browsers */
+	/*background: -moz-linear-gradient(top, #1e506d 0%,#112f40 100%); /* FF3.6-15 */
+	/*background: -webkit-linear-gradient(top, #1e506d 0%,#112f40 100%); /* Chrome10-25,Safari5.1-6 */
+	/*background: linear-gradient(to bottom, #1e506d 0%,#112f40 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	/*filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e506d', endColorstr='#112f40',GradientType=0 ); /* IE6-9 */
+	color: #fff;
+	background: url('../images/DiagonalStripes_Large.png'), linear-gradient(to bottom, #1e506d 0%,#112f40 100%);
+	background-repeat: no-repeat;
+	background-position: right center;
+}
 /*
 .view-snowpit-list td.col-1,
 .view-snowpit-list td.col-2{
