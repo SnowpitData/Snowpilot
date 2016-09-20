@@ -163,7 +163,13 @@
 					//alert('hello world!');
 			    window.location.href = '/sites/default/files/snowpit-profiles/graph-'+ $(this).attr("nid") +'.jpg?345';
 			});
+			//
+			// Experimenting with accordian styles
 			
+	  	/* $("#accordian", context).accordion({
+			    header: "h3"
+			  });
+		 */
 			
 			//// show / hide layers on click
       $('.collapsible-content.collapsed', context).hide();
@@ -176,7 +182,7 @@
           event.stopPropagation();
         });
       });
-      
+     
         
       // TEMP collection:
       $('#edit-field-temp-collection', context).once('open', function () {

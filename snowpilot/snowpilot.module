@@ -887,7 +887,7 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	// Start with the overall title of the group
-	$form['field_layer']['und']['#title'] = "Snowpack Layers"; // 
+	$form['field_layer']['und']['#title'] = "Layers"; // 
 	// Add more button:
 	$form['field_layer']['und']['add_more']['#value'] = "Add Layer";
 
@@ -910,7 +910,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		$next_layer = $x+1 ; 
 		
 		$collapsed = '';
-		
+		//drupal_add_js( 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', 'external');
 		// The next 
 		$layer_info = '';
 		$this_hardness = '';
@@ -930,11 +930,21 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value']. ' ' . $snowpit_unit_prefs['field_depth_units']  .  $this_hardness; 
 			
 		}
-		$form['field_layer']['und'][$x]['#prefix'] ="<div class='collapsible-container layer_num_". $x ." '>".
-			"<h3 class='collapsible-handle layer-title'>Layer " . $next_layer . ": ". $layer_info . "</h3>".
-				'<div class="collapsible-content'. $collapsed .'" >';
+		$form['field_layer']['und'][$x]['#prefix'] ="<div class='collapsible-container layer_num_". $x ." '>"
+			."<h3 class='collapsible-handle layer-title'>Layer " . $next_layer . ": ". $layer_info . "</h3>".
+				'<div class="collapsible-content'. $collapsed .'" >' ;
 
 		$form['field_layer']['und'][$x]['#suffix'] ="</div> </div>";
+		
+		if ( $x > 5 ){
+			 $xx = 0 ;
+			while ( $xx >= 0 ){
+			  $form['field_layer']['und'][1]['#prefix'] = "<div class='collapsible-container layer_num_". $xx ." scrunch'>".
+				  "<h3 class = 'collapsible-handle layer-title' > +/-  ". $xx ."</h3>".
+					  '<div class="collapsible-content collapsed" >';
+				$xx++  ;
+			 }
+		}
 		
 		//
 		// this block hides the last layer entry form where the bottom of the previous one was "zero depth"
