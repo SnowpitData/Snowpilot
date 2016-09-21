@@ -163,52 +163,7 @@
 					//alert('hello world!');
 			    window.location.href = '/sites/default/files/snowpit-profiles/graph-'+ $(this).attr("nid") +'.jpg?345';
 			});
-			//
-			// Experimenting with accordian styles
-			
-	  	/* $("#accordian", context).accordion({
-			    header: "h3"
-			  });
-		 */
-			
-			//// show / hide layers on click
-      $('.collapsible-content.collapsed', context).hide();
-      
-      // REFACTOR TO USE EVENT DELEGATES: 
-      // Snowpack Layers
-      $('#edit-field-layer', context).once('open', function () {
-        $('#edit-field-layer', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
-          $(this).parent().find('div.collapsible-content').toggle('slow');
-          event.stopPropagation();
-        });
-      });
-     
-        
-      // TEMP collection:
-      $('#edit-field-temp-collection', context).once('open', function () {
-        $('#edit-field-temp-collection', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
-          $(this).parent().find('div.collapsible-content').toggle('slow');
-          event.stopPropagation();
-        });
-      });
-      
-            
-      // DENSITY collection:
-      $('#edit-field-density-profile', context).once('open', function () {
-        $('#edit-field-density-profile', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
-          $(this).parent().find('div.collapsible-content').toggle('slow');
-          event.stopPropagation();
-        });
-      });
 
-      // Stability Tests:
-      $('#edit-field-test', context).once('open', function () {
-        $('#edit-field-test', context).delegate( 'h3.collapsible-handle', 'click', function (event) {
-          $(this).parent().find('div.collapsible-content').toggle('slow');
-          event.stopPropagation();
-        });
-      });
-        
     }    // end of attach 
   };  //end of Drupal.behavior.snowpilot.formlayers
 }) (jQuery);

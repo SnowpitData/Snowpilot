@@ -167,7 +167,8 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
       $form['actions2']['submit']['#value'] = "Save Snowpit and Preview";
 			$form['actions2']['delete']['#value'] = 'Delete Snowpit';
 			$form['actions2']['#weight'] = -100;			
-	
+	    drupal_add_library('system', 'ui.accordion');
+
 			if( !isset($node->nid) || isset($node->is_new) ){ // a new snowpit profile node, find $unit_prefs from $user
 				if ( snowpilot_user_unit_prefs_check($user->uid)){ // this check function verifies that we have a full set of unit preferences, etc, setup for this user. It redirects to the user /edit page if one or more are lacking
 					// set the unit prefs on the snowpit node form.
@@ -190,19 +191,40 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 							);
 					
 				}
-				// Possibly do this with JS entered inline, jed working on it
-				//drupal_add_js( , , 'inline');
+				// new pits accordian js settings
+				//
+				$form['#attached']['js'][] = array(
+					'type' => 'file',
+					'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-new-pit.js',
+				);
 				
-				 if ( $snowpit_unit_prefs['field_latitude_type'] == 'S' )	drupal_add_js( drupal_get_path( 'module', 'snowpilot').'/js/negative_latitude.js');
-				 if ( $snowpit_unit_prefs['field_longitude_type'] == 'W' )	drupal_add_js( drupal_get_path( 'module', 'snowpilot').'/js/negative_longitude.js');
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
 				$account = user_load($node->uid);
 				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
 			
 				$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
-				//dsm($snowpit_unit_prefs);
+				//
+				// exisiting pits accordion js settings
+				//
+				$form['#attached']['js'][] = array(
+					'type' => 'file',
+					'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-existing-pit.js',
+				);
 				
 			}
+			//
+			// add the js to make lat and long negative if they should be.
+		 if ( $snowpit_unit_prefs['field_latitude_type'] == 'S' )	{
+			 $form['#attached']['js'][] = array(
+			    'type' => 'file',
+			    'data' => drupal_get_path('module','snowpilot') . '/js/negative_latitude.js',
+			  );}
+		 if ( $snowpit_unit_prefs['field_longitude_type'] == 'W' ){
+			 $form['#attached']['js'][] = array(
+			    'type' => 'file',
+			    'data' => drupal_get_path('module','snowpilot') . '/js/negative_longitude.js',
+			  );}
+			 
 			$form['field_layer']['#prefix'] = '<div>';
 			$form['field_layer']['#suffix'] = '</div>';
 			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => 'Mountain Range' );
@@ -222,9 +244,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs);
 			
 			snowpilot_set_visibility_field_options($form, $snowpit_unit_prefs);
-			
-
-			
+						
 			
 		} // end case node->type == snowpit prof
 		break;
@@ -910,8 +930,6 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		$next_layer = $x+1 ; 
 		
 		$collapsed = '';
-		//drupal_add_js( 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', 'external');
-		// The next 
 		$layer_info = '';
 		$this_hardness = '';
 		if (isset($form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value']) && ( $form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value'] <> '')
@@ -922,6 +940,8 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 			if ( isset( $form['field_layer']['und'][$next_layer])){
 				$form['field_layer']['und'][$next_layer]['field_height']['und'][0]['value']['#default_value'] = 
 					$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'];
+			}else{
+				$collapsed .= ' last';
 			}
 			$this_hardness = (isset($form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0]) && $form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0] <> '') ? 
 				', '.$form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0] 
@@ -936,7 +956,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 
 		$form['field_layer']['und'][$x]['#suffix'] ="</div> </div>";
 		
-		if ( $x > 5 ){
+		/*if ( $x > 5 ){
 			 $xx = 0 ;
 			while ( $xx >= 0 ){
 			  $form['field_layer']['und'][1]['#prefix'] = "<div class='collapsible-container layer_num_". $xx ." scrunch'>".
@@ -944,10 +964,10 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 					  '<div class="collapsible-content collapsed" >';
 				$xx++  ;
 			 }
-		}
+		}*/
 		
 		//
-		// this block hides the last layer entry form where the bottom of the previous one was "zero depth"
+		// this block hides the last layer entry form where the bottom of the previous one was "zero depth" and puts up a 'bottom of Snowpit' sign
 		//
 		
 		if ( isset($form['field_layer']['und'][$x]) && 

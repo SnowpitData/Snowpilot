@@ -532,6 +532,14 @@ h3.test-title{
 	
 }
 /*
+//
+//  Layers need to get scunched if there are lots of them
+*/
+.scrunch .collapsible-handle.layer-title {
+    font-size: 0.8em;
+    line-height: 0.8em;
+}
+/*
     snoww profile edit form
 */
 
@@ -677,6 +685,7 @@ fieldset.group-density{
 
 form.node-snowpit_profile-form .group-layers{
 	background: #fff;
+
 }
 
 form.node-snowpit_profile-form .tabledrag-toggle-weight-wrapper {
@@ -685,6 +694,7 @@ form.node-snowpit_profile-form .tabledrag-toggle-weight-wrapper {
 
 form .group-snowpit{
 	background-color: #fff;
+	clear: both;
 }
 
 #edit-field-graph-canvas {
