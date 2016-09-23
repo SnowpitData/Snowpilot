@@ -28,10 +28,9 @@ if (  !isset($node->nid) || isset($node->is_new) ){
 	  $zoom = $default_location->field_zoom_level['und'][0]['value'];
 	}
 } else {  // existing node, let's check for existing lat /long settings and put the map and marker there
-	if ( isset ( $node->field_latitude['und'][0]['value'] ) && isset( $node->field_longitude['und'][0]['value']) && isset($node->field_zoom_level['und'][0]['value'] )){
+	if ( isset ( $node->field_latitude['und'][0]['value'] ) && isset( $node->field_longitude['und'][0]['value']) ){
 		$latitude = $node->field_latitude['und'][0]['value'];
 		$longitude = $node->field_longitude['und'][0]['value'];
-		$zoom = $node->field_zoom_level['und'][0]['value']; // TODO : reset zoom so it is appropriate for whatever region the pit is located at
 		$existing_node = TRUE ; 
 	}
 }
@@ -67,12 +66,9 @@ function initialize() {
 
    });
    <?php   /// If this is an existing node with already-set lat / long, place the marker in appropriate location
-	 if ( $existing_node ){
-   	 ?>
+	 if ( $existing_node ){  ?>
 		 createMarker(<?php echo $latitude ; ?>,<?php  echo $longitude; ?> );
-		 <?php
-   }
-	 ?>
+		 <?php } ?>
 
 }
 google.maps.event.addDomListener(window, 'load', initialize);

@@ -126,19 +126,13 @@ function snowpilot_avscience_pit_write($node){
 	return true;
 }
 
+function snowpilot_user_login(&$edit, $account){
+	snowpilot_user_unit_prefs_check($account->uid);
+}
+
 function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
-
-	//
-	//  We will pester the user on all pages if preferences aren't set
-	//
-	global $user;
-	if($user->uid <> 0){ 
-
-			//snowpilot_user_unit_prefs_check($user->uid,FALSE);
-
-	}
 	
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
@@ -211,6 +205,13 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-existing-pit.js',
 				);
 				
+			}
+			// Done wiwth new / or / existing pit logic, now we do things to all pits
+			if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
+				$form['#attached']['js'][] = array(
+					'type' => 'file', 
+					'data' => drupal_get_path('module','snowpilot') . '/js/negative_C_degrees.js',
+				);
 			}
 			//
 			// add the js to make lat and long negative if they should be.

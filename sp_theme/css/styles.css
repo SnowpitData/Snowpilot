@@ -109,7 +109,7 @@ body{
 
 form .field-multiple-table th.field-label,
 form .field-multiple-table td {
-    padding-left: 10px;
+    /*padding-left: 10px;*/
 }
 
 #main-menu ul.links li.menu-514{
@@ -543,6 +543,16 @@ h3.test-title{
     snoww profile edit form
 */
 
+form.node-snowpit_profile-form .form-item{
+	margin: .4em 0; 
+}
+
+form.node-snowpit_profile-form .form-item-field-loaction-und{
+	margin:0;
+}
+
+form.node-snowpit_profile-form 
+
 form.node-snowpit_profile-form #edit-title{
 	width: 170px;
 }
@@ -577,9 +587,15 @@ input#edit-field-elevation-und-0-value{
 #edit-field-slope-angle,
 #edit-field-surface-penetration,
 #edit-field-boot-penetration-depth,
-#edit-field-ski-penetration,
-#edit-field-total-height-of-snowpack{
+#edit-field-ski-penetration{
 	display: inline-block;
+	margin: 0 15px;
+}
+
+#edit-field-latitude,
+#edit-field-longitude,
+#edit-field-total-height-of-snowpack,
+#edit-field-loaction{
 	margin: 0 15px;
 }
 
@@ -600,21 +616,107 @@ body.page-user .profile h3.field-label{
 	display: none;
 }
 
-.group-snopit .tabledrag-toggle-weight-wrapper{
+.group-snowpit .tabledrag-toggle-weight-wrapper{
 	display: none;
 }
+
+
+fieldset.group-location legend,
+fieldset.group-weather legend{
+  bottom: 10px;
+  color: #c87931;
+  font-size: 1.3em;
+  height: 0;
+  left: 20px;
+  padding-left: 5px;
+  padding-right: 5px;
+  position: relative;}
 
 form.node-snowpit_profile-form .fieldset-wrapper{
 /*	margin-top:0px; */
 }
-form.node-snowpit_profile-form fieldset{
-	margin-top:0;
-	
+form.node-snowpit_profile-form fieldset.group-location,
+form.node-snowpit_profile-form fieldset.group-weather{
+	border-top: 4px solid #c87931;
+	border-bottom: none;
 }
 
 .field-group-htab .tabledrag-toggle-weight-wrapper{
 	display:none;
 }
+
+form.node-snowpit_profile-form .field-name-field-hardness select.form-select{
+	appearance: none;
+	font-size: .9em;
+}
+form.node-snowpit_profile-form .field-name-field-hardness select.form-select option{
+	appearance: none;
+	font-size: .9em;
+	padding: 2px 2px 2px 10px;
+}
+
+form.node-snowpit_profile-form .field-name-field-hardness select.form-select option:nth-child(3n) ,
+form.node-snowpit_profile-form .field-name-field-hardness2 select.form-select option:nth-child(3n) {
+	appearance: none;
+    font-size: 1.2em;
+		padding-left: 0px;
+}
+
+form.node-snowpit_profile-form .field-name-field-hardness select.form-select option:nth-child(3n+1) ,
+form.node-snowpit_profile-form .field-name-field-hardness2 select.form-select option:nth-child(3n+1) {
+border-bottom: 2px solid #1e506d;
+}
+
+fieldset.group-location{
+	margin: 0;
+	padding: 0;
+	border-left: none;
+	margin-top: 20px;
+}
+/*
+// Formatting checkboxes
+// temporarily removing this for publication
+
+.form-type-checkbox input {
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+		
+}
+
+.form-type-checkbox label{
+	
+/*	position: absolute;
+
+		width: 20px;
+		height: 20px;
+		background-image: url('../images/button-unchecked.png');
+		background-position: left center;
+		background-repeat: no-repeat;
+		padding-left: 19px;
+		cursor: pointer;
+	
+}
+*/
+
+#edit-field-loaction{
+	height: 45px;
+	padding-top:25px;
+}
+
+/*
+.form-type-checkbox::before{button-unchecked.png
+	content: " ";
+	position: relative;
+	display: inline-block;
+	cursor: pointer;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 1px solid #000;
+}
+	*/
+	
 /* Temp collection field sizes: */
 
 /* default text input field width: depths, etc.   */
@@ -644,7 +746,6 @@ form.node-snowpit_profile-form fieldset{
 
 #snowpit-profile-node-form .field-name-field-grain-type div.form-type-cshs div.select-wrapper:nth-of-type(2),
 #snowpit-profile-node-form .field-name-field-grain-type-secondary div.form-type-cshs div.select-wrapper:nth-of-type(2){
-	margin-left: 35px;
 	display: block;
 	/*background: #dedede url('/images/grain-types/primary-rounded-grains.jpg') no-repeat -15px top;*/
 }
@@ -678,14 +779,88 @@ fieldset.group-density{
 	float: right;
 	width: 300px;
 }
+/*
+// Formatting layers
+*/
 
 .group-layers .fieldset-wrapper > div {
     width: 300px;
 }
 
+form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion h3{
+	background:none;
+}
+
 form.node-snowpit_profile-form .group-layers{
 	background: #fff;
 
+}
+
+form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion tr.odd{
+	background: #c87931;
+}
+
+form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion tr.odd h3{
+	color: #fff;
+	padding-bottom: 2px;
+	padding-left: 20px;
+}
+
+form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion tr.even{
+	background: #fff;
+}
+
+form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion tr.even h3{
+	color: #c87931;
+	padding-bottom: 2px;
+	padding-left: 20px;
+}
+
+form.node-snowpit_profile-form table th label{
+	color: #c87931;
+	width: 150px;
+	margin: 0 auto;
+}
+
+form.node-snowpit_profile-form .field-multiple-table th.field-label{
+	padding-left: 5px;
+	padding-bottom: 5px;
+	padding-bottom: 3px;
+	border-bottom: none;
+	
+}
+
+form.node-snowpit_profile-form table.field-multiple-table th{
+	
+	background-attachment: scroll;
+	background-position: right center;
+	background: -moz-linear-gradient(top, rgba(87,107,119,0.85) 0%, rgba(125,185,232,0.85) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(87,107,119,0.85) 0%,rgba(125,185,232,0.85) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(87,107,119,0.85) 0%,rgba(125,185,232,0.85) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d9576b77', endColorstr='#d97db9e8',GradientType=0 ); /* IE6-9 */
+	background-image: url('../images/diagonal-stripes-40.png'), linear-gradient(to bottom, #e2e4e6,#f3f3f3);
+	background-repeat: no-repeat;
+	background-position: right center; 
+}
+
+form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
+	border-top: 3px solid #c87931;
+	padding: 0 .4em;
+  top: 1px;
+	
+}	
+
+form.node-snowpit_profile-form table.field-multiple-table .ui-accordion.ui-accordion-content{
+}
+
+form.node-snowpit_profile-form table.field-multiple-table{
+	border: 6px solid #c87931;
+	border-right: 10px solid #c87931;
+	min-width: 290px;
+}
+
+form.node-snowpit_profile-form label{
+	color: #4e4e4e;
 }
 
 form.node-snowpit_profile-form .tabledrag-toggle-weight-wrapper {
@@ -708,14 +883,14 @@ form .group-snowpit{
 fieldset.group-stability {
 	display: inline-block;
 	float: right;
-	width: 49%;
-	background-color: #cdcdcd;
-	padding: 8px;
+	width: 630px;
+	margin-left: -500px;
+  border-left: 3px solid #c87931;
 }
 
 #google-map{
 	background-color: #fff;
-	width: 610px;
+	width: 630px;
 	height: 350px;
 	
 }
@@ -732,7 +907,7 @@ fieldset.group-stability {
 {
 	display: none;
 }
-*/
+
 
 /*
 fieldset.group-location,

@@ -33,7 +33,7 @@ if ( isset ( $node->field_longitude['und'][0]['value'])){
         var marker = new google.maps.Marker({
           map: map,
           position: myLatLng,
-          title: 'Hello World!'
+          title: '<?php echo $node->nid; ?>'
         });
       }
 
