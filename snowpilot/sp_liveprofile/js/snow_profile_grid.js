@@ -479,6 +479,11 @@
       if ($.trim($("#edit-field-total-height-of-snowpack-und-0-value").val()).length){
         pitDepth = $("#edit-field-total-height-of-snowpack-und-0-value").val();
         SnowProfile.snowpackHeightSet = true;
+        // Update the first layer's Top Depth if needed
+        if (SnowProfile.depthRef === "g") {
+          var roundedDepth = Math.round(pitDepth * 10) / 10;
+          $('div.layer_num_0 input[id*="-height-"]').val(roundedDepth);
+        }
       }
       // If no HoS and we're measuring from bottom, use the first Top Depth value 
       else if(SnowProfile.depthRef === 'g'){
@@ -548,17 +553,23 @@
     // Listen for a change to the "snow pit depth" input
     $("#edit-field-total-height-of-snowpack-und-0-value").change(pitDepthChange);
     
-    // Listen for changes to top depth of first layer in case we need to draw grid from it - only works until new layer added
+    // Listen for changes to top depth of first layer in case we need to draw grid from it - only works until new layer added by virtue of the markup for the listener changing
     $("[id^=edit-field-layer-und-0-field-height-und-0-value]").change(pitDepthChange);
 
     // Listen for a change to the "Measure depth from" select
     $("#edit-field-depth-0-from-und").change(function() {
-      if($("#edit-field-depth-0-from-und").val() === "top") 
+      var currentDepth = SnowProfile.pitDepth;
+      if($("#edit-field-depth-0-from-und").val() === "top") {
         SnowProfile.depthRef = "s";
-      else if($("#edit-field-depth-0-from-und").val() === "bottom") 
+        var roundedDepth = 0.0;
+        $('div.layer_num_0 input[id*="-height-"]').val(roundedDepth);
+      } else if($("#edit-field-depth-0-from-und").val() === "bottom") {
         SnowProfile.depthRef = "g";
+        var roundedDepth = Math.round(currentDepth * 10) / 10;
+        $('div.layer_num_0 input[id*="-height-"]').val(roundedDepth);
+      }
       drawGrid();
-    });
+    });   
     
     // Draw grid at end of constructor 
     drawGrid();

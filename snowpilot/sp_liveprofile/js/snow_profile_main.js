@@ -94,6 +94,16 @@
       SnowProfile.snowLayers[1].handleTouchState(true, true);
       SnowProfile.snowLayers[1].draw();
       SnowProfile.snowLayers[0].draw();
+      // Prepopulate first layer Top Depth 
+      var currentDepth = SnowProfile.pitDepth;
+      if (SnowProfile.depthRef === "s") {
+        var roundedDepth = 0.0;
+        $('div.layer_num_0 input[id*="-height-"]').val(roundedDepth);
+      }
+      else if (SnowProfile.depthRef === "g") {
+        var roundedDepth = Math.round(currentDepth * 10) / 10;
+        $('div.layer_num_0 input[id*="-height-"]').val(roundedDepth);
+      }
     }
     // Initialize Stability Tests:
     // Loop and check for existence of stability tests and count them, break when finished
@@ -247,11 +257,19 @@
           //var scrollBot = $(document).height() - $(window).height() - $(window).scrollTop();
           // Layers Tab
           if ($('#active-horizontal-tab').parents('.horizontal-tab-button-1').length > 0) {
-            if ($(window).scrollTop() > 225 ) {
-              $('#edit-field-layer').css({
-                "position": "fixed",
-                "top": "50px"
-              });
+            var diff = $(window).height() - $('#edit-field-layer').height();
+            if ($(window).scrollTop() > 160 ) {
+              if (diff < 0) {
+                $('#edit-field-layer').css({
+                  "position": "fixed",
+                  "top": diff
+                });
+              } else {
+                $('#edit-field-layer').css({
+                  "position": "fixed",
+                  "top": "5px"
+                });
+              }
             } else {
               $('#edit-field-layer').css({
                 "position": "static"
@@ -259,11 +277,19 @@
             }
           // Stability Tests Tab
           } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-2').length > 0) {
-            if ($(window).scrollTop() > 225 ) {
-              $('#edit-field-test').css({
-                "position": "fixed",
-                "top": "50px"
-              });
+            var diff = $(window).height() - $('#edit-field-test').height();
+            if ($(window).scrollTop() > 160 ) {
+              if (diff < 0) {
+                $('#edit-field-test').css({
+                  "position": "fixed",
+                  "top": diff
+                });
+              } else {
+                $('#edit-field-test').css({
+                  "position": "fixed",
+                  "top": "5px"
+                });
+              }
             } else {
               $('#edit-field-test').css({
                 "position": "static"
@@ -271,11 +297,19 @@
             }
           // Temp Profile Tab
           } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-3').length > 0) {
-            if ($(window).scrollTop() > 225 ) {
-              $('#edit-field-temp-collection').css({
-                "position": "fixed",
-                "top": "50px"
-              });
+            var diff = $(window).height() - $('#edit-field-temp-collection').height();
+            if ($(window).scrollTop() > 160 ) {
+              if (diff < 0) {
+                $('#edit-field-temp-collection').css({
+                  "position": "fixed",
+                  "top": diff
+                });
+              } else {
+                $('#edit-field-temp-collection').css({
+                  "position": "fixed",
+                  "top": "5px"
+                });
+              }
             } else {
               $('#edit-field-temp-collection').css({
                 "position": "static"
@@ -283,11 +317,19 @@
             }
           } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-4').length > 0) {
           // Density Tab
-            if ($(window).scrollTop() > 225 ) {
-              $('#edit-field-density-profile').css({
-                "position": "fixed",
-                "top": "50px"
-              });
+            var diff = $(window).height() - $('#edit-field-density-profile').height();
+            if ($(window).scrollTop() > 160 ) {
+              if (diff < 0) {
+                $('#edit-field-density-profile').css({
+                  "position": "fixed",
+                  "top": diff
+                });
+              } else {
+                $('#edit-field-density-profile').css({
+                  "position": "fixed",
+                  "top": "5px"
+                });
+              }
             } else {
               $('#edit-field-density-profile').css({
                 "position": "static"
@@ -377,6 +419,7 @@
           
           var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
           var layerNum = parseInt(layerString, 10);
+          console.log("LayerNum: " + layerNum);
           
           // Primary Hardness Selector
           if($(this).parents('.field-name-field-hardness').length) {

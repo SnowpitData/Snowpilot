@@ -90,7 +90,7 @@ var SnowProfile = {};
      * @memberof SnowProfile
      * @const {number}
      */
-    CTRLS_WD: 130,
+    CTRLS_WD: 120,
 
     /**
      * Width in pixels of the area used by snow grain shape
@@ -104,7 +104,7 @@ var SnowProfile = {};
      * @memberof SnowProfile
      * @const {number}
      */
-    GRAIN_SPACE_WD: 5,
+    GRAIN_SPACE_WD: 15,
 
     /**
      * Width in pixels of the area used by snow grain size
