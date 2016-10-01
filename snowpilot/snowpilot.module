@@ -127,12 +127,27 @@ function snowpilot_avscience_pit_write($node){
 }
 
 function snowpilot_user_login(&$edit, $account){
-	snowpilot_user_unit_prefs_check($account->uid);
+	snowpilot_user_unit_prefs_check($account->uid, FALSE);
+	return;
 }
 
 function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
+	$user_agent = $_SERVER['HTTP_USER_AGENT'];
+	
+	if ( strpos($user_agent , 'Mac OS X') && ( strpos($user_agent , 'Chrome') || strpos($user_agent , 'Safari') ) ){
+		if ( (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'snowpit-profile') || arg(0) == 'user' ){
+			drupal_set_message("You are using Mac OSX in combination with Safari or Chrome. 
+				<p>Firefox is the recommended browser for Mac OSX because the 'grain type symbols' display correctly in the dropdown list of the 'Add New Snowpit' form.
+				 <p>Note that the grain types will be displayed properly in all other settings, such as the 'live profile' section, and on the final graph.
+			   <p>However, for the best user experience, it is recommended that you swith to using Firefox.", 'warning');
+			
+		}
+		
+		
+		
+	}
 	
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
@@ -161,7 +176,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
       $form['actions2']['submit']['#value'] = "Save Snowpit and Preview";
 			$form['actions2']['delete']['#value'] = 'Delete Snowpit';
 			$form['actions2']['#weight'] = -100;			
-	    drupal_add_library('system', 'ui.accordion');
 
 			if( !isset($node->nid) || isset($node->is_new) ){ // a new snowpit profile node, find $unit_prefs from $user
 				if ( snowpilot_user_unit_prefs_check($user->uid)){ // this check function verifies that we have a full set of unit preferences, etc, setup for this user. It redirects to the user /edit page if one or more are lacking
@@ -195,7 +209,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
 				$account = user_load($node->uid);
 				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
-			
+
 				$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
 				//
 				// exisiting pits accordion js settings
@@ -206,25 +220,15 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				);
 				
 			}
+			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
 			// Done wiwth new / or / existing pit logic, now we do things to all pits
-			if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
+			/*if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
 				$form['#attached']['js'][] = array(
 					'type' => 'file', 
 					'data' => drupal_get_path('module','snowpilot') . '/js/negative_C_degrees.js',
 				);
 			}
-			//
-			// add the js to make lat and long negative if they should be.
-		 if ( $snowpit_unit_prefs['field_latitude_type'] == 'S' )	{
-			 $form['#attached']['js'][] = array(
-			    'type' => 'file',
-			    'data' => drupal_get_path('module','snowpilot') . '/js/negative_latitude.js',
-			  );}
-		 if ( $snowpit_unit_prefs['field_longitude_type'] == 'W' ){
-			 $form['#attached']['js'][] = array(
-			    'type' => 'file',
-			    'data' => drupal_get_path('module','snowpilot') . '/js/negative_longitude.js',
-			  );}
+	*/
 			 
 			$form['field_layer']['#prefix'] = '<div>';
 			$form['field_layer']['#suffix'] = '</div>';
@@ -285,7 +289,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		      $form['#after_build'][] = 'snowpilot_timezone_modify';
 		    }
 			$form['#after_build'][] = 'snowpilot_password_field';
-			
 				
 		break;
 		// change 'sticky node' to 'snowpit locked, submitted to avscience DB'
@@ -306,9 +309,43 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		break;
 		case 'user_register_form':
 			$form['account']['notify']['#default_value'] = TRUE;
+			//$form['#after_build'][] = 'snowpilot_user_register_after_build';
+			$form['#submit'][] = 'snowpilot_new_user_unit_prefs';
+			
 		break;
 			
 	} // end switch
+	return $form;
+}
+
+function snowpilot_new_user_unit_prefs(){
+	global $user;
+	dsm($user);
+	drupal_goto('user/'. $user->uid .'/edit', array( 'query' => array( 'destination' => 'node/5')));
+	
+}
+
+function snowpilot_snowpit_profile_after_build($form, &$form_state){
+  drupal_add_library('system', 'ui.accordion');
+	//
+	// add the js to make lat and long negative if they should be.
+	$snowpit_unit_prefs = snowpilot_unit_prefs_get($form_state['node'],'node');  
+	
+ if ( $form['field_latitude_type']['und']['#default_value'][0] == 'S' )	{
+	 $form['#attached']['js'][] = array(
+	    'type' => 'file',
+	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_latitude.js',
+	  );}
+ if ( $form['field_longitude_type']['und']['#default_value'][0] == 'W' ){
+	 $form['#attached']['js'][] = array(
+	    'type' => 'file',
+	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_longitude.js',
+	  );}
+		
+		$form['#attached']['js'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-existing-pit.js',
+		);
 	return $form;
 }
 
@@ -477,14 +514,21 @@ function snowpilot_timezone_modify($form, &$form_state){
 	
 }
 
+function snowpilot_user_register_after_build( $form, &$form_state){
+	$form['field_professional_affiliation']['und']['hierarchical_select']['dropbox_add']['#value'] = 'Add Affiliation';
+	return $form;
+}
+
 function snowpilot_password_field( $form, &$form_state){
 	//$form['account']['current_pass_required_values']['#value']['#pass'] = t('New Password');
 	//dsm($form['account']['pass']['pass1']['#title']);
 	$form['account']['pass']['pass1']['#title'] = t('Change Password');
 	$form['account']['pass']['pass2']['#title'] = t('Confirm New Password');
 	// Density Units are set at kg/m-3, not available for user edit
-	$form['field_density_units']['#access'] = FALSE;
-	
+
+	$form['field_density_units']['und']['#value'] = 'kg_cubic_m';
+
+	//$form['field_professional_affiliation']['und']['hierarchical_select']['dropbox_add']['#value'] = 'Add Affiliation';_dark_40
   return $form;
 }
 
@@ -528,25 +572,25 @@ function snowpilot_lock_professional_affil(&$form){
 	if (isset( $form['field_professional_affiliation']['und']['#default_value'][0]  ) 
 	  && !in_array($form['field_professional_affiliation']['und']['#default_value'][0], $top_level_prof_affil )
 	  && !snowpilot_user_has_role('administrator') ){
-		$form['field_professional_affiliation']['#access'] = FALSE ; 
-		$ids = array();
-		foreach ( $form['field_professional_affiliation']['und']['#default_value'] as $affiliation) $ids[] = $affiliation ;
+		  $form['field_professional_affiliation']['#access'] = FALSE ; 
+		  $ids = array();
+		  foreach ( $form['field_professional_affiliation']['und']['#default_value'] as $affiliation) $ids[] = $affiliation ;
 		 
-		$terms = taxonomy_term_load_multiple( $ids );
+		  $terms = taxonomy_term_load_multiple( $ids );
 		
-		$terms_list_formatted = '';
-		foreach( $terms as $tid => $term) {
-			$terms_list_formatted .= 	'<div class="inner"> ' . $term->name.' </div>';
-		}
+		  $terms_list_formatted = '';
+		  foreach( $terms as $tid => $term) {
+		  	$terms_list_formatted .= 	'<div class="inner"> ' . $term->name.' </div>';
+		  }
 
-		$form['field_professional_affiliation_display'] = array( 
-			'#type' => 'container',
-			'#weight' => '5',
-			'und' => array ( 
-			'markup' => array (
-		    '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . ' </div>',),
-			),	
-		);
+		  $form['field_professional_affiliation_display'] = array( 
+		  	'#type' => 'container',
+		  	'#weight' => '5',
+		  	'und' => array ( 
+		  	'markup' => array (
+		      '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . ' </div>',),
+			  ),	
+		  );
 	}
 }
 
@@ -699,11 +743,13 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 		  &&	$layer['field_bottom_depth']['und'][0]['value'] <= $layer['field_height']['und'][0]['value'] ){
 	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be greater than Top Depth.'));
 		}
+		if (is_numeric($key) &&  $form_state['clicked_button']['#name'] == 'field_layer_add_more' && (!isset($layer['field_bottom_depth']['und'][0]['value']) || $layer['field_bottom_depth']['und'][0]['value'] == '' )){
+			form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('Please enter a value for bottom depth (if there are no further layers, you may leave this blank).'));
+		}
 		//
 		//  check that layers do not stretch outside the total raw heigth of snowpack
 		$result = _raw_max_pit_depth( $form_state['values'] );
 		if( is_numeric($key) ) { 
-			watchdog ( 'snowpilot', 'raw Max: '. $result );
 		  if( $layer['field_bottom_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']) ){
         form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be less than ' . _raw_max_pit_depth( $form_state['values']) .', the total Height of Snowpack ( available on Core Info tab).'));
 	  	}elseif ( $layer['field_height']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']) ){
@@ -821,6 +867,7 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 	$x= 0;
 	while (isset($form['field_density_profile']['und'][$x])){
 		$next_layer = $x+1;
+		$form['field_density_profile']['und'][$x]['remove_button']['#value'] = "X Remove Density";
 		if (isset($form['field_density_profile']['und'][$next_layer])){ $collapsed = ' collapsed'; 
 		
 		$form['field_density_profile']['und'][$x]['#prefix'] = "<div class='collapsible-container density_num_". $x ." '>".
@@ -850,12 +897,14 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 	$x= 0;
 	while (isset($form['field_test']['und'][$x])){
 		$next_layer = $x+1;
-		$form['field_test']['und'][$x]['remove_button']['#value'] = "Remove Test";
+		$form['field_test']['und'][$x]['remove_button']['#value'] = "X Remove Test";
 		//dsm($form['field_test']['und'][$x]);
 		if (isset($form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0]) && $form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0] <> ''){ 
 			$form_test_shorthand = stability_test_score_shorthand_form($form['field_test']['und'][$x]);
+			
+			$depth_final = $form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value']+0 ; 
 			$depth_val =( $form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'] <> '') ? 
-				"Depth: ".$form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value']. " ". $snowpit_unit_prefs['field_depth_units'] :	'';
+				"Depth: ". $depth_final . " ". $snowpit_unit_prefs['field_depth_units'] :	'';
 			
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
 				"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. ": ". $form_test_shorthand ." ".
@@ -885,6 +934,7 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 	$x= 0;
 	while (isset($form['field_temp_collection']['und'][$x])){
 		$next_layer = $x+1;
+		$form['field_temp_collection']['und'][$x]['remove_button']['#value'] = "X Remove Temp";
 		if (isset($form['field_temp_collection']['und'][$next_layer])){ 	
 			$form['field_temp_collection']['und'][$x]['#prefix'] = "<div class='collapsible-container temp_num_". $x ." '>".
 			"<h3 class='collapsible-handle temp-title'>Temp Point " . $next_layer. ": ". 
@@ -924,6 +974,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	);*/
 	$x=0;
 	
+	$layer_info = array();
 	while(isset($form['field_layer']['und'][$x] )){
 		// Set remove button text
 		$form['field_layer']['und'][$x]['remove_button']['#value'] = "Remove Layer";
@@ -931,7 +982,6 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		$next_layer = $x+1 ; 
 		
 		$collapsed = '';
-		$layer_info = '';
 		$this_hardness = '';
 		if (isset($form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value']) && ( $form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value'] <> '')
 				&& isset($form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] ) && $form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'] <> '' ){  // if this is an existing layer , collapse the box and set the top depth ....
@@ -941,32 +991,30 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 			if ( isset( $form['field_layer']['und'][$next_layer])){
 				$form['field_layer']['und'][$next_layer]['field_height']['und'][0]['value']['#default_value'] = 
 					$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value'];
-			}else{
-				$collapsed .= ' last';
 			}
+			
 			$this_hardness = (isset($form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0]) && $form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0] <> '') ? 
 				', '.$form['field_layer']['und'][$x]['field_hardness']['und']['#default_value'][0] 
 				: '' ;
-			$layer_info = 	$form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value'].' ' . $snowpit_unit_prefs['field_depth_units'] . ' - ' .
+			$layer_info[$x] = 'Layer '.$next_layer.': '	. $form['field_layer']['und'][$x]['field_height']['und'][0]['value']['#default_value'].' ' . $snowpit_unit_prefs['field_depth_units'] . ' - ' .
 				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value']. ' ' . $snowpit_unit_prefs['field_depth_units']  .  $this_hardness; 
 			
 		}
+		$this_layer_info = isset ( $layer_info[$x] ) ? $layer_info[$x] : "New Layer";
 		$form['field_layer']['und'][$x]['#prefix'] ="<div class='collapsible-container layer_num_". $x ." '>"
-			."<h3 class='collapsible-handle layer-title'>Layer " . $next_layer . ": ". $layer_info . "</h3>".
-				'<div class="collapsible-content'. $collapsed .'" >' ;
+			."<h3 class='layer-title'>". $this_layer_info . "</h3>".
+				'<div class="'. $collapsed .'" >' ;
 
 		$form['field_layer']['und'][$x]['#suffix'] ="</div> </div>";
-		
-		/*if ( $x > 5 ){
-			 $xx = 0 ;
-			while ( $xx >= 0 ){
-			  $form['field_layer']['und'][1]['#prefix'] = "<div class='collapsible-container layer_num_". $xx ." scrunch'>".
-				  "<h3 class = 'collapsible-handle layer-title' > +/-  ". $xx ."</h3>".
-					  '<div class="collapsible-content collapsed" >';
-				$xx++  ;
-			 }
-		}*/
-		
+		/*
+		if ( $x >= 5 ){
+			
+			$layer_number = $x-5;
+			$form['field_layer']['und'][$x-5]['#prefix'] ="<div class='collapsible-container layer_num_ scrunch '>"
+				."<h3 class=' layer-title'>" .$layer_info[$layer_number] . "</h3>".
+					"<div class='' >" ;				
+		}
+		*/
 		//
 		// this block hides the last layer entry form where the bottom of the previous one was "zero depth" and puts up a 'bottom of Snowpit' sign
 		//
