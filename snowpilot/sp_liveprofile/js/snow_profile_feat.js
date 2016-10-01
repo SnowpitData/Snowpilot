@@ -542,17 +542,18 @@
       secondarySubShape, container) {
 
       if (primaryShape !== "") {
-        if (primarySubShape === "MFcr") {
+        // UNCOMMENT FOR SPECIAL MELT-FREEZE ICON
+        /*if (primarySubShape === "MFcr") {
 
           // Case 1) Melt-freeze crust, secondary goes inside
           sym2iconsMFcr(secondaryShape, secondarySubShape, container);
         }
-        else {
+        else { */
 
           // Case 2) secondary follows primary in parentheses
           sym2iconsNormal(primaryShape, primarySubShape, secondaryShape,
             secondarySubShape, container);
-        }
+        //}
       }
     } // function sym2icons
 
