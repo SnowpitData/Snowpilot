@@ -1,4 +1,8 @@
 (function ($) {
+  
+  // variables for layer of greatest concern alert 
+  var lgcWarningRequired = true;
+  var layerTabSelected = false;
 
   // Behaviors related to Snowpit Profile Forms
   Drupal.behaviors.snowpilot = {
@@ -102,27 +106,43 @@
 			//
 			//  start tweaks for "this is my layer of greatest concern"
 			//////////////////////////////////////////////////////////
-			// Hide initially if anything is checked
+			// Hide initially if anything is checked and disable LGC warning
 			$('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox:checked', context).each(function() {
         if ($(this).is(':checked')) {
           $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).not(this).each(function() {
             $(this).parent().hide();
           });
+          lgcWarningRequired = false;
         } else {
           $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).parent().show();
+          lgcWarningRequired = true;
         }
 			});
 			
-			//If anything gets checked, hide the other boxes; and vice versa
+			//If anything gets checked, hide the other boxes and disable warning; and vice versa
 			
       $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).change(function() {
         if ($(this).is(':checked')) {
+          lgcWarningRequired = false;
           $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).not(this).each(function() {
              $(this).parent().hide();
           });
         } else {
+          lgcWarningRequired = true;
           $('div.field-name-field-this-is-my-layer-of-greate input.form-checkbox', context).parent().show();
         }
+      });
+      
+      // Horizontal tab listeners for Layer of Greatest Concern Warning
+      $('#content', context).once('lgc_warning', function () {
+        $('ul.horizontal-tabs-list').delegate('li', 'mousedown', function (event) {
+          if($(this).hasClass("horizontal-tab-button-1")) {
+            layerTabSelected = true;
+          } else if(layerTabSelected && lgcWarningRequired) {
+            alert("Reminder:  You have not yet selected a layer of greatest concern");
+            lgcWarningRequired = false;
+          }
+        });
       });
 				
 			//////////////////////////////////////
