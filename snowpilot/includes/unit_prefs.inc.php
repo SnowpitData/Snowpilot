@@ -191,7 +191,7 @@ function snowpilot_user_unit_prefs_check($uid,$redirect_to_user_edit = TRUE){
 		drupal_set_message( "<h3>Missing User Unit Preferences</h3>You need to set your <a href = '/user/". $uid ."/edit#edit-field-first-name'>User Unit Preferences</a> before you can create a new Snowpit Profile.<br/>
 			The following preferences have not been set yet: <li>" . implode($missing_keys,'<li>'), 'warning');
 		if ( $redirect_to_user_edit == TRUE ) {
-			drupal_goto("user/". $uid ."/edit", array('query' => array('destination' => drupal_get_destination())) );
+			drupal_goto("snowpilot/user/edit", array('query' => array('destination' => drupal_get_destination())) );
 		}
 				return FALSE;
 		}

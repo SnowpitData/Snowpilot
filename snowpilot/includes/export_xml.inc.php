@@ -677,7 +677,10 @@ function snowpilot_node_write_caaml($node){
 	$SnowProfileMeasurements = $snowpilot_caaml->createElement('SnowProfileMeasurements');
 	  $SnowProfileMeasurements->setAttribute('dir' , ($unit_prefs['measureFrom'] == 'top') ? 'top down' : 'bottom up' );
 		$SnowProfileMeasurements->appendChild($snowpilot_caaml->createElement('comment', $node->body['und'][0]['safe_value']));
-	  $SnowProfileMeasurements->appendChild($snowpilot_caaml->createElement('profileDepth', _snowpilot_find_pit_depth($node) )) ;
+		$profileDepth = $snowpilot_caaml->createElement('profileDepth', _snowpilot_find_pit_depth($node) );
+		  $profileDepth->setAttribute( 'uom' , $unit_prefs['field_depth_units'] );
+	    $SnowProfileMeasurements->appendChild( $profileDepth) ;
+		
 		$SnowProfileMeasurements->appendChild($snowpilot_caaml->createElement('skyCond', $node->field_sky_cover['und'][0]['value']) ) ;
 		$SnowProfileMeasurements->appendChild($snowpilot_caaml->createElement('precipTI' , isset($node->field_precipitation['und'][0]['value']) ? $node->field_precipitation['und'][0]['value'] : '')); // this is not CAAML formatted
 		$windSpd =$snowpilot_caaml->createElement('windSpd', $node->field_wind_speed['und'][0]['value']); // the values of this too, need to be set in the drupal db
@@ -694,8 +697,9 @@ function snowpilot_node_write_caaml($node){
 		  $hsComponents = $snowpilot_caaml->createElement('Components');
 		    $snowHeight = $snowpilot_caaml->createElement('snowHeight', isset ( $node->field_total_height_of_snowpack['und'][0]['value']) ? $node->field_total_height_of_snowpack['und'][0]['value'] : '' );
 	    	$snowHeight->setAttribute('uom' , $unit_prefs['field_depth_units']);
+				
 		  $hsComponents->appendChild($snowHeight);
-	  $heightOfSnowpack->appendChild($hsComponents);
+	  $heightOfSnowpack->appendChild($hsComponents);		
 		$SnowProfileMeasurements->appendChild($heightOfSnowpack);
 		// Ski Penetration
 		if ( isset($node->field_surface_penetration['und'][0]['value']) && $node->field_surface_penetration['und'][0]['value'] == 'ski'){
@@ -724,10 +728,10 @@ function snowpilot_node_write_caaml($node){
 			$thickness->setAttribute('uom', $unit_prefs['field_depth_units']);
 			
 			if ( isset($layer->field_grain_type['und'])){
-			  $Layer->appendChild($snowpilot_caaml->createElement('grainFormPrimary' , taxonomy_term_load($layer->field_grain_type['und'][0]['tid'])->name) );  // this needs to be changed to description as soon as the particle abbreviations are populated into the grain types taxonomy 'description' field. IT also breaks whenever there is a & in a name
+			  $Layer->appendChild($snowpilot_caaml->createElement('grainFormPrimary' , taxonomy_term_load($layer->field_grain_type['und'][0]['tid'])->description) );  // this needs to be changed to description as soon as the particle abbreviations are populated into the grain types taxonomy 'description' field. IT also breaks whenever there is a & in a name
 		  }
 			if ( isset($layer->field_grain_type_secondary['und'])){
-			  $Layer->appendChild($snowpilot_caaml->createElement('grainFormSecondary' , taxonomy_term_load($layer->field_grain_type_secondary['und'][0]['tid'])->name) );  // this needs to be changed to description as soon as the particle abbreviations are populated into the grain types taxonomy 'description' field. IT also breaks whenever there is a & in a name
+			  $Layer->appendChild($snowpilot_caaml->createElement('grainFormSecondary' , taxonomy_term_load($layer->field_grain_type_secondary['und'][0]['tid'])->description) );  // this needs to be changed to description as soon as the particle abbreviations are populated into the grain types taxonomy 'description' field. IT also breaks whenever there is a & in a name
 		  }
 			//
 			// Grain size

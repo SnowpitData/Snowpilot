@@ -753,7 +753,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				$textpos = imagettftext($img, 9 , 0, 645, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
 				$comment_count = 1;
 			}
-			if ( isset( $node->field_surface_penetration['und'] )  && ( $node->field_surface_penetration['und'][0]['value'] == 'boot' ) && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
+			if ( isset( $node->field_surface_penetration['und'] )  
+			  && ( $node->field_surface_penetration['und'][0]['value'] == 'boot' ) 
+				&& ( isset($node->field_boot_penetration_depth['und']) )
+			  && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
 				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 645 ;
 					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PF'.$node->field_boot_penetration_depth['und'][0]['value']  );
 					$comment_count = 1;
@@ -812,7 +815,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 								
 					// this use of imageline will need to be updated to include some kind of cluster management
 					imageline($img, 667, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']), 707, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']),$black);
-					imagettftext($img, 8, 0, 669, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])-5,$black, $label_font, $density->field_density_top['und'][0]['value']);
+					imagettftext($img, 8, 0, 671, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])+12,$black, $label_font, $density->field_density_top['und'][0]['value']);
 				}
 			}
 			//

@@ -67,13 +67,23 @@
 
 body{
 		background-image: url('../images/investigating crown-Light-1600.jpg');
-		background-position: center top;
+		background-position: center 130px;
+		background-repeat: no-repeat;
+		
+		/*font-family:'Arial,Verdana,sans-serif';*/
+}
+article.node{
+	background-color: rgba(255,255,255,.8);
+}
+
+article.node .field-name-body{
+	padding: 3px 3px 3px 10px;
 }
 
 #content{
-	padding-top:15px;
-	padding-left: 30px;
-	padding-right: 30px;
+	padding-top:15px ;
+	padding-left: 0px;
+	padding-right: 0px;
 }
 
 
@@ -124,7 +134,8 @@ header.header{
 /*
 //  un -authenticated User block, "Modal Login Popup"
 */
-header #block-block-3{
+header #block-block-3,
+header #block-block-8{
   background-color: #c87931;
   clear: none;
   display: block;
@@ -132,8 +143,7 @@ header #block-block-3{
   position: relative;
   bottom: 40px;
   width: 50px;
-
-    background: #c87931 url("../images/lock.png") no-repeat scroll 6px 11px;
+    background: #c87931 url("../images/lock-icon-white.png") no-repeat scroll 6px 6px;
     border: 2px solid #d4d8dc;
     border-radius: 6px;
     color: #fff;
@@ -141,8 +151,21 @@ header #block-block-3{
     padding-right: 8px;
     text-align: right;
 }
+header #block-block-8 {
+	width: 70px;
+	background: #c87931 url("../images/person-icon-white.png") no-repeat scroll 6px 6px;
+	right: 10px;
+}
+#block-block-9 {
+    color: #fff;
+    left: 470px;
+    position: absolute;
+    top: 25px;
+    width: 450px;
+}
 
-header #block-block-3 {
+header #block-block-3,
+header #block-block-8 {
     padding: 8px;
 }
 
@@ -161,7 +184,7 @@ header #block-block-6{
   float: right;
   position: relative;
   bottom: 120px;
-  width: 240px;
+  width: 340px;
 }
 
 header #block-block-6 h2,
@@ -181,7 +204,8 @@ nav#secondary-menu{
 }
 
 #secondary-menu ul.links a,
-#header a.ctools-modal-snowpilot-login-style{
+#block-block-3 a,
+#block-block-8 a{
 	color: #ffffff;
 	
 }
@@ -371,6 +395,12 @@ h1 {
   font-size: 1.357em;
   color: #000;
 }
+h1.title{
+	background: #c87931 url("../images/diagonal-stripes_dark_40.png") no-repeat scroll 50px center;
+	color: #fff;
+	padding: 6px 126px;
+}
+
 h2 {
   font-size: 1.143em;
 }
@@ -459,6 +489,10 @@ pre {
 	display: none;
 }
 
+.form-field-type-field-collection .messages{
+	max-width: 275px;
+}
+
 h3.layer-title,
 h3.test-title{
 	margin: 0.05em 0 0.05em 0;
@@ -505,7 +539,6 @@ h3.test-title{
 }
 
 #snowpit-profile-node-form .field-name-field-bottom-depth,
-#snowpit-profile-node-form .field-name-field-density-bottom,
 #snowpit-profile-node-form .group-layers .field-name-field-depth,
 #snowpit-profile-node-form .field-name-field-grain-size-max,
 #snowpit-profile-node-form .field-name-field-hardness2{
@@ -519,39 +552,53 @@ h3.test-title{
 #snowpit-profile-node-form .field-name-field-use-multiple-density,
 #snowpit-profile-node-form .field-name-field-water-content,
 #snowpit-profile-node-form .field-name-field-this-is-my-layer-of-greate {
-	padding-top: 3px;
+/*	padding-top: 3px;
   border-top: 2px solid #fff;
   margin-top: 4px;
-	
+	*/
+	/* All that was making the layers form to lengthy */
 }
-#edit-field-test .collapsible-container input.cancel.form-submit,
-#edit-field-layer .collapsible-container input.cancel.form-submit{
-	background-color: #eaa;
-	color: #955;
+
+#field-test-add-more-wrapper>div.form-item,
+#field-temp-collection-add-more-wrapper>div.form-item,
+#field-layer-add-more-wrapper>div.form-item,
+#field-density-add-morewrapper>div.form-item{
+	margin-top: 0;
+}
+
+form.node-snowpit_profile-form .form-field-type-field-collection input.cancel.form-submit{
+	background-color: #fef5f1;
+	color: #8c2e0b;
 	float: right;
-	
+	border-radius: 6px;
+	border: 1px solid #8c2e0b;
+	font-size: .8em;
+	position: relative;
+	top: 4px;
 }
-/*
-//
-//  Layers need to get scunched if there are lots of them
-*/
-.scrunch .collapsible-handle.layer-title {
-    font-size: 0.8em;
-    line-height: 0.8em;
+
+form.node-snowpit_profile-form .form-field-type-field-collection input.field-add-more-submit{
+	background-color: #f8fff0;
+	color: #334E5F;
+	border-radius: 6px;
+	margin: 4px;
+	border: 2px solid #d4d8dc;
 }
+
 /*
     snoww profile edit form
 */
 
 form.node-snowpit_profile-form .form-item{
-	margin: .4em 0; 
+	margin: .4em 0 0 0; 
 }
+
 
 form.node-snowpit_profile-form .form-item-field-loaction-und{
 	margin:0;
 }
 
-form.node-snowpit_profile-form 
+/*form.node-snowpit_profile-form  */
 
 form.node-snowpit_profile-form #edit-title{
 	width: 170px;
@@ -579,6 +626,10 @@ input#edit-field-slope-angle-und-0-value{
 }
 
 input#edit-field-elevation-und-0-value{
+	width: 45px;
+}
+#edit-field-ski-penetration-und-0-value,
+#edit-field-boot-penetration-depth-und-0-value{
 	width: 40px;
 }
 
@@ -587,16 +638,33 @@ input#edit-field-elevation-und-0-value{
 #edit-field-slope-angle,
 #edit-field-surface-penetration,
 #edit-field-boot-penetration-depth,
-#edit-field-ski-penetration{
+#edit-field-ski-penetration,
+#edit-field-precipitation{
 	display: inline-block;
-	margin: 0 15px;
+}
+
+#edit-field-slope-angle,
+#edit-field-aspect,
+#edit-field-ski-penetration,
+#edit-field-boot-penetration-depth{
+	margin-left: 25px;
 }
 
 #edit-field-latitude,
 #edit-field-longitude,
 #edit-field-total-height-of-snowpack,
 #edit-field-loaction{
-	margin: 0 15px;
+	/*margin: 0 15px;*/
+}
+
+
+form.node-snowpit_profile-form #edit-field-precipitation label,
+form.node-snowpit_profile-form #edit-field-air-temp label,
+form.node-snowpit_profile-form #edit-field-sky-cover label,
+form.node-snowpit_profile-form #edit-field-wind-speed label,
+form.node-snowpit_profile-form #edit-field-wind-direction label,
+form.node-snowpit_profile-form #edit-field-wind-loading label{
+	width: 110px;
 }
 
 input#edit-field-total-height-of-snowpack-und-0-value{
@@ -628,9 +696,15 @@ fieldset.group-weather legend{
   font-size: 1.3em;
   height: 0;
   left: 20px;
-  padding-left: 5px;
-  padding-right: 5px;
-  position: relative;}
+  position: relative;
+}
+
+fieldset.group-location legend span,
+fieldset.group-weather legend span{
+	padding-right: 27px;
+	padding-left: 27px;
+	
+}
 
 form.node-snowpit_profile-form .fieldset-wrapper{
 /*	margin-top:0px; */
@@ -639,6 +713,10 @@ form.node-snowpit_profile-form fieldset.group-location,
 form.node-snowpit_profile-form fieldset.group-weather{
 	border-top: 4px solid #c87931;
 	border-bottom: none;
+}
+
+form.node-snowpit_profile-form .group-location{
+	margin-top: 14px;
 }
 
 .field-group-htab .tabledrag-toggle-weight-wrapper{
@@ -667,11 +745,22 @@ form.node-snowpit_profile-form .field-name-field-hardness2 select.form-select op
 border-bottom: 2px solid #1e506d;
 }
 
-fieldset.group-location{
+fieldset.group-location,
+fieldset.group-weather{
 	margin: 0;
 	padding: 0;
 	border-left: none;
-	margin-top: 20px;
+	border-right: none;
+	
+}
+
+form.node-snowpit_profile-form .group-stability legend{
+    position: relative;
+    top: 5px;
+		color: #fff;
+}
+form.node-snowpit_profile-form .group-stability .fieldset-wrapper {
+    margin: 30px 10px 15px 25px;
 }
 /*
 // Formatting checkboxes
@@ -699,7 +788,7 @@ fieldset.group-location{
 }
 */
 
-#edit-field-loaction{
+form.node-snowpit_profile-form #edit-field-loaction{
 	height: 45px;
 	padding-top:25px;
 }
@@ -755,20 +844,28 @@ fieldset.group-location{
 }
 
 #snowpit-profile-node-form .snowpilot-snowpit-bottom{
-	background-color: #694e3e;
-	
-	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#5b558e+0,4f3c2a+100 */
-	background: #5b558e; /* Old browsers */
-	background: -moz-linear-gradient(top,  #5b558e 0%, #4f3c2a 100%); /* FF3.6-15 */
-	background: -webkit-linear-gradient(top,  #5b558e 0%,#4f3c2a 100%); /* Chrome10-25,Safari5.1-6 */
-	background: linear-gradient(to bottom,  #5b558e 0%,#4f3c2a 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#5b558e', endColorstr='#4f3c2a',GradientType=0 ); /* IE6-9 */
+	background-color: #3B6E8B;
+
+	background: #3B6E8B; /* Old browsers */
+	background: -moz-linear-gradient(top,  #3B6E8B 0%, #334E5F 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top,  #3B6E8B 0%,#334E5F 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom,  #3B6E8B 0%,#334E5F 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3B6E8B', endColorstr='#334E5F',GradientType=0 ); /* IE6-9 */
 	
 	color: #fff;
 	margin-top: .2em;
-	padding-top: 2px;
-	padding-left: 2px;
-	padding-bottom: 2px;
+	padding-top: 4px;
+	padding-left: 20px;
+	padding-bottom: 4px;
+	border-radius: 0 0 4px 4px;
+}
+
+#field-layer-values tbody>tr:last-child{
+	border-bottom: none;
+}
+
+#snowpit-profile-node-form h3.snowpilot-snowpit-bottom .ui-icon{
+	background-image: none;
 }
 
 
@@ -845,22 +942,41 @@ form.node-snowpit_profile-form table.field-multiple-table th{
 
 form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
 	border-top: 3px solid #c87931;
-	padding: 0 .4em;
+  padding: 0px 4px 4px;
   top: 1px;
-	
+	max-height: 370px;
 }	
+
+form.node-snowpit_profile-form .form-field-name-field-test table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
+	min-height:300px;
+}
 
 form.node-snowpit_profile-form table.field-multiple-table .ui-accordion.ui-accordion-content{
 }
 
 form.node-snowpit_profile-form table.field-multiple-table{
-	border: 6px solid #c87931;
-	border-right: 10px solid #c87931;
-	min-width: 290px;
+	width: 100%;
+}
+
+form.node-snowpit_profile-form .form-field-type-field-collection{
+		border: 6px solid #c87931;
+		min-width: 275px;
 }
 
 form.node-snowpit_profile-form label{
 	color: #4e4e4e;
+	font-weight:normal;
+	font-size:1.1em;
+}
+
+
+form.node-snowpit_profile-form .group-core-info label{
+	display: inline-block;
+}
+
+form.node-snowpit_profile-form .form-item-field-latitude-und-0-value label,
+form.node-snowpit_profile-form .form-item-field-longitude-und-0-value label{
+	width: 80px;
 }
 
 form.node-snowpit_profile-form .tabledrag-toggle-weight-wrapper {
@@ -884,14 +1000,24 @@ fieldset.group-stability {
 	display: inline-block;
 	float: right;
 	width: 630px;
+	height: 370;
 	margin-left: -500px;
   border-left: 3px solid #c87931;
+	border-right: none;
+	margin-right: 0px;
+	padding: 0;
+	background-color: #c87931;
+	border-top: none;
+}
+
+fieldset.group-stability .fieldset_wrapper{
+	padding-left: 12px;
 }
 
 #google-map{
 	background-color: #fff;
 	width: 630px;
-	height: 350px;
+	height: 370px;
 	
 }
 
@@ -955,19 +1081,18 @@ form#views-exposed-form-snowpit-list-page .views-exposed-widget.views-submit-but
 	display: inline-block;
 	font-weight: normal;
 	font-size:.9em;
-	color: blue;
+	color: #112F40;
 }
 
 #snowpit-profile-node-form #edit-field-depth-0-from .description{
-	position: relative;
-	bottom: 35px;
-	font-color: blue;
+  padding-top: 3px;
+	font-color: #112F40;
 }
 
 #snowpit-profile-node-form #edit-field-depth-0-from select{
 	font-size:.85em;
 	width: 70px;
-	color: blue;
+	color: #112F40;
 }
 
 button#edit-button,
@@ -977,7 +1102,11 @@ button#print-button{
 	background-color:#f8fff0;
 }
 
-
+.group-snowpit .horizontal-tabs ul.horizontal-tabs-list,
+#edit-actions{
+	background-color: #3b6e8b;
+	line-height: 25px;
+}
 
 body.node-type-snowpit-profile ul.tabs-primary{
 	display:none;
@@ -1056,28 +1185,44 @@ body.not-logged-in #edit-uid-current-wrapper{
 #edit-actions2{
 	float: right;
 	position:relative;
-	top: 23px;
+	top: 30px;
 	z-index: 200;
 	clear: both;
 }
 
-#edit-submit--2{
-	background-color: green;
-	color: #fff;
+
+
+#edit-submit--2,
+#edit-submit{
+	background-color: #f8fff0;
+	color: #334E5F;
+	border: 2px solid #d4d8dc;
+	border-radius: 6px;
+	margin: 2px 10px;
 }
 
-#edit-delete--2{
-	background-color: #fef5f1;
-	color: #8c2e0b;
+#edit-delete--2,
+#edit-delete {
+    background-color: #fef5f1;
+    border: 2px solid #d4d8dc;
+    border-radius: 6px;
+    color: #8c2e0b;
+    margin: 2px 10px;
 }
 
 #edit-0 {
     display: inline-block;
 }
 
-#edit-pre-delete{
-	display: inline-block;
+#edit-pre-delete {
+    background-color: #fef5f1;
+    border: 2px solid #d4d8dc;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 1px 10px;
+    padding: 2px 10px;
 }
+
 #edit_pre_delete .delete_pit_wrapper{
 	margin: 5px 8px;
 	
@@ -1101,6 +1246,27 @@ body.not-logged-in #edit-uid-current-wrapper{
     max-width: 450px;
     min-height: 25px;
     padding-top: 2px;
+}
+
+#edit-field-density-units{
+	display: none;
+}
+
+#edit-field-professional-affiliation .dropbox-title{
+	font-weight: bolder;
+	color: #4c4c4e;
+}
+
+#edit-field-professional-affiliation .dropbox table{
+	color: #4c4c4e;
+}
+
+#edit-field-professional-affiliation .dropbox td{
+	padding: 3px;
+}
+
+#edit-field-professional-affiliation .dropbox-entry{
+	padding: 3px;
 }
 
 body.node-type-snowpit-profile{
@@ -1205,7 +1371,6 @@ body.node-type-snowpit-profile{
 
 #block-views-snowpit-list-block .view-snowpit-list table td > div.views-field-title a{
 	color: #fff;
-	text-transform: uppercase;
 	font-size: 1em;
 }
 
@@ -1233,12 +1398,9 @@ body.node-type-snowpit-profile{
 	background-repeat: no-repeat;
 	background-position: right center;
 }
-/*
-.view-snowpit-list td.col-1,
-.view-snowpit-list td.col-2{
-	width: 400px;
+#block-block-7{
+	padding: 20px 25px;
 }
-*/
 
 .views-graph-image img{
 	height:250px;

@@ -7,7 +7,7 @@
 	attach: function (context, settings) {
 		
 
-	  $('.form-field-type-field-collection table.field-multiple-table > tbody').accordion({
+	  $('.group-layers table.field-multiple-table > tbody').accordion({
 	 	 header: "h3",
 	 	 collapsible: true,
 	 	 active: false,
@@ -15,9 +15,15 @@
 	  });		
      
     $('.horizontal-tabs-panes').once('accordion_ajax_toggle', function() {
-        $( '.form-field-type-field-collection table.field-multiple-table > tbody').accordion('option', 'active', ":last");
+        $( '.group-layers table.field-multiple-table > tbody').accordion('option', 'active', ":last");
       $(document).ajaxComplete(function() {
-        $( '.form-field-type-field-collection table.field-multiple-table > tbody').accordion('option', 'active', ":last");
+        $( '.group-layers table.field-multiple-table > tbody').accordion('option', 'active', ":last");
+      });
+    });
+		$('ul.horizontal-tabs-list li.horizontal-tab-button-1 a' ).click( function() {
+        $( '.group-layers table.field-multiple-table > tbody').accordion('option', 'active', ":last");
+      $(document).ajaxComplete(function() {
+        $( '.group-layers table.field-multiple-table > tbody').accordion('option', 'active', ":last");
       });
     });
 	
