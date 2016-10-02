@@ -143,6 +143,19 @@
             lgcWarningRequired = false;
           }
         });
+        // Save and Preview listeners for LGC warning
+        $('#edit-submit').mousedown(function (event) {
+          if(layerTabSelected && lgcWarningRequired) {
+            alert("Reminder:  You have not yet selected a layer of greatest concern");
+            lgcWarningRequired = false;
+          }
+        });
+        $('#edit-submit--2').mousedown(function (event) {
+          if(layerTabSelected && lgcWarningRequired) {
+            alert("Reminder:  You have not yet selected a layer of greatest concern");
+            lgcWarningRequired = false;
+          }
+        });
       });
 				
 			//////////////////////////////////////
