@@ -309,18 +309,27 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		break;
 		case 'user_register_form':
 			$form['account']['notify']['#default_value'] = TRUE;
+			// for some reason changing the name of this button breaks the HS dropbox form.
 			//$form['#after_build'][] = 'snowpilot_user_register_after_build';
-			$form['#submit'][] = 'snowpilot_new_user_unit_prefs';
+			$form['#validate'][] = 'snowpilot_new_user_register_validate';
 			
+			$form['#submit'][] = 'snowpilot_new_user_register_submit';
 		break;
 			
 	} // end switch
 	return $form;
 }
 
-function snowpilot_new_user_unit_prefs(){
+function snowpilot_new_user_register_validate(&$form, &$form_state){
+	if ( $form['field_phone']['und'][0]['value']['#value'] == '%phone_short%' ){
+	  form_set_error('account_password', "Invalid login");
+		watchdog('snowpilot', 'User creation blocked due to phone_short syntax');
+		drupal_goto('node/5');
+  }
+}
+
+function snowpilot_new_user_register_submit(){
 	global $user;
-	dsm($user);
 	drupal_goto('user/'. $user->uid .'/edit', array( 'query' => array( 'destination' => 'node/5')));
 	
 }
