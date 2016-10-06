@@ -91,6 +91,10 @@ article.node .field-name-body{
 	color: #c87931;
 }
 
+#content .messages__item > a {
+  color: #1e506d;
+}
+
 #main-menu a {
     color: #333;
     float: left;
@@ -986,6 +990,8 @@ form.node-snowpit_profile-form .tabledrag-toggle-weight-wrapper {
 form .group-snowpit{
 	background-color: #fff;
 	clear: both;
+	position: relative;
+	top: -30px;
 }
 
 #edit-field-graph-canvas {
@@ -1185,15 +1191,18 @@ body.not-logged-in #edit-uid-current-wrapper{
 #edit-actions2{
 	float: right;
 	position:relative;
-	top: 30px;
 	z-index: 200;
 	clear: both;
 }
 
-
+#block-block-2 .save {
+    display: inline-block;
+}
 
 #edit-submit--2,
-#edit-submit{
+#edit-submit,
+#edit-button,
+#block-block-2 .download{
 	background-color: #f8fff0;
 	color: #334E5F;
 	border: 2px solid #d4d8dc;
@@ -1202,12 +1211,50 @@ body.not-logged-in #edit-uid-current-wrapper{
 }
 
 #edit-delete--2,
-#edit-delete {
+#edit-delete,
+#block-block-2 .save,
+#block-block-2 .download {
     background-color: #fef5f1;
     border: 2px solid #d4d8dc;
     border-radius: 6px;
     color: #8c2e0b;
     margin: 2px 10px;
+}
+
+#block-block-2 .save{
+  background-color: #3b6e8b;
+}
+
+#block-block-2 .save a,
+#block-block-2 .download a{
+	color: #fff;
+}
+
+#block-block-2 .save,
+#edit-button,
+#block-block-2 .download{
+  padding: 2px 10px;
+	margin-bottom: 6px;
+}
+
+#block-block-2 .download {
+    background-color: #3b6e8b;
+    margin-left: 622px;
+    width: 175px;
+}
+
+#block-block-2 .download div.ctools-dropdown-container,
+#block-block-2 .save div.ctools-dropdown-container{
+	background-color: #3b6e8b;
+}
+
+#edit-button{
+	margin-left: 622px;
+}
+
+#block-block-2 {
+    position: relative;
+    top: -31px;
 }
 
 #edit-0 {
@@ -1226,6 +1273,23 @@ body.not-logged-in #edit-uid-current-wrapper{
 #edit_pre_delete .delete_pit_wrapper{
 	margin: 5px 8px;
 	
+}
+
+.page-node-delete.node-type-snowpit-profile div.download,
+.page-node-delete.node-type-snowpit-profile div.save{
+	display: none;
+}
+
+.page-node-delete.node-type-snowpit-profile h1#page-title{
+  color: #C87931;
+	background-color: #fff;
+}
+.page-node-delete #block-block-2{
+	top:0px;
+}
+
+.node-type-snowpit-profile form#node-delete-confirm input.form-submit{
+	background-color: #fef5f1;
 }
 /*
  			Nice good green color: #5db978;
