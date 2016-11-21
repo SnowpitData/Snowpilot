@@ -1366,7 +1366,6 @@ body.node-type-snowpit-profile{
 
 /* graph image wrapper*/
 .view-snowpit-list table{
-	min-width: 980px;
 	margin: 0 auto;
 }
 .view-snowpit-list.view-display-id-block .view-content  {

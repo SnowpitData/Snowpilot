@@ -45,8 +45,42 @@ function snowpilot_menu(){
 	return $items;
 }
 
+function snowpilot_menu_alter(&$items){
+	global $user;
+  $items['user/%user/edit']['access callback'] = 'snowoilot_org_admin_access';
+	$items['user/%user/edit']['access argument'] = array(1);
+  //dsm($items['user/%user/edit']);
+	return $items;
+}
+
+function snowpilot_permission(){
+	$permission = array(
+		'lock snowpit' => array(
+			'title' => t('Lock Snowpit'),
+			'description' => t('Lock Pit to prevent further editing.'),			
+		),
+	);
+	return $permission;
+}
+
+function snowoilot_org_admin_access($item){
+	global $user;
+	//dsm($user);
+	$account = user_load($user->uid);
+	//dsm($item);
+	if ( (in_array( 'org admin', $user->roles ) && ( $item->field_professional_affiliation['und'][0]['tid'] == $account->field_professional_affiliation['und'][0]['tid'] ) 
+	  ) || user_access( 'administer users') 
+			|| $item->uid == $account->uid
+	  ){
+		return TRUE;
+		
+	}else{
+		return FALSE;
+	}
+}
+
 function snowpilot_node_snowpit_download($node, $format = 'jpg'){
-	if ( node_access('update', $node)){
+	if ( node_access('update', $node) && user_access('lock snowpit')){
 		// if node is not locked for editing, and there is NOT a snowpit in the avscience db which would include the same serial #, then we cna save and lock it!
 		if ( !$node->sticky && !snowpilot_avscience_pit_exists($node) ){
 			// then we reset the the pit to sticky == true ( i.e. LOCKED )
@@ -97,7 +131,7 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 function snowpilot_avscience_pit_exists($node){
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 
-	Database::addConnectionInfo('avscience_db', 'default', $avsci_db_info);
+	Database::addConnectionInfo('avscience_db', 'default', $test_db);
   $account = user_load($node->uid);	
 	
 	db_set_active('avscience_db');
@@ -185,7 +219,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			
 					snowpilot_snopit_prof_unit_prefs_set($form, $snowpit_unit_prefs);	
 					// Put a fake "delete" link above the rest of the items
-	
 						$form['actions2']['pre_delete'] 	= array( 
 								'#type' => 'container',
 								'#weight' => '5',
@@ -1063,7 +1096,8 @@ function snowpilot_node_access_records($node) {
   // Make sure we have the correct content type.
   if ($node->type == 'snowpit_profile') {
     // 
-  if (!($node->sticky)) {
+		$user = user_load($node->uid);
+    if (!($node->sticky)) {
         // If 
       $grants[] = array(
         'nid' => $node->nid,
@@ -1074,10 +1108,23 @@ function snowpilot_node_access_records($node) {
         'grant_delete' => 1,
         'priority' => 1
       );
-    }
-  
-	if ( isset($node->field_snowpit_visibility['und'][0]['value']) && $node->field_snowpit_visibility['und'][0]['value'] == 'group'){
-		$user = user_load($node->uid);
+    
+		if ( isset($user->field_professional_affiliation['und'][0]['tid'])){
+	  	$user_group = $user->field_professional_affiliation['und'][0]['tid'];
+			//
+		  $grants[] = array(
+		  	'nid' => $node->nid,
+		  	'realm' => 'org_admin',
+		  	'gid' => $user_group,
+		  	'grant_view' => 1,
+		  	'grant_update' => 1,
+		 	 'grant_delete' => 1,
+		 	 'priority' => 1,
+	    );
+		 }
+   }
+	 if ( isset($node->field_snowpit_visibility['und'][0]['value']) && $node->field_snowpit_visibility['und'][0]['value'] == 'group'){
+		
 		if ( isset($user->field_professional_affiliation['und'][0]['tid'])){
 	  	$user_group = $user->field_professional_affiliation['und'][0]['tid'];
 	  	// if u$user-> group is not something like unaffiliated, or education , then ......
@@ -1138,11 +1185,20 @@ function snowpilot_node_grants($account, $op) {
 		$current_user = user_load($account->uid);
     $grants['snowpit_unlocked'] = array( $account->uid );
     $grants['snowpit-owner'] = array( $account->uid );
-		
+		//
+		// set group visibility ; possibly to be updated for multiple group membership ?
 	  if ( isset( $current_user->field_professional_affiliation['und'][0]['tid']) ){
 	  	$affiliation = $current_user->field_professional_affiliation['und'][0]['tid'];
 	  	$grants['snowpit_group'] = array($affiliation);
+			//
+			// likewise, org admins get more permissions for edit/delete
+			if ( in_array( 'org admin' , $current_user->roles)){
+			  $grants['org_admin'] = array($affiliation);
+			
+			}
+			
   	}
+
 	}
 	
 	

@@ -293,6 +293,10 @@ function snowpilot_node_write_pitxml($node){
 	//  Location Element
 	//
 	
+	// ID is required, even if blank
+	//
+	$id = $snowpilot_xmldoc->createAttribute('id');
+	$snowpit_Location->appendChild($id);
 	// Coordinate type: UTM or Lat / Long
 	//
 	
@@ -423,7 +427,6 @@ function snowpilot_node_write_pitxml($node){
 		// multiples ...
 		// We make a little array and loop through it so this is easier.
 		$multiples = array ('multipleHardness' => 'field_use_multiple_hardnesses' ,
-		  'multipleDensity' => 'field_use_multiple_density',
 		  'multipleGrainType' => 'field_use_multiple_grain_type',
 		  'multipleGrainSize' => 'field_use_multiple_grain_size');
 		foreach ( $multiples as $key => $multiple ){
@@ -440,8 +443,10 @@ function snowpilot_node_write_pitxml($node){
 		$counter++;
 	}
 	$ids = array();
-	foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
-	$shear_tests = field_collection_item_load_multiple($ids);
+	if ( isset( $node->field_test['und'] ) ){
+	  foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
+	  $shear_tests = field_collection_item_load_multiple($ids);
+  }
 
 	foreach ( $shear_tests as $shear_test ){
 		$snowpilot_ShearTest = $snowpilot_xmldoc->createElement("Shear_Test_Result");
