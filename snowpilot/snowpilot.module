@@ -42,14 +42,15 @@ function snowpilot_menu(){
 		'access arguments' => array( 'view', 1),
 		'type' => MENU_CALLBACK,
 	);
-	return $items;
-}
-
-function snowpilot_menu_alter(&$items){
-	global $user;
-  $items['user/%user/edit']['access callback'] = 'snowoilot_org_admin_access';
-	$items['user/%user/edit']['access argument'] = array(1);
-  //dsm($items['user/%user/edit']);
+	$items['snowpilot/%user/remove_affiliation'] = array(
+		'title' => 'How is user to be removed?',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('snowpilot_remove_affiliation_form', 1),
+		'access callback' => 'snowpilot_org_admin_access',
+		'access arguments' => array(1),
+		'type' => MENU_CALLBACK,		
+	);
+	
 	return $items;
 }
 
@@ -63,11 +64,111 @@ function snowpilot_permission(){
 	return $permission;
 }
 
-function snowoilot_org_admin_access($item){
+function snowpilot_remove_affiliation_form($form, &$form_state, $account){
+	$form['#access'] = 'snowpilot_org_admin_access';
+	$form_state['storage']['account'] = $account;
+	//dsm($item);
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => 'Submit',
+		'#weight' => '25',
+		
+	);
+	$form['snowpilot_remove_affiliation'] = array(
+		'#type' => 'radios',
+		'#title' => t('How will @theuser be removed from the group?', array( '@theuser' => $account->name)),
+		'#description' => t(''),	
+		'#weight' => '15',
+		'#required' => TRUE,
+		'#options' => array(
+			'remove' => t('Remove'),
+			'suspend' => t('Suspend'),
+		),
+	);
+ 
+	$form['snowpilot_remove_affiliation']['remove'] = array( 
+	  '#description' => t('Use this if this user should never have been a part of your group. The user\'s account and snowpits will no longer be associated with your organization.' ),
+	);
+	$form['snowpilot_remove_affiliation']['suspend'] = array( 
+	  '#description' => t('Use this option if this forecaster has worked for your group, and has entered data which should remain associated with your group. The user will not be ble to login, but may create a new account.' ),
+	);
+	return $form;
+	
+}
+
+
+function snowpilot_remove_affiliation_form_submit($form, &$form_state){
 	global $user;
-	//dsm($user);
+	$org_admin_user = entity_metadata_wrapper('user', $user);
+	$org_admin_info = $org_admin_user->field_professional_affiliation->value();
+	$user_wrapper = entity_metadata_wrapper( 'user' , $form_state['storage']['account']);
+	
+	if ( $user_wrapper->field_professional_affiliation->value() == $org_admin_user->field_professional_affiliation->value() ){
+	  $admin_email = $user->mail;
+  	if ($form_state['values']['snowpilot_remove_affiliation'] == 'remove'){
+		  $user_wrapper->field_professional_affiliation->set( 57 );
+		  $body = "<h2>The user ".$user_wrapper->label()." has been removed from ". $org_admin_user->field_professional_affiliation->label()." </h2> ";
+			
+  	}elseif ( $form_state['values']['snowpilot_remove_affiliation'] == 'suspend' ){
+			$user_mail = $user_wrapper->mail->value();
+			$user_name = $user_wrapper->name->value();
+			$user_wrapper->mail->set($user_mail.'xyz');
+
+			$user_wrapper->status = '0';
+		  $body = $user_name.' has been suspended. Existing snowpits remain associated with ' . $org_admin_user->field_professional_affiliation->label().' <p>User: <em>'.$user_wrapper->field_first_name->value().' '.$user_wrapper->field_last_name->value(). '</em> may re-register using the email address: <em>'. $user_mail. '</em>, but will need to choose a new username, not <em>'. $user_name. '</em>.';		
+      drupal_mail('snowpilot', 
+			  'removed', 
+				'admin@snowpilot.org,'.$user_mail ,
+				 user_preferred_language($user),
+				  array ( 'body' => $body, 'subject' => 'User has been removed from group' ), 'jimurl@snowpilot.org' , TRUE  );
+  	}
+		$user_wrapper->save();
+		
+	}else{
+	  $body = "<h2>The user ".$user_wrapper->label()." is not currently part of ". $org_admin_user->field_professional_affiliation->label()." </h2> ";
+  }
+	drupal_set_message($body);
+	return;
+}
+
+function snowpilot_mail( $key, &$message, $params){
+	switch ($key){
+		case 'removed':
+	    if (isset($params['subject'])) {
+	      $message['subject'] = $params['subject'];
+	    } 
+	    if (isset($params['body'])) {
+	      $message['body'][] = $params['body']; 
+	    }
+	    if (isset($params['headers']) && is_array($params['headers'])) {   
+	      $message['headers'] += $params['headers'];
+  	  }
+		
+		break;
+		case 'notiy_or_admin':
+		
+		break;
+	}
+	return;
+}
+
+function snowpilot_user_org(&$argument){
+	//dsm($argument);
+	
+	global $user;
+	$user_wrapper = entity_metadata_wrapper( 'user' , $user);
+	$user_info = $user_wrapper->field_professional_affiliation->value();
+	$argument->validated_title = $user_wrapper->field_professional_affiliation->label();
+	return $user_info->tid;
+}
+
+function snowpilot_org_admin_access($item){
+	global $user;
 	$account = user_load($user->uid);
 	//dsm($item);
+	// Administrators have permissions to edit all users
+	// Organization Admins have permissions to edit their users
+	// Everybody can edit their own account.
 	if ( (in_array( 'org admin', $user->roles ) && ( $item->field_professional_affiliation['und'][0]['tid'] == $account->field_professional_affiliation['und'][0]['tid'] ) 
 	  ) || user_access( 'administer users') 
 			|| $item->uid == $account->uid
@@ -131,7 +232,7 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 function snowpilot_avscience_pit_exists($node){
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 
-	Database::addConnectionInfo('avscience_db', 'default', $test_db);
+	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
   $account = user_load($node->uid);	
 	
 	db_set_active('avscience_db');
@@ -326,7 +427,8 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		      $form['#after_build'][] = 'snowpilot_timezone_modify';
 		    }
 			$form['#after_build'][] = 'snowpilot_password_field';
-				
+			$form['#validate'][] = 'snowpilot_user_profile_form_validate';	
+			
 		break;
 		// change 'sticky node' to 'snowpit locked, submitted to avscience DB'
 		case 'node_admin_content':
@@ -347,12 +449,24 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		case 'user_register_form':
 			$form['account']['notify']['#default_value'] = TRUE;
 			// for some reason changing the name of this button breaks the HS dropbox form.
-			//$form['#after_build'][] = 'snowpilot_user_register_after_build';
 			$form['#validate'][] = 'snowpilot_new_user_register_validate';
 			
 			$form['#submit'][] = 'snowpilot_new_user_register_submit';
 		break;
+		case 'taxonomy_form_term':
 			
+			
+			if ( !user_has_role( 3 ) ){ // everybody but administrators
+				$form['name']['#disabled'] = TRUE;
+				$form['description']['#access'] = FALSE;
+				$form['relations']['#access'] = FALSE;
+				//dsm($form);
+			}
+		
+		
+		break;
+			
+
 	} // end switch
 	return $form;
 }
@@ -363,6 +477,22 @@ function snowpilot_new_user_register_validate(&$form, &$form_state){
 		watchdog('snowpilot', 'User creation blocked due to phone_short syntax');
 		drupal_goto('node/5');
   }
+}
+
+function snowpilot_user_profile_form_validate(&$form, &$form_state){
+	
+	if ($form['field_professional_affiliation']['und']['#value'][0]['tid'] == '226' ){
+		form_set_error('field_professional_affiliation', 'Please choose a Ski Patrol, or create a new one.');
+	}elseif ($form['field_professional_affiliation']['und']['#value'][0]['tid'] == '243' ){
+		form_set_error('field_professional_affiliation', 'Please choose an Avalanche Center, or create a new one.');
+	}elseif ($form['field_professional_affiliation']['und']['#value'][0]['tid'] == '245' ){
+		form_set_error('field_professional_affiliation', 'Please choose an Education group, or create a new one.');
+	}elseif ($form['field_professional_affiliation']['und']['#value'][0]['tid'] == '244' ){
+		form_set_error('field_professional_affiliation', 'Please choose a Ski or Snowmobile Guide Service, or create a new one.');
+	}elseif ($form['field_professional_affiliation']['und']['#value'][0]['tid'] == '246' ){
+		form_set_error('field_professional_affiliation', 'Please choose a Department of Transportation, or create a new one.');
+	}
+	
 }
 
 function snowpilot_new_user_register_submit(){
@@ -615,10 +745,11 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 }
 
 function snowpilot_lock_professional_affil(&$form){
-	$top_level_prof_affil = array ('none', 108, 57, 59, 60, 62, 58, 61);
+	$top_level_prof_affil = array ('none', 108, 57, 59, 60, 62, 58, 61, 172);
 	if (isset( $form['field_professional_affiliation']['und']['#default_value'][0]  ) 
 	  && !in_array($form['field_professional_affiliation']['und']['#default_value'][0], $top_level_prof_affil )
-	  && !snowpilot_user_has_role('administrator') ){
+	  && !snowpilot_user_has_role('administrator') 
+	){
 		  $form['field_professional_affiliation']['#access'] = FALSE ; 
 		  $ids = array();
 		  foreach ( $form['field_professional_affiliation']['und']['#default_value'] as $affiliation) $ids[] = $affiliation ;
@@ -629,15 +760,16 @@ function snowpilot_lock_professional_affil(&$form){
 		  foreach( $terms as $tid => $term) {
 		  	$terms_list_formatted .= 	'<div class="inner"> ' . $term->name.' </div>';
 		  }
-
+      $to_change_affil_text = '<div class = "inner"><em>If your Organization Affiliation is incorrect, please contanct us at <a href ="mailto:admin@snowpilot.org">admin@snowpilot.org</a> to update it.</em></div>';
 		  $form['field_professional_affiliation_display'] = array( 
 		  	'#type' => 'container',
-		  	'#weight' => '5',
+		  	'#weight' => '25',
 		  	'und' => array ( 
 		  	'markup' => array (
-		      '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . ' </div>',),
+		      '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . $to_change_affil_text . ' </div>',),
 			  ),	
 		  );
+			$form['#group_children']['field_professional_affiliation_display'] = 'group_profs';
 	}
 }
 
@@ -1111,7 +1243,7 @@ function snowpilot_node_access_records($node) {
     
 		if ( isset($user->field_professional_affiliation['und'][0]['tid'])){
 	  	$user_group = $user->field_professional_affiliation['und'][0]['tid'];
-			//
+			//			
 		  $grants[] = array(
 		  	'nid' => $node->nid,
 		  	'realm' => 'org_admin',
@@ -1137,6 +1269,20 @@ function snowpilot_node_access_records($node) {
         'grant_delete' => 0,
         'priority' => 1
       );
+			$user_shared_groups = snowpilot_user_shared_groups($user_group); // returns an array
+			if ( count($user_shared_groups)){
+				foreach ( $user_shared_groups as $shared_group ){
+		      $grants[] = array(
+		        'nid' => $node->nid,
+		        'realm' => 'org_shared',
+		        'gid' => $shared_group,
+		        'grant_view' => 1,
+		        'grant_update' => 0,
+		        'grant_delete' => 0,
+		        'priority' => 1
+		      );
+				}
+			}
 		}
 	}elseif (isset ($node->field_snowpit_visibility['und'][0]['value']) && $node->field_snowpit_visibility['und'][0]['value'] == 'public'){
     $grants[] = array(
@@ -1190,6 +1336,7 @@ function snowpilot_node_grants($account, $op) {
 	  if ( isset( $current_user->field_professional_affiliation['und'][0]['tid']) ){
 	  	$affiliation = $current_user->field_professional_affiliation['und'][0]['tid'];
 	  	$grants['snowpit_group'] = array($affiliation);
+			$grants['org_shared'] = array($affiliation);
 			//
 			// likewise, org admins get more permissions for edit/delete
 			if ( in_array( 'org admin' , $current_user->roles)){
@@ -1203,6 +1350,22 @@ function snowpilot_node_grants($account, $op) {
 	
 	
   return $grants;
+}
+ 
+ 
+//
+// Function to find which group tids should be added to the org_shared realm
+//
+ 
+function snowpilot_user_shared_groups($tid){
+	$term = taxonomy_term_load($tid) ;
+	$tids = array();
+	if ( isset($term->field_org_share_snowpits['und']) && count( $term->field_org_share_snowpits['und'] )){
+		foreach ( $term->field_org_share_snowpits['und'] as $key => $shared_org){
+			$tids[] = $shared_org['tid'];
+		}
+	}
+	return $tids;
 }
 
 
