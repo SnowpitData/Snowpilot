@@ -102,26 +102,28 @@ function snowpilot_remove_affiliation_form_submit($form, &$form_state){
 	$org_admin_user = entity_metadata_wrapper('user', $user);
 	$org_admin_info = $org_admin_user->field_professional_affiliation->value();
 	$user_wrapper = entity_metadata_wrapper( 'user' , $form_state['storage']['account']);
-	
 	if ( $user_wrapper->field_professional_affiliation->value() == $org_admin_user->field_professional_affiliation->value() ){
 	  $admin_email = $user->mail;
+		$user_mail = $user_wrapper->mail->value();
+		$user_name = $user_wrapper->name->value();
+		
   	if ($form_state['values']['snowpilot_remove_affiliation'] == 'remove'){
 		  $user_wrapper->field_professional_affiliation->set( 57 );
 		  $body = "<h2>The user ".$user_wrapper->label()." has been removed from ". $org_admin_user->field_professional_affiliation->label()." </h2> ";
-			
+      
   	}elseif ( $form_state['values']['snowpilot_remove_affiliation'] == 'suspend' ){
-			$user_mail = $user_wrapper->mail->value();
-			$user_name = $user_wrapper->name->value();
-			$user_wrapper->mail->set($user_mail.'xyz');
-
-			$user_wrapper->status = '0';
-		  $body = $user_name.' has been suspended. Existing snowpits remain associated with ' . $org_admin_user->field_professional_affiliation->label().' <p>User: <em>'.$user_wrapper->field_first_name->value().' '.$user_wrapper->field_last_name->value(). '</em> may re-register using the email address: <em>'. $user_mail. '</em>, but will need to choose a new username, not <em>'. $user_name. '</em>.';		
-      drupal_mail('snowpilot', 
-			  'removed', 
-				'admin@snowpilot.org,'.$user_mail ,
-				 user_preferred_language($user),
-				  array ( 'body' => $body, 'subject' => 'User has been removed from group' ), 'jimurl@snowpilot.org' , TRUE  );
+			$user_wrapper->roles->set(array('2'));
+			//dsm($user_wrapper->roles->value());
+			//$user_wrapper->status = '0';
+		  $body = $user_name.' has been suspended. Existing snowpits remain associated with ' . $org_admin_user->field_professional_affiliation->label();		
+      
   	}
+    drupal_mail('snowpilot', 
+		  $form_state['values']['snowpilot_remove_affiliation'], // mail key equals the value of how to suspend/remove
+			'admin@snowpilot.org,'.$user_mail ,
+			 user_preferred_language($user),
+			  array ( 'org_admin_user' => $org_admin_user , 'user_wrapper' => $user_wrapper), 'jimurl@snowpilot.org' , TRUE  );
+		
 		$user_wrapper->save();
 		
 	}else{
@@ -132,17 +134,45 @@ function snowpilot_remove_affiliation_form_submit($form, &$form_state){
 }
 
 function snowpilot_mail( $key, &$message, $params){
+	$org_admin_user = $params['org_admin_user'];
+	$user_wrapper = $params['user_wrapper'];
 	switch ($key){
 		case 'removed':
 	    if (isset($params['subject'])) {
 	      $message['subject'] = $params['subject'];
-	    } 
-	    if (isset($params['body'])) {
-	      $message['body'][] = $params['body']; 
-	    }
+	    } else {
+	    	$message['subject'] = '[SnowPilot] User '.$user_wrapper->name->value(). ' has been removed from group '.$org_admin_user->field_professional_affiliation->label();
+			}
+	    $message['body'][] = 'Dear '.$user_wrapper->name->value().',
+			
+Thank you for using SnowPilot. Your group affiliation has changed from '. $org_admin_user->field_professional_affiliation->label() .' to "Individual / Unaffiliated" since the group\'s administrator has removed you. Your profile is still active and all your pits are still associated with you. 
+
+If you chose the last group in error, you are free to select your correct group on your User Preferences page: 
+http://snowpilot.org/user/' .$user_wrapper->uid->value(). '/edit
+
+SnowPilot Admin Team';		
 	    if (isset($params['headers']) && is_array($params['headers'])) {   
 	      $message['headers'] += $params['headers'];
   	  }
+		
+		break;
+		case 'suspend':
+      if (isset($params['subject'])) {
+        $message['subject'] = $params['subject'];
+      } else {
+      	$message['subject'] = '[SnowPilot] User '.$user_wrapper->name->value(). ' has been suspended from group '.$org_admin_user->field_professional_affiliation->label();
+		  }
+    $message['body'][] ='Dear '. $user_wrapper->name->value() .',
+
+Thank you for using SnowPilot. Up until now, your profile and all your pits have been associated with the '. $org_admin_user->field_professional_affiliation->label() .' group. The group administer has suspended your account. What this means is:
+
+    1. You can still view and download all your pits using your current username and password.
+    2. If you would like to make new snowpits, create another account with a different username at http://snowpilot.org/user/register .
+    3. Remember, all pits are saved in the database. Nothing is lost. 
+
+All the best,
+
+SnowPilot Admin Team';
 		
 		break;
 		case 'notiy_or_admin':
@@ -497,6 +527,11 @@ function snowpilot_user_profile_form_validate(&$form, &$form_state){
 
 function snowpilot_new_user_register_submit(){
 	global $user;
+	// auto set the 'forecaster' role. It gets removed if need be later.
+	$user_wrapper = entity_metadata_wrapper( 'user' , $user);
+	$user_wrapper->roles->set(array('2', '4'));
+	$user_wrapper->save();
+	
 	drupal_set_message( 'Have questions or confused? Check out the <a href="/documentation">Getting Started Page</a>.', 'warning');
 	drupal_goto('user/'. $user->uid .'/edit', array( 'query' => array( 'destination' => 'node/5')));
 	
