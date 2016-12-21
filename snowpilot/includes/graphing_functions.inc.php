@@ -1064,6 +1064,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imagettftext($img, 10, 0 , 516,137, $black, $label_font , "Form");
 	imagettftext($img, 10, 0 , 580,137, $black, $label_font , "Size (mm)");
 	
+	// write out the small image before laying the watermark
+	snowpilot_snowpit_crop_layers_write($img,$node->nid);
+	
 	// Snowpilot water mark logo _100
 	$sp_watermark = imagecreatefrompng(DRUPAL_ROOT.'/sites/all/themes/sp_theme/images/SnowPilot_Watermark_BlueOrange_100.png');
 	imagecopy ( $img , $sp_watermark , 35 , 170 , 0 , 0, 160 , 99);
@@ -1074,7 +1077,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imagejpeg($img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.jpg',100);
 	
 	imagepng($img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.png');
-	snowpilot_snowpit_crop_layers_write($img,$node->nid);
 // Destroy GD image
 //imagedestroy($img);
 if ($format == 'jpg') {

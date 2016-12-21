@@ -239,11 +239,12 @@ form#user-login input.form-submit{
 	border: solid 2px #d4d8dc;
 }
 
-.not-logged-in #content .field-name-body .field-item {
+/*.not-logged-in #content .field-name-body .field-item {
     margin-left: 252px;
     padding-left: 20px;
     width: 50%;
 }
+*/
 
 form#user-login-form .form-item input.form-text,
 form#user-login .form-item input.form-text{
@@ -519,9 +520,9 @@ h3.test-title{
 }
 
 #snowpit-profile-node-form .form-field-name-field-date-time{
-	float: right;
+	/*float: right;
 	width: 50%;
-	
+	*/
 }
 
 #snowpit-profile-node-form .field-name-field-hardness,
@@ -896,9 +897,12 @@ form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion h3{
 	background:none;
 }
 
-form.node-snowpit_profile-form .group-layers{
+form.node-snowpit_profile-form .group-layers,
+form.node-snowpit_profile-form .group-stability-tests,
+form.node-snowpit_profile-form .group-temp-profile,
+form.node-snowpit_profile-form .group-density{
 	background: #fff;
-
+  padding: 0;
 }
 
 form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion tr.odd{
@@ -947,19 +951,24 @@ form.node-snowpit_profile-form table.field-multiple-table th{
 	background-repeat: no-repeat;
 	background-position: right center; 
 }
-
+/* the default height is 480, applies mainly to layers
+*/
 form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
 	border-top: 3px solid #c87931;
   padding: 0px 4px 4px;
   top: 1px;
-	max-height: 370px;
+	min-height: 480px;
 }	
-
+/*
+** override for tests form width
+ */
 form.node-snowpit_profile-form .form-field-name-field-test table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
 	min-height:300px;
 }
 
-form.node-snowpit_profile-form table.field-multiple-table .ui-accordion.ui-accordion-content{
+form.node-snowpit_profile-form .form-field-name-field-temp-collection table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active,
+form.node-snowpit_profile-form .form-field-name-field-density-profile table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
+	min-height: 50px;
 }
 
 form.node-snowpit_profile-form table.field-multiple-table{
@@ -969,6 +978,10 @@ form.node-snowpit_profile-form table.field-multiple-table{
 form.node-snowpit_profile-form .form-field-type-field-collection{
 		border: 6px solid #c87931;
 		min-width: 275px;
+}
+
+form.node-snowpit_profile-form .form-field-name-field-date-time .form-item-field-date-time-und-0>label{
+	display:none;
 }
 
 form.node-snowpit_profile-form label{
@@ -1000,9 +1013,8 @@ form .group-snowpit{
 
 #edit-field-graph-canvas {
     display: inline-block;
-    width: 943px;
-		background-color: #cdcdcd;
-		padding: 8px;
+    width: 933px;
+		border: 6px solid #c87931;
 }
 
 #edit-field-google-map-canvas,
@@ -1487,4 +1499,17 @@ body.node-type-snowpit-profile{
 
 .views-graph-image img{
 	height:250px;
+}
+
+/*
+Organization Users admin page nicities
+*/
+
+td.views-field-field-last-name .org.admin::before {
+    content: "Org Admin: ";
+}
+td.views-field-field-last-name .org.admin {
+    background-color: purple;
+    color: white;
+    padding: 3px;
 }
