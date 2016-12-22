@@ -429,7 +429,9 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs);
 			
 			snowpilot_set_visibility_field_options($form, $snowpit_unit_prefs);
-						
+			
+			snowpilot_snowpit_set_tester_fields($form);
+			
 			
 		} // end case node->type == snowpit prof
 		break;
@@ -824,6 +826,21 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 	  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
 		//dsm($form['field_snowpit_visibility']['und']['#options']);
 	}
+	
+}
+
+function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
+
+	if ( !(user_has_role( 8, $account ))){
+    $form['field_a_priori_eval']['#access'] = FALSE ;
+		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_unstable']);
+		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_stable']);
+	}else{
+		unset($form['field_stability_on_similar_slope']['und']['#options']['fair']);
+		
+		
+	}
+	dsm($form['field_stability_on_similar_slope']['und']);
 	
 }
 

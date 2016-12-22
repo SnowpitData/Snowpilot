@@ -594,10 +594,6 @@ function _generate_specifics_string($node) {
 					case 'field_near_avalanche':
 					break;
 					
-					case 'field_stability_on_similar_slope':
-						$specifics[] = $item_full['label'].": ". $node->field_stability_on_similar_slope['und'][0]['value'];
-					break;
-					
 					default:
 						$specifics[] = $item_full['label'];
 					break;
@@ -608,7 +604,20 @@ function _generate_specifics_string($node) {
 	}
   return implode('; ', $specifics);
 }
-
+//
+//  simple substitution for the field_tester_1 update
+// the case of a field_tester operating on this will   
+//
+function snowpilot_tester_fields_update($stability){
+	if( substr($stability['#items'][0]['value'], 0 , 4 ) == 'fair' ){
+		return 'Fair';
+		
+	}else{
+		
+		return $stability[0]['#markup'];
+	}
+	return;
+}
 
 function snowpilot_snowpit_graph_header_write($node, $format='jpg'){	
 	// also add user account info to this:
@@ -704,7 +713,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			$text_pos = imagettftext($img, 11, 0, 429, 17, $black, $label_font, "Stability: ");
 			if(isset($node->field_stability_on_similar_slope['und'])){
 				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
-				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, $similar_stability[0]['#markup'] );
+				//dsm($similar_stability);
+				//snowpilot_tester_fields_update($similar_stability);
+				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, snowpilot_tester_fields_update($similar_stability) );
 			}
 			$text_pos  = imagettftext($img, 11, 0, 429, 35, $black, $label_font, "Air Temperature: ");
 			if(isset($node->field_air_temp['und'])){
