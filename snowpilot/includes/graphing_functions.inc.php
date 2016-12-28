@@ -964,12 +964,13 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				$all_temps = field_collection_item_load_multiple($ids);
 
 				uasort($all_temps, 'depth_val');
-				$min_temp = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 12 : -8 ;
+				$min_temp = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 22 : -8 ;
 				$min_temp = _temp_profile_find_min_temp($all_temps, $min_temp) - 2 ;
+				$temp_span = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 32 - $min_temp : 0 - $min_temp ;
 
 				if ($snowpit_unit_prefs['field_temp_units'] == 'C'){
-					$pixels_per_degree =  433/$min_temp ;
-					$increment = ($min_temp < -14 )? 2 : 1;
+					$pixels_per_degree =  433/$temp_span ;
+					$increment = ($temp_span < -14 )? 2 : 1;
 					$x= 0; while ($x >=$min_temp ){ //  tickmarks
 						imageline($img, 447 - $pixels_per_degree * $x, 132, 447-$pixels_per_degree * $x, 140, $black );
 						imagettftext($img, 9, 0, 441 - $pixels_per_degree * $x, 130, $black, $label_font, $x  );
@@ -977,11 +978,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					}
 
 				}else{ /// Temperature units = 'F'
-					$pixels_per_degree = 433/$min_temp ;
-					$increment = $min_temp < 5 ? 2 : 1;
+					$pixels_per_degree = 433/$temp_span ;
+					$increment = $temp_span < 5 ? 2 : 1;
 					$x= 32; while ($x >=$min_temp ){  // tickmarks
-						imageline($img, 447 - $pixels_per_degree * ( $x - 32), 132, 447-$pixels_per_degree * ($x-32) , 140, $black );
-						imagettftext($img, 9, 0, 441 - $pixels_per_degree * ( $x - 32), 130, $black, $label_font, $x  );
+						imageline($img, 447 - $pixels_per_degree * ( 32-$x), 132, 447-$pixels_per_degree * (32-$x) , 140, $black );
+						imagettftext($img, 9, 0, 441 - $pixels_per_degree * (32- $x), 130, $black, $label_font, $x  );
 						$x = $x - $increment;
 					}
 
@@ -991,7 +992,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				$prev_x=0; $prev_y = 0; 
 				foreach($all_temps as $x=> $temp){
 					$cx =  ($snowpit_unit_prefs['field_temp_units'] == 'C') ?  447 - $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value']) :
-					447 - $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value'] - 32);
+					447 - $pixels_per_degree * (32 - $temp->field_temp_temp['und'][0]['value']);
 					//dsm($cx);
 					if( $cx >= 14 && $cx <= 447 ){
 						// draw point
