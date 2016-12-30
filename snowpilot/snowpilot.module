@@ -837,10 +837,10 @@ function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_stable']);
 	}else{
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair']);
+		$form['field_stability_on_similar_slope']['und']['#title'] = 'AFTER doing stability tests';
 		
-		
-	}
-	dsm($form['field_stability_on_similar_slope']['und']);
+	}	
+	//dsm($form['field_stability_on_similar_slope']);
 	
 }
 

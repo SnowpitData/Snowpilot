@@ -966,14 +966,14 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				uasort($all_temps, 'depth_val');
 				$min_temp = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 22 : -8 ;
 				$min_temp = _temp_profile_find_min_temp($all_temps, $min_temp) - 2 ;
-				$temp_span = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 32 - $min_temp : 0 - $min_temp ;
+				$temp_span = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 32 - $min_temp :  0 - $min_temp ;
 
 				if ($snowpit_unit_prefs['field_temp_units'] == 'C'){
 					$pixels_per_degree =  433/$temp_span ;
-					$increment = ($temp_span < -14 )? 2 : 1;
+					$increment = ($temp_span > 14 )? 2 : 1;
 					$x= 0; while ($x >=$min_temp ){ //  tickmarks
-						imageline($img, 447 - $pixels_per_degree * $x, 132, 447-$pixels_per_degree * $x, 140, $black );
-						imagettftext($img, 9, 0, 441 - $pixels_per_degree * $x, 130, $black, $label_font, $x  );
+						imageline($img, 447 + $pixels_per_degree * $x, 132, 447 + $pixels_per_degree * $x, 140, $black );
+						imagettftext($img, 9, 0, 441 + $pixels_per_degree * $x, 130, $black, $label_font, $x  );
 						$x = $x - $increment;
 					}
 
@@ -991,7 +991,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				// draw points, and line, different $cx calculations for F or C
 				$prev_x=0; $prev_y = 0; 
 				foreach($all_temps as $x=> $temp){
-					$cx =  ($snowpit_unit_prefs['field_temp_units'] == 'C') ?  447 - $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value']) :
+					$cx =  ($snowpit_unit_prefs['field_temp_units'] == 'C') ?  447 + $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value']) :
 					447 - $pixels_per_degree * (32 - $temp->field_temp_temp['und'][0]['value']);
 					//dsm($cx);
 					if( $cx >= 14 && $cx <= 447 ){
