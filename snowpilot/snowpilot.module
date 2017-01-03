@@ -450,6 +450,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			if( $form['#id'] == 'views-exposed-form-snowpit-list-page'){
 				//$form['field_loaction_tid']['#size'] = '3';
 				$form['uid_current']['#options'] = array( 'All' => 'All Snowpits', 1 => 'Just my snowpits');
+				$form['field_practice_pit_value']['#options'] = array(  0 => 'Exclude Practice Pits' ,'All' => 'Include Practice Pits');
 				if ( $user->uid == 0 ){
 					$form['uid_current']['#access'] = FALSE;
 					
@@ -662,6 +663,7 @@ function snowpit_list_view_after_build($form, &$form_state){
 	$form['field_professional_affiliation_tid']['#options'] = array_reverse($form['field_professional_affiliation_tid']['#options']);
 	$form['field_professional_affiliation_tid']['#options']['All'] = 'All Snowpits';
 	$form['field_professional_affiliation_tid']['#options'] = array_reverse($form['field_professional_affiliation_tid']['#options']);
+	$form['field_practice_pit_value']['#default_value'] = '0';
 	
 	return $form;
 }
