@@ -78,6 +78,9 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 		
 		  'field_loaction_1' => _helper_cleaner($entity, 'field_loaction','tid', '1'),
 			'range' =>  $range_name,  // this will need a conversion function to the name of the range
+			
+			'field_direction_format' => _helper_cleaner($entity, 'field_direction_format' ),
+			
 	  );
 	
 			//////

@@ -644,6 +644,7 @@ input#edit-field-elevation-und-0-value{
 
 #edit-field-elevation,
 #edit-field-aspect,
+#edit-field-aspect-cardinal,
 #edit-field-slope-angle,
 #edit-field-surface-penetration,
 #edit-field-boot-penetration-depth,
@@ -654,6 +655,7 @@ input#edit-field-elevation-und-0-value{
 
 #edit-field-slope-angle,
 #edit-field-aspect,
+#edit-field-aspect-cardinal,
 #edit-field-ski-penetration,
 #edit-field-boot-penetration-depth{
 	margin-left: 25px;

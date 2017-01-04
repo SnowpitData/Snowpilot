@@ -669,18 +669,22 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
  	 		}
       $text_pos = imagettftext($img, 11, 0, 14, 89, $black, $label_font, 'Aspect: ');
 			if (isset($node->field_aspect['und'])){
-				$aspect = field_view_field('node', $node, 'field_aspect');
+				if ( $node->field_direction_format['und'][0]['value'] == 'cardinal' /* cardnial type aspect */ ){
+					$aspect = field_view_field('node', $node, 'field_aspect_cardinal');
+				}else{ // the default, azimuth degrees
+				  $aspect = field_view_field('node', $node, 'field_aspect');
+			  }
         imagettftext($img, 11, 0, $text_pos[2], 89 , $black, $value_font ,$aspect[0]['#markup']);
 			}
 			$text_pos = imagettftext($img, 11, 0, 14, 107, $black, $label_font, 'Specifics: ');
 			$specifics = _generate_specifics_string($node);
 			imagettftext($img, 9, 0, $text_pos[2], 107, $black, $value_font, $specifics );
 			// Observer
-			imagettftext($img, 11, 0, 183 , 17, $black,  $value_font, $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value']);
-			imagettftext($img, 11, 0, 183, 35, $black, $value_font, date('D M j H:i Y (T) ', 
-			strtotime($node->field_date_time['und'][0]['value']." ". $node->field_date_time['und'][0]['timezone_db']))); //Date / Time of observation
-
-			$text_pos = imagettftext($img, 11, 0, 183, 53, $black, $label_font, "Co-ord: ");
+			imagettftext($img, 11, 0, 193 , 17, $black,  $value_font, $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value']);
+			imagettftext($img, 11, 0, 193, 35, $black, $value_font, date('D M j H:i Y', 
+			strtotime($node->field_date_time['und'][0]['value']))); //Date / Time of observation
+			//dsm($node->field_date_time);
+			$text_pos = imagettftext($img, 11, 0, 193, 53, $black, $label_font, "Co-ord: ");
 			if ($snowpit_unit_prefs['field_coordinate_type'] != 'UTM'){
 				if (isset($node->field_latitude['und']) && isset($node->field_longitude['und'])){
 					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
@@ -701,38 +705,38 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				}
 			}
 			
-			$text_pos = imagettftext($img, 11, 0, 183, 71, $black, $label_font, "Slope Angle: ");
+			$text_pos = imagettftext($img, 11, 0, 193, 71, $black, $label_font, "Slope Angle: ");
 			if (isset($node->field_slope_angle['und'])){
 				$slope_angle = field_view_field('node', $node, 'field_slope_angle');
 				imagettftext($img , 11, 0, $text_pos[2], 71, $black, $value_font, $slope_angle[0]['#markup'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 183, 89, $black, $label_font, "Wind Loading: ");
+			$text_pos = imagettftext($img, 11, 0, 193, 89, $black, $label_font, "Wind Loading: ");
 			if (isset($node->field_wind_loading['und'])){
 				imagettftext($img, 11, 0, $text_pos[2], 89, $black, $value_font, $node->field_wind_loading['und'][0]['value'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 429, 17, $black, $label_font, "Stability: ");
+			$text_pos = imagettftext($img, 11, 0, 444, 17, $black, $label_font, "Stability: ");
 			if(isset($node->field_stability_on_similar_slope['und'])){
 				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
 				//dsm($similar_stability);
 				//snowpilot_tester_fields_update($similar_stability);
 				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, snowpilot_tester_fields_update($similar_stability) );
 			}
-			$text_pos  = imagettftext($img, 11, 0, 429, 35, $black, $label_font, "Air Temperature: ");
+			$text_pos  = imagettftext($img, 11, 0, 444, 35, $black, $label_font, "Air Temperature: ");
 			if(isset($node->field_air_temp['und'])){
 				$air_temp = field_view_field('node', $node, 'field_air_temp');
 			  imagettftext($img, 11,0, $text_pos[2], 35, $black, $value_font, $air_temp[0]['#markup']."&#176;". $snowpit_unit_prefs['field_temp_units'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 429, 53, $black, $label_font, "Sky Cover: ");
+			$text_pos = imagettftext($img, 11, 0, 444, 53, $black, $label_font, "Sky Cover: ");
 			if (isset($node->field_sky_cover['und'])){
 				$sky_cover = field_view_field('node', $node, 'field_sky_cover'); 
-			imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, html_entity_decode($sky_cover[0]['#markup']) );
+			imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, $sky_cover['#items'][0]['value'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 429, 71, $black, $label_font, "Precipitation: " );
+			$text_pos = imagettftext($img, 11, 0, 444, 71, $black, $label_font, "Precipitation: " );
 			if ( isset($node->field_precipitation['und'])){
 				$precipitation = field_view_field('node', $node, 'field_precipitation');
-			  imagettftext($img, 11, 0, $text_pos[2] , 71, $black, $value_font, $precipitation[0]['#markup'] );
+			  imagettftext($img, 11, 0, $text_pos[2] , 71, $black, $value_font, $precipitation['#items'][0]['value'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 429, 89, $black, $label_font, "Wind: ");
+			$text_pos = imagettftext($img, 11, 0, 444, 89, $black, $label_font, "Wind: ");
 			if (isset($node->field_wind_direction['und'][0]['value'])){
 				$text_pos = imagettftext($img, 11 , 0, $text_pos[2]+4, 89, $black , $value_font, snowpilot_cardinal_wind_dir($node->field_wind_direction['und'][0]['value'] ));			
 			}
@@ -746,7 +750,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			
 			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
 			if ( isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' ){ 
-				$notes_lines = _output_formatted_notes($node->body['und'][0]['safe_value'], $value_font);
+				$notes_lines = _output_formatted_notes($node->body['und'][0]['value'], $value_font);
 				foreach($notes_lines as $x => $line){
 					if ($x <= 3 ){
 					  imagettftext($img, 9, 0, $textpos[2], 779 + $x * 19 ,$black, $value_font,$line);
@@ -761,18 +765,18 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			$comment_count = 0;
 			$textpos = array();
 			if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
-				$textpos = imagettftext($img, 9 , 0, 645, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
+				$textpos = imagettftext($img, 9 , 0, 625, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
 				$comment_count = 1;
 			}
 			if ( isset( $node->field_surface_penetration['und'] )  
 			  && ( $node->field_surface_penetration['und'][0]['value'] == 'boot' ) 
 				&& ( isset($node->field_boot_penetration_depth['und']) )
 			  && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
-				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 645 ;
+				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 625 ;
 					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PF'.$node->field_boot_penetration_depth['und'][0]['value']  );
 					$comment_count = 1;
 			}elseif(isset( $node->field_surface_penetration['und'] )  && isset($node->field_ski_penetration['und'][0]['value']) &&( $node->field_surface_penetration['und'][0]['value'] == 'ski' ) &&  (  $node->field_ski_penetration['und'][0]['value'] != '' ) ){
-				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 645 ;
+				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 625 ;
 					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'SP'.$node->field_ski_penetration['und'][0]['value']  );
 					$comment_count = 1;
 			}
@@ -796,7 +800,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				}
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
 
-				imagettftext( $img, 11, 0 , 645, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
+				imagettftext( $img, 11, 0 , 625, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
 				
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->y_position) ){
@@ -807,10 +811,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						if ( count($test->field_stability_comments) ){
 							if ( $comment_count < 5 ){
 								$test_depth = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value']+0 : 0 ;
-								imagettftext($img, 9, 0, 645, $comment_count*13 + 35, $black, $value_font,$test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'] );
+								imagettftext($img, 9, 0, 625, $comment_count*13 + 35, $black, $value_font,$test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'] );
 								$comment_count++;
 							}else{
-								imagettftext($img, 7, 0, 645, $comment_count*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes ... ]' );
+								imagettftext($img, 7, 0, 625, $comment_count*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes ... ]' );
 							}
 						}
 					}
