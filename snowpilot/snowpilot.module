@@ -312,7 +312,6 @@ function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 	$user_agent = $_SERVER['HTTP_USER_AGENT'];
-	
 	if ( strpos($user_agent , 'Mac OS X') && ( strpos($user_agent , 'Chrome') || strpos($user_agent , 'Safari') ) ){
 		if ( (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'snowpit-profile') || arg(0) == 'user' ){
 			drupal_set_message("You are using Mac OSX in combination with Safari or Chrome. 
@@ -760,6 +759,7 @@ function snowpilot_timezone_modify($form, &$form_state){
 			|| $zone == 'Europe/Paris'
 			|| $zone == 'Europe/Zurich'
 			|| $zone == 'Europe/Stockholm'
+			|| $zone == 'Europe/Helsinki'
 			|| $zone == 'Europe/Berlin'
 			|| $zone == 'Asia/Kabul'
 			|| $zone == 'Asia/Karachi'
@@ -890,10 +890,15 @@ function snowpilot_entity_presave($entity, $type){
 		// we can insert other actions in here as necessary, for layers other other field collection items
 		
 	}
+	
+	if ($type == 'field_collection_item' &&  $entity->field_name == 'field_temp_collection'){
+		// We save this as a decimal in the db
+			$entity->field_temp_temp['und'][0]['value'] = str_replace(',','.', $entity->field_temp_temp['und'][0]['value'] );
+	}
 	// core info fields updates
 	//Aspect - Cardinal -> degrees Azimuth convert and write value
 	
-	if ($entity->field_direction_format['und'][0]['value'] == 'cardinal' ){
+	if ( isset($entity->field_direction_format['und']) && $entity->field_direction_format['und'][0]['value'] == 'cardinal' ){
 		$entity->field_aspect = $entity->field_aspect_cardinal;
 	}
 	return $entity;
@@ -1052,6 +1057,10 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	
 	// Loop through temperature collection items for server-side error checking
 	foreach($form_state['values']['field_temp_collection']['und'] as $key=>$temp_item){
+		// We want to validate using decimal, not commas, for temp collection items
+		if ( is_numeric($key)){
+			$temp_item['field_temp_temp']['und'][0]['value'] = str_replace(',' , '.', $temp_item['field_temp_temp']['und'][0]['value']);
+		}
 
 		if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' && is_numeric($key)){
 			if ( isset( $temp_item['field_temp_temp'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && $temp_item['field_temp_temp']['und'][0]['value'] > 0  ){ 
@@ -1063,7 +1072,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 		  && $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
 			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack temperature measurement should be 32&deg; F or less.'));
 		}
-		if ( is_numeric($key) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric($temp_item['field_depth']['und'][0]['value'] ) &&  $temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+		if ( is_numeric($key) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric( _tofloat($temp_item['field_depth']['und'][0]['value']) ) &&  _tofloat($temp_item['field_depth']['und'][0]['value']) > _raw_max_pit_depth( $form_state['values'] ) ) {	
 			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
 		}
 	}
@@ -1127,6 +1136,7 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 		  }
 		}
 	}		
+
 	return $form_state;
 }
 
@@ -1819,5 +1829,24 @@ function snowpilot_user_has_role($roles) {
 
 function snowpilot_graph_field_trunc(&$img,$string,$x_limit){
 	
+}
+
+//
+// borrowed from http://php.net/manual/en/function.floatval.php
+// $num is a string
+function _tofloat($num) {
+    $dotPos = strrpos($num, '.');
+    $commaPos = strrpos($num, ',');
+    $sep = (($dotPos > $commaPos) && $dotPos) ? $dotPos :
+        ((($commaPos > $dotPos) && $commaPos) ? $commaPos : false);
+  
+    if (!$sep) {
+        return floatval(preg_replace("/[^0-9]/", "", $num));
+    }
+
+    return floatval(
+        preg_replace("/[^0-9]/", "", substr($num, 0, $sep)) . '.' .
+        preg_replace("/[^0-9]/", "", substr($num, $sep+1, strlen($num)))
+    );
 }
 

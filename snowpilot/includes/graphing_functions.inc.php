@@ -880,19 +880,19 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						$secondary_grain_type = ' ('. $secondary_grain_type_image . ')';
 					}
 				//output grain symbols
-					imagettftext($img, 10, 0, 525 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image.$secondary_grain_type);
+					imagettftext($img, 9, 0, 525 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image.$secondary_grain_type);
 				
 				// calculate grain size string
 					$grain_size_string = isset($layer->field_grain_size['und']) ? $layer->field_grain_size['und'][0]['value'] : '' ;
 					if ( $layer->field_use_multiple_grain_size['und'][0]['value'] == '1' && isset( $layer->field_grain_size_max['und'][0]['value'])) $grain_size_string .= ' - ' . $layer->field_grain_size_max['und'][0]['value'];
 				
 				// Ouptut grain sizes
-					$textpos = imagettftext($img, 10, 0, 584, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
+					$textpos = imagettftext($img, 9, 0, 584, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
 				
 				// calculate & output layer moisture	
 					if ( isset($layer->field_water_content['und'] )){
 						$moisture = $layer->field_water_content['und'][0]['value'];
-				 	 	imagettftext($img, 10, 0, $textpos[2]+5, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
+				 	 	imagettftext($img, 9, 0, $textpos[2]+5, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
 				 	}
 				
 				// Output Layer comments
