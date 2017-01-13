@@ -913,6 +913,8 @@ var SnowProfile = {};
       shearQuality = "";
     }
     var testDepthString = $('input[id^=edit-field-test-und-' + testNum + '-field-depth]').val();
+    // Convert comma to decimal for EU style
+    testDepthString = testDepthString.replace(/,/g,".");
     var testDepth = Number(testDepthString);
     if (testDepth === 0) {
       testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
