@@ -1,7 +1,7 @@
 <?php
 // from http://drupal.stackexchange.com/questions/79378/changing-a-field-type-from-integer-to-decimal
 // Change this to your field name, obvs.
-$field = 'field_height';
+$field = 'field_air_temp';
 
 // Update the storage tables
 $tables = array('field_data', 'field_revision');
@@ -34,7 +34,7 @@ $data['settings'] = array(
 db_update('field_config')
   ->fields(array(
     'data' => serialize($data),
-    'type' => 'number_decimal',
+    'type' => 'number_float',
   ))
   ->condition('field_name', $field)
   ->execute();    
@@ -58,7 +58,7 @@ foreach ($instances[$field]['bundles'] as $entity_type => $bundles) {
     $data = unserialize($field_config_instance->data);
 
     // Update it with the new display type
-    $data['display']['default']['type'] = 'number_decimal';
+    $data['display']['default']['type'] = 'number_float';
 
     // Store it back to the database
     db_update('field_config_instance')

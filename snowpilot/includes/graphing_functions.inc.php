@@ -724,7 +724,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			$text_pos  = imagettftext($img, 11, 0, 444, 35, $black, $label_font, "Air Temperature: ");
 			if(isset($node->field_air_temp['und'])){
 				$air_temp = field_view_field('node', $node, 'field_air_temp');
-			  imagettftext($img, 11,0, $text_pos[2], 35, $black, $value_font, $air_temp[0]['#markup']."&#176;". $snowpit_unit_prefs['field_temp_units'] );
+				$air_temp_value =  number_format($air_temp['#items'][0]['value'] , 1 , '.' , '')+0;
+			  imagettftext($img, 11,0, $text_pos[2], 35, $black, $value_font, $air_temp_value ."&#176;". $snowpit_unit_prefs['field_temp_units'] );
 			}
 			$text_pos = imagettftext($img, 11, 0, 444, 53, $black, $label_font, "Sky Cover: ");
 			if (isset($node->field_sky_cover['und'])){
