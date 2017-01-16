@@ -322,11 +322,15 @@
       
       // Update pit depth if it is filled in
       var pitDepth = $("#edit-field-total-height-of-snowpack-und-0-value").val();
+      // Convert comma to decimal for EU style
+      pitDepth = pitDepth.replace(/,/g,".");
       if($.trim(pitDepth).length) {
         SnowProfile.pitDepth = Number(pitDepth);
         SnowProfile.totalDepth = SnowProfile.pitDepth;
       } else if (SnowProfile.depthRef === "g") {
         var checkFirstDepth = $("[id^=edit-field-layer-und-0-field-height-und-0-value]").val();
+        // Convert comma to decimal for EU style
+        checkFirstDepth = checkFirstDepth.replace(/,/g,".");
         if($.trim(checkFirstDepth).length) {
           SnowProfile.pitDepth = Number(checkFirstDepth);
           SnowProfile.totalDepth = SnowProfile.pitDepth;
@@ -467,7 +471,7 @@
     /**
      * Respond to a change in the depth of the pit
      *
-     * Input the value set by the user in the "Snow pit depth" box.
+     * Input the value set by the user in the "Total Height of Snowpack" box.
      * Check that it is a number in the range MIN_DEPTH .. MAX_DEPTH not
      * greater than total snow depth.  If checks pass, save this pit depth.
      * If the checks fail, put the previous value back in the input box.
@@ -478,6 +482,8 @@
       // Check height of snowpack field
       if ($.trim($("#edit-field-total-height-of-snowpack-und-0-value").val()).length){
         pitDepth = $("#edit-field-total-height-of-snowpack-und-0-value").val();
+        // Convert comma to decimal for EU style 
+        pitDepth = pitDepth.replace(/,/g, ".");
         SnowProfile.snowpackHeightSet = true;
         // Update the first layer's Top Depth if needed
         if (SnowProfile.depthRef === "g") {
@@ -488,6 +494,8 @@
       // If no HoS and we're measuring from bottom, use the first Top Depth value 
       else if(SnowProfile.depthRef === 'g'){
         pitDepth = $("[id^=edit-field-layer-und-0-field-height-und-0-value]").val();
+        // Convert comma to decimal for EU style 
+        pitDepth = pitDepth.replace(/,/g, ".");
         SnowProfile.snowpackHeightSet = true;
       } else pitDepth = SnowProfile.totalDepth;
       
