@@ -884,8 +884,8 @@ function snowpilot_entity_presave($entity, $type){
 		
 		// this sets a specific field ( Stability test score ) when the field collection item is saved
 		$entity->field_stability_test_score['und'][0]['value'] = _set_test_result_single($entity);
-		
-		$entity->field_depth['und'][0]['value'] = str_replace( ',' , '.' , $entity->field_depth['und'][0]['value']);
+		// We only reset this depth value if it is not null. For Null depth test results ( e.g. ECTX or CTN ), it needs to be null
+		if ( isset($entity->field_depth['und'][0]['value']) ) $entity->field_depth['und'][0]['value'] = str_replace( ',' , '.' , $entity->field_depth['und'][0]['value']) ;
 	}elseif ( $type == 'field_collection_item' && $entity->field_name =='field_layer' ){
 		//dsm($entity);
 		// we can insert other actions in here as necessary, for layers other other field collection items
@@ -920,7 +920,6 @@ function snowpilot_entity_presave($entity, $type){
 function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	// Add serverside validation for stability tests
 	foreach( $form_state['values']['field_test']['und'] as $key => $test){
-		
 		if ( isset( $test['field_depth']['und'][0]['value'])){
 		  $test['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $test['field_depth']['und'][0]['value']);
 		} 
