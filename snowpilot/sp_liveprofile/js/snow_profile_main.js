@@ -158,7 +158,10 @@
       // test for existence of some element in that layer of the form...in this case bottom depth is fine
       if ($("[id^=edit-field-layer-und-" + nextIndex + "-field-bottom-depth-und-0-value]").length) {
         // add new layer if the form updated, use different depth values depending on depthRef
-        var newDepthNumber = Number($("[id^=edit-field-layer-und-" + maxIndex + "-field-bottom-depth-und-0-value]").val());
+        var prevBottomDepth = $("[id^=edit-field-layer-und-" + maxIndex + "-field-bottom-depth-und-0-value]").val();
+        // convert commas to decimals for EU style
+        prevBottomDepth = prevBottomDepth.replace(/,/g, ".");
+        var newDepthNumber = Number(prevBottomDepth);
         if (SnowProfile.depthRef === 's'){
           newDepthNumber += 20;
         }
