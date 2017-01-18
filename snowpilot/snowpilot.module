@@ -431,7 +431,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			
 			snowpilot_snowpit_set_tester_fields($form);
 			
-			
 		} // end case node->type == snowpit prof
 		break;
 		case 'user_login':
@@ -836,7 +835,7 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 
-	if ( !(user_has_role( 8, $account ))){
+	if ( !(user_has_role( 8, $account ))){ /// role 8 is False Stability Test 2017
     $form['field_a_priori_eval']['#access'] = FALSE ;
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_unstable']);
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_stable']);
@@ -885,28 +884,45 @@ function snowpilot_entity_presave($entity, $type){
 		
 		// this sets a specific field ( Stability test score ) when the field collection item is saved
 		$entity->field_stability_test_score['und'][0]['value'] = _set_test_result_single($entity);
+		// We only reset this depth value if it is not null. For Null depth test results ( e.g. ECTX or CTN ), it needs to be null
+		if ( isset($entity->field_depth['und'][0]['value']) ) $entity->field_depth['und'][0]['value'] = str_replace( ',' , '.' , $entity->field_depth['und'][0]['value']) ;
 	}elseif ( $type == 'field_collection_item' && $entity->field_name =='field_layer' ){
 		//dsm($entity);
 		// we can insert other actions in here as necessary, for layers other other field collection items
+		$entity->field_height['und'][0]['value'] = str_replace( ',' , '.' , $entity->field_height['und'][0]['value']);
+		$entity->field_bottom_depth['und'][0]['value'] = str_replace( ',' , '.' , $entity->field_bottom_depth['und'][0]['value']);
 		
 	}
 	
 	if ($type == 'field_collection_item' &&  $entity->field_name == 'field_temp_collection'){
 		// We save this as a decimal in the db
 			$entity->field_temp_temp['und'][0]['value'] = str_replace(',','.', $entity->field_temp_temp['und'][0]['value'] );
+			$entity->field_depth['und'][0]['value'] = str_replace(',','.', $entity->field_depth['und'][0]['value'] );
+	}
+	
+	if ($type == 'field_collection_item' &&  $entity->field_name == 'field_density_profile'){
+		$entity->field_density_top['und'][0]['value'] = str_replace(',','.', $entity->field_density_top['und'][0]['value'] );
+		$entity->field_depth['und'][0]['value'] = str_replace(',','.', $entity->field_depth['und'][0]['value'] );
 	}
 	// core info fields updates
 	//Aspect - Cardinal -> degrees Azimuth convert and write value
 	
-	if ( isset($entity->field_direction_format['und']) && $entity->field_direction_format['und'][0]['value'] == 'cardinal' ){
+	if ( $type == 'node' && isset($entity->field_direction_format['und']) && $entity->field_direction_format['und'][0]['value'] == 'cardinal' ){
 		$entity->field_aspect = $entity->field_aspect_cardinal;
 	}
+	
+	if ($type == 'node' && $entity->type == 'snowpit_profile' && isset( $entity->field_air_temp['und'][0]['value']) ){ 
+		$entity->field_air_temp['und'][0]['value'] = str_replace( ',', '.' ,$entity->field_air_temp['und'][0]['value'] );
+		dsm ( $entity); }
 	return $entity;
 }
 
 function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	// Add serverside validation for stability tests
 	foreach( $form_state['values']['field_test']['und'] as $key => $test){
+		if ( isset( $test['field_depth']['und'][0]['value'])){
+		  $test['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $test['field_depth']['und'][0]['value']);
+		} 
 	  if (is_numeric($key) && isset($test['field_stability_test_type']['und'][0]['value']) && $test['field_stability_test_type']['und'][0]['value'] <> ''){ // 
 	  	switch ($test['field_stability_test_type']['und'][0]['value']){
 				case 'ECT':
@@ -1019,6 +1035,13 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	//  if it lacks the bottom depth, form_set_error on that field
 	
 	foreach($form_state['values']['field_layer']['und'] as $key=>$layer){
+	  
+		if (  isset($layer['field_height']['und'][0]['value'] )){
+			$layer['field_height']['und'][0]['value'] = str_replace( ',', '.' , $layer['field_height']['und'][0]['value']);
+		}
+		if ( isset ($layer['field_bottom_depth']['und'][0]['value'])){
+			$layer['field_bottom_depth']['und'][0]['value'] = str_replace( ',', '.' , $layer['field_bottom_depth']['und'][0]['value']);
+		}
 		if ( is_numeric($key) && isset($layer['field_height']['und'][0]['value']) 
 		  && (  (isset( $layer['field_bottom_depth']['und'][0]['value']) && ($layer['field_bottom_depth']['und'][0]['value'] <> ''))  || (isset($layer['field_hardness']['und'][0]['value']) && ($layer['field_hardness']['und'][0]['value'] <> '' )) || (isset($layer['field_grain_type']['und'][0]['value']) && ($layer['field_grain_type']['und'][0]['value'] <> '')) || (isset($layer['field_grain_size']['und'][0]['value']) && ($layer['field_grain_size']['und'][0]['value'] <> '')) )   ){// all of this test to see if it is a 'real' layer
 			// we process through error checking and set any missing fields as needed.
@@ -1058,26 +1081,42 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	// Loop through temperature collection items for server-side error checking
 	foreach($form_state['values']['field_temp_collection']['und'] as $key=>$temp_item){
 		// We want to validate using decimal, not commas, for temp collection items
-		if ( is_numeric($key)){
-			$temp_item['field_temp_temp']['und'][0]['value'] = str_replace(',' , '.', $temp_item['field_temp_temp']['und'][0]['value']);
-		}
-
-		if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' && is_numeric($key)){
-			if ( isset( $temp_item['field_temp_temp'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && $temp_item['field_temp_temp']['und'][0]['value'] > 0  ){ 
-				form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack measurement should be 0&deg; C or less.'));
+		if ( is_numeric($key)) {
+				
+	  	if (strpos(  $temp_item['field_depth']['und'][0]['value'], ',' ) ){
+        $temp_item['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $temp_item['field_depth']['und'][0]['value'] );
+	  	}
+			if ( strpos( $temp_item['field_temp_temp']['und'][0]['value'] , ',')){
+				$temp_item['field_temp_temp']['und'][0]['value'] = str_replace( ',' , '.' , $temp_item['field_temp_temp']['und'][0]['value'] ); 
 			}
-		}elseif ( is_numeric($key)  
-			&& isset ( $temp_item['field_temp_temp']['und'][0]['value'] )
-		  && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) 
-		  && $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
-			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack temperature measurement should be 32&deg; F or less.'));
-		}
-		if ( is_numeric($key) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric( _tofloat($temp_item['field_depth']['und'][0]['value']) ) &&  _tofloat($temp_item['field_depth']['und'][0]['value']) > _raw_max_pit_depth( $form_state['values'] ) ) {	
-			form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
+
+	  	if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' && is_numeric($key)){
+	  		if ( isset( $temp_item['field_temp_temp'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && 
+				$temp_item['field_temp_temp']['und'][0]['value'] > 0  ){ 
+		  		form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack measurement should be 0&deg; C or less.'));
+	  		}
+		  }elseif ( is_numeric($key)  
+	  		&& isset ( $temp_item['field_temp_temp']['und'][0]['value'] )
+	  	  && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) 
+	  	  && $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
+		  	form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack temperature measurement should be 32&deg; F or less.'));
+	  	}
+	  	if ( is_numeric($key) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric( $temp_item['field_depth']['und'][0]['value'] ) && 
+			$temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+	  		form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
+	  	}
 		}
 	}
 	// Loop through density collection items for server-side error checking
 	foreach($form_state['values']['field_density_profile']['und'] as $key=>$density_item){
+  	if (strpos(  $density_item['field_depth']['und'][0]['value'], ',' ) ){
+      $density_item['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_depth']['und'][0]['value'] );
+  	}
+		if ( strpos( $density_item['field_density_top']['und'][0]['value'] , ',')){
+			$density_item['field_density_top']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_density_top']['und'][0]['value'] ); 
+		}
+		
+		
 		if ( is_numeric($key )  && isset( $density_item['field_density_top']['und'][0]['value'] ) && is_numeric( $density_item['field_density_top']['und'][0]['value'] ) && $density_item['field_density_top']['und'][0]['value'] > 1000 ){ 
 			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_density_top", t('Density values should be 1000 kg/m-3 or less.'));
 		}
@@ -1093,6 +1132,8 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
   if ( $form_state['values']['field_elevation_units']['und'][0]['value'] == 'm'   && ($form_state['values']['field_elevation']['und'][0]['value'] > 8000 )){
     form_set_error("field_elevation", 'The elevation in meters must be less than 8000.');
 	}
+	
+	$form_state['values']['field_air_temp']['und'][0]['value'] = str_replace( ',' , '.' ,$form_state['values']['field_air_temp']['und'][0]['value']);
 	// addition Core Info field validation can go here:
 	//
 	if ( substr($form_state['values']['field_date_time']['und'][0]['value'], -8, 8) == '00:00:00' ){
@@ -1259,6 +1300,7 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 		}
 
 		$form['field_temp_collection']['und'][$x]['#suffix'] ="</div> </div>";
+		
 		$x++;
 	}
 	return $form;

@@ -158,7 +158,10 @@
       // test for existence of some element in that layer of the form...in this case bottom depth is fine
       if ($("[id^=edit-field-layer-und-" + nextIndex + "-field-bottom-depth-und-0-value]").length) {
         // add new layer if the form updated, use different depth values depending on depthRef
-        var newDepthNumber = Number($("[id^=edit-field-layer-und-" + maxIndex + "-field-bottom-depth-und-0-value]").val());
+        var prevBottomDepth = $("[id^=edit-field-layer-und-" + maxIndex + "-field-bottom-depth-und-0-value]").val();
+        // convert commas to decimals for EU style
+        prevBottomDepth = prevBottomDepth.replace(/,/g, ".");
+        var newDepthNumber = Number(prevBottomDepth);
         if (SnowProfile.depthRef === 's'){
           newDepthNumber += 20;
         }
@@ -343,15 +346,18 @@
           // Find layer number - starts at 0, corresponds directly to SnowProfile.snowLayers[] index but not to .length
           var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
           var layerNum = parseInt(layerString, 10);
+          // Convert commas to decimals for EU style
+          var userInput = $(this).val();
+          userInput = userInput.replace(/,/g, ".");
             
           // Top Depth was changed
           if($(this).parents('.field-name-field-height').length)
           {
             // Update layer depth value
             if (SnowProfile.depthRef === "s") 
-              SnowProfile.snowLayers[layerNum].depth($(this).val());
+              SnowProfile.snowLayers[layerNum].depth(userInput);
             else if (SnowProfile.depthRef === "g")
-              SnowProfile.snowLayers[layerNum].depth(SnowProfile.pitDepth - $(this).val());
+              SnowProfile.snowLayers[layerNum].depth(SnowProfile.pitDepth - userInput);
             
             // Draw
             SnowProfile.snowLayers[layerNum].draw();
@@ -367,9 +373,9 @@
             // If not last (now hidden) layer, update the layer below depth value
             if((layerNum + 1) != SnowProfile.snowLayers.length){
               if (SnowProfile.depthRef === "s") 
-                SnowProfile.snowLayers[(layerNum + 1)].depth($(this).val());
+                SnowProfile.snowLayers[(layerNum + 1)].depth(userInput);
               else if (SnowProfile.depthRef === "g")
-                var invertedDepth = SnowProfile.pitDepth - $(this).val();
+                var invertedDepth = SnowProfile.pitDepth - userInput;
                 SnowProfile.snowLayers[(layerNum + 1)].depth(invertedDepth);
               // If it's the last visible layer (2nd from last layer), keep bottom slope handle hidden
               if((layerNum + 2) == SnowProfile.snowLayers.length) {

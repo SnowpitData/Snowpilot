@@ -1,7 +1,7 @@
 <?php
 // from http://drupal.stackexchange.com/questions/79378/changing-a-field-type-from-integer-to-decimal
 // Change this to your field name, obvs.
-$field = 'field_height';
+$field = 'field_temp_temp';
 
 // Update the storage tables
 $tables = array('field_data', 'field_revision');
@@ -34,7 +34,7 @@ $data['settings'] = array(
 db_update('field_config')
   ->fields(array(
     'data' => serialize($data),
-    'type' => 'number_decimal',
+    'type' => 'number_float',
   ))
   ->condition('field_name', $field)
   ->execute();    
@@ -58,7 +58,7 @@ foreach ($instances[$field]['bundles'] as $entity_type => $bundles) {
     $data = unserialize($field_config_instance->data);
 
     // Update it with the new display type
-    $data['display']['default']['type'] = 'number_decimal';
+    $data['display']['default']['type'] = 'number_float';
 
     // Store it back to the database
     db_update('field_config_instance')
@@ -70,5 +70,26 @@ foreach ($instances[$field]['bundles'] as $entity_type => $bundles) {
 
   }
 }
+
+
+/*
+
+
+sql = 
+UPDATE `field_revision_field_temp_temp` SET `field_temp_temp_value` = replace( field_temp_temp_value, ',', '.' ) 
+
+UPDATE `field_data_field_temp_temp` SET `field_temp_temp_value` = replace( field_temp_temp_value, ',', '.' ) 
+
+run script above
+
+also in field_config table , change from type = text to type = number
+
+update field_config -> data field iff needed
+
+use this to update field_config_isntance:
+
+UPDATE `field_config_instance` SET data = 'a:8:{s:5:"label";s:11:"Temperature";s:6:"widget";a:5:{s:6:"weight";s:2:"30";s:4:"type";s:6:"number";s:6:"module";s:6:"number";s:6:"active";i:0;s:8:"settings";a:0:{}}s:8:"settings";a:6:{s:3:"min";s:3:"-40";s:3:"max";s:2:"32";s:6:"prefix";s:0:"";s:6:"suffix";s:0:"";s:10:"exclude_cv";b:0;s:18:"user_register_form";b:0;}s:7:"display";a:1:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:12:"number_float";s:6:"weight";s:2:"17";s:8:"settings";a:0:{}s:6:"module";N;}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;s:10:"exclude_cv";i:1;}' WHERE field_name = 'field_temp_temp'
+?
+*/
 
 ?>
