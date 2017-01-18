@@ -411,7 +411,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			 
 			$form['field_layer']['#prefix'] = '<div>';
 			$form['field_layer']['#suffix'] = '</div>';
-			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => 'Mountain Range' );
+			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => '<none>' );
 			
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
@@ -1097,6 +1097,11 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	//
 	if ( substr($form_state['values']['field_date_time']['und'][0]['value'], -8, 8) == '00:00:00' ){
 		form_set_error('field_date_time', 'Please enter a valid time for when the snowpit was dug.');
+	}
+	//dsm( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) );
+	if ( ! isset( $form_state['values']['field_loaction']['und'][1]['tid'] ) && count ( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) )){
+		form_set_error( 'field_loaction', 'Please enter a valid Mountain Range or Region at deepest possible level.');
+		
 	}
 	
 	return;
