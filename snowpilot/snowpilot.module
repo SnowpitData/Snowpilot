@@ -851,6 +851,7 @@ function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 
 function snowpilot_lock_professional_affil(&$form){
 	$top_level_prof_affil = array ('none', 108, 57, 59, 60, 62, 58, 61, 172);
+	$group_admin_text = '';
 	if (isset( $form['field_professional_affiliation']['und']['#default_value'][0]  ) 
 	  && !in_array($form['field_professional_affiliation']['und']['#default_value'][0], $top_level_prof_affil )
 	  && !snowpilot_user_has_role('administrator') 
@@ -864,14 +865,39 @@ function snowpilot_lock_professional_affil(&$form){
 		  $terms_list_formatted = '';
 		  foreach( $terms as $tid => $term) {
 		  	$terms_list_formatted .= 	'<div class="inner"> ' . $term->name.' </div>';
-		  }
-      $to_change_affil_text = '<div class = "inner"><em>If your Organization Affiliation is incorrect, please contact us at <a href ="mailto:admin@snowpilot.org">admin@snowpilot.org</a> to update it.</em></div>';
-		  $form['field_professional_affiliation_display'] = array( 
+		  		  //
+			//
+			//
+			  $user_wrapper = entity_metadata_wrapper( 'user', user_load($form['#user']->uid));
+	      $query = new EntityFieldQuery();
+	      $query->entityCondition('entity_type', 'user')
+	        ->fieldCondition('field_professional_affiliation' ,  'tid' , $affiliation , '=');
+	      $result = $query->execute();
+			  $group_users = array_keys($result['user']);
+		  	$group = user_load_multiple($group_users);
+				
+		  	foreach($group as $individual){
+		  		if ( isset($individual->roles[6])){
+		  			$org_admins[] = $individual;
+		  		}
+		  	}
+			
+		  	if ( !count ( $org_admins) && !in_array( $tid , array ('none', 108, 57, 59, 60, 62, 58, 61, 172) ) && $form['field_professional']['und']['#default_value'] == '1' ){
+		      $group_admin_text = 'If you are an <em>administrator or senior user</em> within the '. $user_wrapper->field_professional_affiliation->label().' group, and would like to manage other users and snowpits within your group, please contact us at <a href ="mailto:admin@snowpilot.org">admin@snowpilot.org</a></div>';
+		  	}
+				
+			}
+      $to_change_affil_text = '<div class = "inner">If your <em>Organization Affiliation</em> is incorrect, please contact us at <a href ="mailto:admin@snowpilot.org">admin@snowpilot.org</a> to update it.</div>';
+			
+			
+			//
+			//
+			$form['field_professional_affiliation_display'] = array( 
 		  	'#type' => 'container',
 		  	'#weight' => '25',
 		  	'und' => array ( 
 		  	'markup' => array (
-		      '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . $to_change_affil_text . ' </div>',),
+		      '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . $to_change_affil_text . $group_admin_text .' </div>',),
 			  ),	
 		  );
 			$form['#group_children']['field_professional_affiliation_display'] = 'group_profs';

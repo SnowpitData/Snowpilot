@@ -888,12 +888,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					if ( $layer->field_use_multiple_grain_size['und'][0]['value'] == '1' && isset( $layer->field_grain_size_max['und'][0]['value'])) $grain_size_string .= ' - ' . $layer->field_grain_size_max['und'][0]['value'];
 				
 				// Ouptut grain sizes
-					$textpos = imagettftext($img, 9, 0, 584, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
+					$textpos = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
 				
 				// calculate & output layer moisture	
 					if ( isset($layer->field_water_content['und'] )){
 						$moisture = $layer->field_water_content['und'][0]['value'];
-				 	 	imagettftext($img, 9, 0, $textpos[2]+5, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
+				 	 	imagettftext($img, 8, 0, $textpos[2]+5, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
 				 	}
 				
 				// Output Layer comments
@@ -972,9 +972,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				$min_temp = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 22 : -8 ;
 				$min_temp = _temp_profile_find_min_temp($all_temps, $min_temp) - 2 ;
 				$temp_span = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 32 - $min_temp :  0 - $min_temp ;
+				$pixels_per_degree =  433/$temp_span ;
 
 				if ($snowpit_unit_prefs['field_temp_units'] == 'C'){
-					$pixels_per_degree =  433/$temp_span ;
 					$increment = ($temp_span > 14 )? 2 : 1;
 					$x= 0; while ($x >=$min_temp ){ //  tickmarks
 						imageline($img, 447 + $pixels_per_degree * $x, 132, 447 + $pixels_per_degree * $x, 140, $black );
@@ -983,7 +983,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					}
 
 				}else{ /// Temperature units = 'F'
-					$pixels_per_degree = 433/$temp_span ;
 					$increment = ($temp_span > 5) ? 2 : 1;
 					$x= 32; while ($x >=$min_temp ){  // tickmarks
 						imageline($img, 447 - $pixels_per_degree * ( 32-$x), 132, 447-$pixels_per_degree * (32-$x) , 140, $black );
@@ -1076,10 +1075,14 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imageline($img, 483,140 , 483, 751 , $black); // left edge, first vert line
 	imageline($img, 511,140 , 511, 751 , $black); // beginning of crystal form column
 	imageline($img, 575,135, 575, 751, $black  ); //beginning of crystal size column
+	imageline($img, 620,140, 620, 751, $black  ); //beginning of crystal moisture column
 	
-	imagettftext($img, 10, 0 , 554, 122, $black ,$label_font, "Crystal");
-	imagettftext($img, 10, 0 , 516,137, $black, $label_font , "Form");
-	imagettftext($img, 10, 0 , 580,137, $black, $label_font , "Size (mm)");
+	
+	imagettftext($img, 10, 0 , 554, 122, $black ,$label_font, t("Crystal"));
+	imagettftext($img, 10, 0 , 516,137, $black, $label_font , t("Form"));
+	imagettftext($img, 10, 0 , 580,137, $black, $label_font , t("Size"));
+	imagettftext($img, 10, 0 , 616,137, $black, $label_font , t("Moisture"));
+	
 	
 	// write out the small image before laying the watermark
 	snowpilot_snowpit_crop_layers_write($img,$node->nid);
