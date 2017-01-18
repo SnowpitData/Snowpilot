@@ -984,7 +984,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 
 				}else{ /// Temperature units = 'F'
 					$pixels_per_degree = 433/$temp_span ;
-					$increment = $temp_span < 5 ? 2 : 1;
+					$increment = ($temp_span > 5) ? 2 : 1;
 					$x= 32; while ($x >=$min_temp ){  // tickmarks
 						imageline($img, 447 - $pixels_per_degree * ( 32-$x), 132, 447-$pixels_per_degree * (32-$x) , 140, $black );
 						imagettftext($img, 9, 0, 441 - $pixels_per_degree * (32- $x), 130, $black, $label_font, $x  );

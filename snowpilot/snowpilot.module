@@ -345,7 +345,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['field_density_profile']['und']['add_more']['#value'] = "Add Density";
 			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
 			$form['title']['#maxlength'] = 22;
-			$form['title']['#description'] = 'Name must be 22 characters or less.';
+			$form['title']['#description'] = t('Name must be 22 characters or less.');
 			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
 			$form['field_precipitation']['und']['#options']['_none'] = '' ;
 			// copy actions to new item
@@ -835,6 +835,7 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 
+
 	if ( !(user_has_role( 8, $account ))){ /// role 8 is False Stability Test 2017
     $form['field_a_priori_eval']['#access'] = FALSE ;
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_unstable']);
@@ -1137,11 +1138,11 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	// addition Core Info field validation can go here:
 	//
 	if ( substr($form_state['values']['field_date_time']['und'][0]['value'], -8, 8) == '00:00:00' ){
-		form_set_error('field_date_time', 'Please enter a valid time for when the snowpit was dug.');
+		form_set_error('field_date_time', t('Please enter a valid time for when the snowpit was dug.'));
 	}
 	//dsm( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) );
 	if ( ! isset( $form_state['values']['field_loaction']['und'][1]['tid'] ) && count ( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) )){
-		form_set_error( 'field_loaction', 'Please enter a valid Mountain Range or Region at deepest possible level.');
+		form_set_error( 'field_loaction', t('Please enter a valid Mountain Range or Region at deepest possible level.'));
 		
 	}
 	
