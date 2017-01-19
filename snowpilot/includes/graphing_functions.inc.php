@@ -545,7 +545,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 	foreach ( $simple_test_results as $x => $test){
   	if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
   		$test->collision_flag = TRUE;
-			$test->y_position = $simple_test_results[$x - 1]->y_position +20;
+			$test->y_position = ($test->field_depth['und'][0]['value'] <> 0) ? $simple_test_results[$x - 1]->y_position +20 : $simple_test_results[$x - 1]->y_position - 20;
 
     }else{
   	 if ( count ($st_cg)){
@@ -893,7 +893,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				// calculate & output layer moisture	
 					if ( isset($layer->field_water_content['und'] )){
 						$moisture = $layer->field_water_content['und'][0]['value'];
-				 	 	imagettftext($img, 8, 0, $textpos[2]+5, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
+				 	 	imagettftext($img, 8, 0, 623, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $moisture );
 				 	}
 				
 				// Output Layer comments
