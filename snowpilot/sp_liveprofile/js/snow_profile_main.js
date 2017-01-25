@@ -1,13 +1,12 @@
 /**
- * @file Contains main program
+ * @file Contains main program, plus setup for SnowPilot.com Drupal Website
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
+ * Modified by Joe DeBruycker
  */
 
 /* global SnowProfile */
 /* global SVG */
-
-
 
 (function($) {
   "use strict";
@@ -406,7 +405,6 @@
           
           var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
           var layerNum = parseInt(layerString, 10);
-          console.log("LayerNum: " + layerNum);
           
           // Primary Hardness Selector
           if($(this).parents('.field-name-field-hardness').length) {
@@ -492,11 +490,3 @@
   }; // end behaviors.snowpilot.sp_livegraph    
 	
 })(jQuery);
-
-// Configure Emacs for Drupal JavaScript coding standards
-// Local Variables:
-// js2-basic-offset: 2
-// indent-tabs-mode: nil
-// fill-column: 78
-// show-trailing-whitespace: t
-// End:

@@ -646,7 +646,7 @@
     } // function setCommentDescr(comment)
     
     /**
-     * Set the stability test text 
+     * Set the stability test text for SnowPilot, which uses the original "commentDescr" area 
      *
      * @param {Array} sTests Array of objects representing stability tests
      */
@@ -687,6 +687,7 @@
      * @returns {Object} Object describing the snow layer if param omitted.
      */
     this.describe = function(data) {
+      console.log("INFO: In SnowProfile.features.describe(data)");
 
       var cdBbox, giBbox, gsBbox, fdBbox;
 
@@ -778,6 +779,7 @@
           self.height = 0;
         }
         else {
+          console.log("feature.height is set to " + fdBbox.height);
           self.height = fdBbox.height;
         }
 
@@ -808,6 +810,9 @@
      * @param {number} bottom Y value of bottom of area
      */
     this.layout = function(top, bottom) {
+      console.log("INFO: In SnowProfile.features.layout()");
+      console.log("Top: " + top);
+      console.log("Bottom: " + bottom);
 
       // Midpoint of space for description
       var spaceMidY = top + ((bottom - top) / 2);
@@ -817,10 +822,13 @@
 
       if (self.height === 0) {
         // No feature description to lay out, forget it
-        return;
+        console.log("feature.height is zero!");
+        //return;
       }
       featDescr.y(spaceMidY - (self.height / 2) +
         (3 * SnowProfile.Cfg.MIN_FEAT_PAD));
+      console.log("featDescr.y set to " + (spaceMidY - (self.height / 2) +
+        (3 * SnowProfile.Cfg.MIN_FEAT_PAD)));
     };
 
     /**
