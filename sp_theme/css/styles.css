@@ -1261,9 +1261,19 @@ body.not-logged-in #edit-uid-current-wrapper{
     width: 175px;
 }
 
+#block-block-2 button + div.download {
+  margin-left: 22px;
+	display: inline-block;
+  
+}
+
 #block-block-2 .download div.ctools-dropdown-container,
 #block-block-2 .save div.ctools-dropdown-container{
 	background-color: #3b6e8b;
+}
+
+#block-block-2 button#edit-delete{
+	float: right;
 }
 
 #edit-button{
