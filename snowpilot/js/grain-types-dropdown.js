@@ -13,11 +13,14 @@
 
 (function ($) {
   // Behaviors related to Grain types dropdown
-  Drupal.behaviors.snowpilot3 = {
+  Drupal.behaviors.snowpilot4 = {
     attach: function (context, settings) {
+			
+			
       $('#edit-field-layer-und-0-field-grain-type-und').hide();
+			
+			
     }    // end of attach
-
   };  //end of Drupal.behavior.snowpilot3
 }) (jQuery);
 

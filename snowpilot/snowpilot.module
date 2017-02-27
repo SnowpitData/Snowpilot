@@ -399,10 +399,43 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				
 			}
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
-				dsm($form['field_layer']['und'][0]);	
 				
+				$grain_types_vocab = taxonomy_get_tree('3');
+				dsm($grain_types_vocab);
 				
-				//foreach( )
+				//
+				//  _tid2snowsymbols($tid)  returns the unicode result from custom snowsymbols file.
+				//
+				$markup = '<ul class = "grain-types-groups">';
+				foreach( $grain_types_vocab as $grain_type ){
+					if ($grain_type->parents[0] == 0 ){
+						$grain_type_groups[] = $grain_type;
+					}
+				}	
+					foreach ( $grain_type_groups as $grain_type_parent ){
+						$markup .= '<li class = "parent"> '.$grain_type_parent->name. ' <span class ="grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</span><ul class = 'children'>";
+						foreach ( $grain_types_vocab as $grain_type_child ){
+							if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
+								$markup .= '<li class = "child"> '. $grain_type_child ->name . ' <span class ="grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</span></li>";
+								
+							}
+						}
+						
+						$markup .=  "</ul></li>"; // end li parent
+					}
+					
+				
+				$markup .= " </ul> ";
+				
+				$form['field_layer']['und'][0]['field_grain_type_display'] = array( 
+			  	'#type' => 'container',
+			  	'#weight' => '8',
+			  	'und' => array ( 
+			  	'markup' => array (
+			      '#markup' => '<div class = "grain-types-parent"><a href ="#" >Select Grain Type</a> '. $markup .'</div>',),
+				  ),	
+			  );
+				
 			// Done wiwth new / or / existing pit logic, now we do things to all pits
 			/*if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
 				$form['#attached']['js'][] = array(
@@ -621,6 +654,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/grain-types-dropdown.js',
 		);
+		
 	return $form;
 }
 
