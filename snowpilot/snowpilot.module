@@ -399,7 +399,10 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				
 			}
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
-			
+				dsm($form['field_layer']['und'][0]);	
+				
+				
+				//foreach( )
 			// Done wiwth new / or / existing pit logic, now we do things to all pits
 			/*if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
 				$form['#attached']['js'][] = array(
@@ -454,6 +457,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					
 				}
 				$form['#after_build'][] = 'snowpit_list_view_after_build';
+				
 			}	
 		break;
 		case 'user_profile_form':
@@ -595,20 +599,27 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 	// add the js to make lat and long negative if they should be.
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($form_state['node'],'node');  
 	
- if ( $form['field_latitude_type']['und']['#default_value'][0] == 'S' )	{
+  if ( $form['field_latitude_type']['und']['#default_value'][0] == 'S' )	{
 	 $form['#attached']['js'][] = array(
 	    'type' => 'file',
 	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_latitude.js',
-	  );}
- if ( $form['field_longitude_type']['und']['#default_value'][0] == 'W' ){
+	  );
+	}
+  if ( $form['field_longitude_type']['und']['#default_value'][0] == 'W' ){
 	 $form['#attached']['js'][] = array(
 	    'type' => 'file',
 	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_longitude.js',
-	  );}
-		
+	  );
+	}
+
 		$form['#attached']['js'][] = array(
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-existing-pit.js',
+		);
+		
+		$form['#attached']['js'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/js/grain-types-dropdown.js',
 		);
 	return $form;
 }
