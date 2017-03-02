@@ -432,7 +432,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			  	'#weight' => '8',
 			  	'und' => array ( 
 			  	'markup' => array (
-			      '#markup' => '<div class = "grain-types-parent"><a href ="#" >Select Grain Type</a> '. $markup .'</div>',),
+			      '#markup' => '<button class = "grain-types-parent" ><a href ="#" >Select Grain Type</a> '. $markup .'</button>',),
 				  ),	
 			  );
 				
@@ -653,6 +653,10 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 		$form['#attached']['js'][] = array(
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/grain-types-dropdown.js',
+		);
+		$form['#attached']['css'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/css/grain-types-dropdown.css',
 		);
 		
 	return $form;
