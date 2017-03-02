@@ -885,7 +885,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 				// calculate grain size string
 					$grain_size_string = isset($layer->field_grain_size['und']) ? $layer->field_grain_size['und'][0]['value'] : '' ;
-					if ( $layer->field_use_multiple_grain_size['und'][0]['value'] == '1' && isset( $layer->field_grain_size_max['und'][0]['value'])) $grain_size_string .= ' - ' . $layer->field_grain_size_max['und'][0]['value'];
+					if ( $layer->field_use_multiple_grain_size['und'][0]['value'] == '1' && isset( $layer->field_grain_size_max['und'][0]['value'])) $grain_size_string .= '-' . $layer->field_grain_size_max['und'][0]['value'];
 				
 				// Ouptut grain sizes
 					$textpos = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
@@ -1022,9 +1022,16 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				imageline($img, 14 , $y_val, 22, $y_val, $black);
 				imageline($img, 440, $y_val, 447, $y_val, $black);
 				
-				imagettftext($img, 10, 0, 456, $y_val+5, $black, $label_font, $x );
+				if ( abs($y_val - round(snowpit_graph_pixel_depth($pit_depth, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']))) > 10 ) { 
+					imagettftext($img, 10, 0, 456, $y_val+5, $black, $label_font, $x );
+				}
 				$x+=10;
 			}
+			$y_val = round(snowpit_graph_pixel_depth($pit_depth, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']));
+			// final HoS at top or bottom
+			  imageline($img, 440, $y_val, 447, $y_val, $black);
+			  imagettftext($img, 10, 0, 456,  $y_val+5, $black, $label_font, $pit_depth );
+			
 		
 			// Now we make the 5cm tick marks
 			$x = 5;
@@ -1075,7 +1082,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 	imageline($img, 483,140 , 483, 751 , $black); // left edge, first vert line
 	imageline($img, 511,140 , 511, 751 , $black); // beginning of crystal form column
 	imageline($img, 575,135, 575, 751, $black  ); //beginning of crystal size column
-	imageline($img, 620,140, 620, 751, $black  ); //beginning of crystal moisture column
+	imageline($img, 617,140, 617, 751, $black  ); //beginning of crystal moisture column
 	
 	
 	imagettftext($img, 10, 0 , 554, 122, $black ,$label_font, t("Crystal"));
