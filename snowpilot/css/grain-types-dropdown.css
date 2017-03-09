@@ -20,15 +20,24 @@
     background: rgba(0,0,0,.6);
 }
 
+.field-name-field-grain-type{
+	display: none;
+}
+
+
+
+#grain-types-modal{
+	width: 250px;
+	vertical-align:top;
+	top:50px;
+	padding: 0;
+}
+
 .scotch-modal
 {
     position: absolute;
     z-index: 9999;
-    top: 20%;
-    left: 80%;
-
-    opacity: 0;
-
+		display:none;
     width: 94%;
     padding: 2px;
 
@@ -210,4 +219,14 @@
 /* Show submenu to the right when dropdown item is hovered*/
 .dropdown-content .dropdown-item:hover>.dropright-content {
 	display: block;
+}
+
+
+.child-symbol{
+	width: 24%;
+	display: inline;
+}
+
+a.child div.the-name{
+	display: inline;
 }

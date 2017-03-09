@@ -1210,7 +1210,7 @@ body.not-logged-in #edit-uid-current-wrapper{
 #edit-actions2{
 	float: right;
 	position:relative;
-	z-index: 200;
+	z-index: 1;
 	clear: both;
 }
 
