@@ -18,21 +18,14 @@
 			
 			
       $('.field-name-field-grain-type').hide();
-			
-      $('ul.grain-types-groups').hide();
-			
-			//grainDropDown.appendChild(grainTypeSelectionContainer);
-
-			//var myModal = new Modal({
-			//  content: grainDropDown
-				//});
-
-			var triggerButton = document.getElementById('trigger');
-
-			//triggerButton.addEventListener('click', function() {
-			 // myModal.open();
-			//});
-			
+						
+			$('.layer_num_0 .parent-39 a.parent').click(function(){
+				var selected_tid = 39;
+				var selected_grain = 'x0799';
+				$('.layer_num_0 .grain-type-display').html('&#'+ selected_grain +';');
+				$('select#edit-field-layer-und-0-field-grain-type-und').val(selected_tid);
+			});
+		
     }    // end of attach
   };  //end of Drupal.behavior.snowpilot4
   
@@ -258,43 +251,7 @@ var CAAML_SHAPE = {
 var primaryGrainTypeList = ["Precipitation Particles", "Machine Made", "Decomposing/Fragmented", 
 	"Rounded Grains", "Faceted Crystals", "Depth Hoar", "Surface Hoar", "Melt Forms", "Ice Formations"];
 	
-/* 
-*	Create Dropdown Style List
-*/
-var grainDropDown = document.createElement("div");
 
-
-
-var grainTypeSelectionContainer = document.createElement("div");
-	grainTypeSelectionContainer.className = "dropdown-content";
-
-primaryGrainTypeList.forEach(function(e) {
-  var d = document.createElement("div");
-	d.className = "dropdown-item";
-	
-  var a = document.createElement("a");
-	a.textContent = e;
-	a.href = "#";
-  
-  var symbol = document.createElement("img");
-	symbol.setAttribute("src", "data:image/png;base64," + CAAML_SHAPE[e] );
-	
-  var subTypeContainer = document.createElement("div");
-	subTypeContainer.className = "dropright-content";
-	
-	/* Replace this with subtype array */
-	for (i = 0; i < 3; i++) {
-		var subA = document.createElement("a");
-			subA.textContent = "Subtype here";
-			subA.href = "#";
-		subTypeContainer.appendChild(subA);
-	}
-  
-  a.appendChild(symbol);
-  d.appendChild(a);
-  d.appendChild(subTypeContainer);
-  grainTypeSelectionContainer.appendChild(d);
-});
 
 
 
