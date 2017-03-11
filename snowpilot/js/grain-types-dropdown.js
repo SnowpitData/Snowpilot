@@ -24,7 +24,7 @@
 		
 		// Attach listener to detect user clicks in grain type modal popup
 		$('#grain-types-modal', context).once('modal_click_listener', function () {       
-			$('#grain-types-modal', context).delegate( 'a', 'click', function (event) {
+			$('#grain-types-modal', context).delegate( 'a.parent, a.child', 'click', function (event) {
 				
 				// Set div image in Layers Form
 				var selected_grain = $(this).children("div.grain-types").eq(0).html();
