@@ -176,7 +176,6 @@
             // if no HoS, extend and redraw grid by triggering event 
             SnowProfile.totalDepth += 20;
             $("#edit-field-total-height-of-snowpack-und-0-value").trigger("change");
-            console.log("Extending grid");
           }
         }
         SnowProfile.newLayer(newDepthNumber);

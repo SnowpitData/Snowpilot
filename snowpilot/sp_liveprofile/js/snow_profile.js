@@ -614,8 +614,6 @@ var SnowProfile = {};
    * that fixed, iterate down the snowpack.
    */
   SnowProfile.layout = function() {
-    console.log("INFO: In SnowProfile.layout()");
-    
     var height,
       i,
       featureBottom,
@@ -698,9 +696,9 @@ var SnowProfile = {};
    * @returns {object} data object for use with featObj.describe(data) method.
    */
   SnowProfile.getSnowPilotData = function (layerNum) {
-    console.log("INFO: In SnowProfile.getSnowPilotData(" + layerNum + ")");
-    var primaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-] > div > select")[0].value);
-    var primarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-]").val());
+	var primaryShapes = translateShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-]").val());
+    var primaryShape = primaryShapes[0];
+    var primarySubShape = primaryShapes[1];
     var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
     var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
     var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
@@ -744,7 +742,6 @@ var SnowProfile = {};
   };
   
   function translateShape(shapeCode) {
-    
     switch (shapeCode) {
       case "33":
         return "PP";
@@ -765,13 +762,125 @@ var SnowProfile = {};
         return "SH";
         break;
       case "39":
-        return "MF";
+        return ["MF",""];
         break;
       case "40":
         return "IF";
         break;
       case "41":
         return "MM";
+        break;
+	  // Start subshapes
+	  case "42":
+        return "PPco";
+        break;
+      case "43":
+        return "PPnd";
+        break;
+      case "44":
+        return "PPpl";
+        break;
+      case "45":
+        return "PPsd";
+        break;
+      case "46":
+        return "PPir";
+        break;
+      case "47":
+        return "PPgp";
+        break;
+      case "48":
+        return "PPhl";
+        break;
+      case "49":
+        return "PPip";
+        break;
+      case "50":
+        return "PPrm";
+        break;
+      case "78":
+        return "DFbk";
+        break;
+      case "79":
+        return "RGsr";
+        break;
+      case "80":
+        return "RGlr";
+        break;
+      case "81":
+        return "RGwp";
+        break;
+      case "82":
+        return "RGxf";
+        break;
+      case "83":
+        return "FCsf";
+        break;
+      case "84":
+        return "FCxr";
+        break;
+      case "85":
+        return "DHcp";
+        break;
+      case "86":
+        return "DHpr";
+        break;
+      case "87":
+        return "DHch";
+        break;
+      case "88":
+        return "DHla";
+        break;
+      case "89":
+        return "DHxr";
+        break;
+      case "90":
+        return "";
+        break;
+      case "91":
+        return "SHcv";
+        break;
+      case "92":
+        return "SHxr";
+        break;
+      case "93":
+        return "MFcl";
+        break;
+      case "94":
+        return "MFpc";
+        break;
+      case "95":
+        return "MFsl";
+        break;
+      case "96":
+        return "MFcr";
+        break;
+      case "97":
+        return "IFil";
+        break;
+      case "98":
+        return "IFic";
+        break;
+      case "99":
+        return "IFbi";
+        break;
+      case "100":
+        return "IFrc";
+        break;
+      case "101":
+        return "IFsc";
+        break;
+      case "102":
+        return "MMrp";
+        break;
+      case "103":
+        return "MMci";
+        break;
+      case "104":
+        return "DFdc";
+        break;
+      case "105":
+        return "FCso";
         break;
       default:
         return "";
@@ -907,7 +1016,6 @@ var SnowProfile = {};
    * @param {number} [testNum] The stability test number, starting at 0 for first test
    */
   SnowProfile.addStabilityTest = function (testNum) {
-    console.log("INFO: In SnowProfile.addStabilityTest(" + testNum + ")");
     var scoreType, scoreValue, testString;
     var testType = $("select[id^=edit-field-test-und-" + testNum + "-field-stability-test-type]").val();
     var shearQuality = $('select[id^=edit-field-test-und-' + testNum + '-field-shear-quality]').val();
@@ -924,11 +1032,9 @@ var SnowProfile = {};
     var testDepth = Number(testDepthString);
     // Set anything with no depth yet input to the top
     if (!testDepthString.length) {
-      console.log("No Test Depth Input");
       testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
       testDepthString = "";
     }
-    console.log("testDepth set to " + testDepth);
     
     switch(testType){
       case "ECT":
