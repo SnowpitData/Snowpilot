@@ -6,6 +6,7 @@
 */
 
 (function ($) {
+	var layerNum;
   // Behaviors related to Grain types dropdown
   Drupal.behaviors.snowpilot4 = {
     attach: function (context, settings) {
@@ -14,7 +15,6 @@
 		$('.field-name-field-grain-type').hide();
 				
 		// Attach listener to save layer number when modal is opened
-		var layerNum;
 		$('#edit-field-layer', context).once('grain_modal_layer', function () {       
 			$('#edit-field-layer', context).delegate( 'a#modal-trigger', 'click', function (event) {
 				var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
@@ -28,17 +28,18 @@
 				
 				// Set div image in Layers Form
 				var selected_grain = $(this).children("div.grain-types").eq(0).html();
-				$('.layer_num_' + layerNum + ' .grain-type-display').html(selected_grain);
+				$('div.layer_num_' + layerNum + ' div.grain-type-display').html(selected_grain);
 				
 				// Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
 				var tid = parseInt(selected_tid, 10);
 				
 				// Set value in old primary grain type select
-				$('#edit-field-layer-und-'+ layerNum + '-field-grain-type-und').val(tid);
+				var selector = 'select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-und"]';
+				$(selector).val(tid);
 				
 				// Fire event to update live profile
-				$('#edit-field-layer-und-'+ layerNum + '-field-grain-type-und').trigger('change');
+				$(selector).trigger('change');
 				
 				// Close modal window after click
 				$.modal.close();

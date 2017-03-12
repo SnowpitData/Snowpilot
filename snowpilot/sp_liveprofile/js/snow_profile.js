@@ -696,12 +696,15 @@ var SnowProfile = {};
    * @returns {object} data object for use with featObj.describe(data) method.
    */
   SnowProfile.getSnowPilotData = function (layerNum) {
-	var primaryShapes = translateShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-]").val());
+	var primaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-und"]').val());
     var primaryShape = primaryShapes[0];
     var primarySubShape = primaryShapes[1];
-    var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
-    var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
-    var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
+    //var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
+    //var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
+    var secondaryShape = "";
+	var secondarySubShape = "";
+	
+	var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
     if (sizeMin === "_none") {
       sizeMin = "";
     }
@@ -835,7 +838,7 @@ var SnowProfile = {};
         return ["DH","DHxr"];
         break;
       case "90":
-        return "";
+        return ["", ""];
         break;
       case "91":
         return ["SH","SHcv"];
@@ -883,126 +886,7 @@ var SnowProfile = {};
         return ["FC","FCso"];
         break;
       default:
-        return "";
-    }
-  }
-  
-  function translateSubShape(shapeCode) {
-    
-    switch (shapeCode) {
-      case "42":
-        return "PPco";
-        break;
-      case "43":
-        return "PPnd";
-        break;
-      case "44":
-        return "PPpl";
-        break;
-      case "45":
-        return "PPsd";
-        break;
-      case "46":
-        return "PPir";
-        break;
-      case "47":
-        return "PPgp";
-        break;
-      case "48":
-        return "PPhl";
-        break;
-      case "49":
-        return "PPip";
-        break;
-      case "50":
-        return "PPrm";
-        break;
-      case "78":
-        return "DFbk";
-        break;
-      case "79":
-        return "RGsr";
-        break;
-      case "80":
-        return "RGlr";
-        break;
-      case "81":
-        return "RGwp";
-        break;
-      case "82":
-        return "RGxf";
-        break;
-      case "83":
-        return "FCsf";
-        break;
-      case "84":
-        return "FCxr";
-        break;
-      case "85":
-        return "DHcp";
-        break;
-      case "86":
-        return "DHpr";
-        break;
-      case "87":
-        return "DHch";
-        break;
-      case "88":
-        return "DHla";
-        break;
-      case "89":
-        return "DHxr";
-        break;
-      case "90":
-        return "";
-        break;
-      case "91":
-        return "SHcv";
-        break;
-      case "92":
-        return "SHxr";
-        break;
-      case "93":
-        return "MFcl";
-        break;
-      case "94":
-        return "MFpc";
-        break;
-      case "95":
-        return "MFsl";
-        break;
-      case "96":
-        return "MFcr";
-        break;
-      case "97":
-        return "IFil";
-        break;
-      case "98":
-        return "IFic";
-        break;
-      case "99":
-        return "IFbi";
-        break;
-      case "100":
-        return "IFrc";
-        break;
-      case "101":
-        return "IFsc";
-        break;
-      case "102":
-        return "MMrp";
-        break;
-      case "103":
-        return "MMci";
-        break;
-      case "104":
-        return "DFdc";
-        break;
-      case "105":
-        return "FCso";
-        break;
-      default:
-        return "";
+        return ["",""];
     }
   }
   
