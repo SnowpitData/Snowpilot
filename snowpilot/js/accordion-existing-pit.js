@@ -6,10 +6,7 @@
 
 	attach: function (context, settings) {
 		
-		var tableSelector = "table[id^='field-layer-values'] > tbody";
-		
- 		//$('.form-field-type-field-collection table#field-layer-values > tbody').accordion({
-		$(tableSelector).accordion({
+		$( '.form-field-type-field-collection table.field-multiple-table > tbody').accordion({
  			 header: "h3",
  			 collapsible: true,
  			 active: false,
@@ -17,15 +14,11 @@
  		});
 		 
 		$('.horizontal-tabs-panes').once('accordion_ajax_toggle', function() {
-			//$( '.form-field-type-field-collection table#field-layer-values > tbody').accordion('option', 'active', -1);
-			$(tableSelector).accordion('option', 'active', -1);
-			
+			$( '.form-field-type-field-collection table.field-multiple-table > tbody').accordion('option', 'active', -1);
 			$(document).ajaxComplete(function() {
-				 //$( '.form-field-type-field-collection table#field-layer-values > tbody').accordion('option', 'active', -1);
-				 $(tableSelector).accordion('option', 'active', -1);
+				$( '.form-field-type-field-collection table.field-multiple-table > tbody').accordion('option', 'active', -1);
 			});
-			
-		});	
+		});
 		
 	} // end attach 
   } // end Drupal.behaviors.snowpilot3
