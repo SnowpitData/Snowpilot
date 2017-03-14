@@ -1,6 +1,5 @@
 /*
    Use this file for js functions related to , e.g., hiding select dropdown
-
 // Primary grain type needs to be changed to 'select list' from 'Hierarchical select' widget to properly hide using this-
 //  Also, this only works for first load, and on the first layer; Needs to be generalized.
 */

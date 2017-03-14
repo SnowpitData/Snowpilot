@@ -437,7 +437,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			  	'und' => array ( 
 			  	'markup' => array (
 			      '#markup' => '<a href = "#grain-types-modal" class = "modal-open" rel = "modal:open" id="modal-trigger" >Select Grain Type</a>'.
-							'<div class ="grain-type-display grain-types" >X</div> '. $markup .'',),
+							'<div class ="grain-type-display grain-types" > </div> '. $markup .'',),
 				  ),	
 			  );
 				
@@ -667,6 +667,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/jquery.modal.js',
 		);
+		
 		$form['#attached']['css'][] = array(
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/css/jquery.modal.css',
