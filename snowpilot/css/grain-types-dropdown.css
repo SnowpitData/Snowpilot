@@ -2,11 +2,30 @@
 	display: none;
 }
 
-.grain-type-display.grain-types{
-	font-size: 1.7em;
-	padding-left:35px;
+#content a.modal-open{
+	color: #3b6e8b;
+	text-decoration: underline;
+}
+
+.grain-type-primary-display-wrapper .field-suffix,
+.field-name-field-use-multiple-grain-type .field-suffix{
+	font-size: larger;
+	padding-right:45px;
 	vertical-align:middle;
 	display:inline-block;	
+	float: right;
+}
+
+.grain-type-primary-display-wrapper{
+	padding-top: 3px;
+	margin-top: 2px;
+	border-top: solid 1px #c87931;
+}
+.field-name-field-use-multiple-grain-type{
+	padding-bottom: 3px;
+	margin-bottom: 2px;
+	border-bottom: solid 1px #c87931;
+	
 }
 
 #grain-types-modal{

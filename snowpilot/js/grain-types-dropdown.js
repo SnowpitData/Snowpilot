@@ -12,6 +12,8 @@
 			
 		// Hide the old primary grain type select 
 		$('.field-name-field-grain-type').hide();
+		// Hide the secondary grain type select dropdown
+		$('.field-name-field-grain-type-secondary').hide();
 				
 		// Attach listener to save layer number when modal is opened
 		$('#edit-field-layer', context).once('grain_modal_layer', function () {       
@@ -27,7 +29,7 @@
 				
 				// Set div image in Layers Form
 				var selected_grain = $(this).children("div.grain-types").eq(0).html();
-				$('div.layer_num_' + layerNum + ' div.grain-type-display').html(selected_grain);
+				$('div.layer_num_' + layerNum + ' span.grain-type-primary-display').html(selected_grain);
 				
 				// Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
@@ -45,6 +47,31 @@
 				
 			});
 		});
+    //
+		// Secondary grain type
+		$('#grain-types-secondary-modal', context).once('modal_click_listener', function () {       
+			$('#grain-types-secondary-modal', context).delegate( 'a.parent, a.child', 'click', function (event) {
+				
+				// Set div image in Layers Form
+				var selected_grain = $(this).children("div.grain-types").eq(0).html();
+        $('div.layer_num_' + layerNum + ' span.grain-type-secondary-display').html(selected_grain);				
+				// Parse TID from class attribute
+				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
+				var tid = parseInt(selected_tid, 10);
+				
+				// Set value in old secondary grain type select
+				var selector = 'select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]';
+				$(selector).val(tid);
+				
+				// Fire event to update live profile
+				$(selector).trigger('change');
+				
+				// Close modal window after click
+				$.modal.close();
+				
+			});
+		});
+
 		
     }    // end of attach
   };  //end of Drupal.behavior.snowpilot4

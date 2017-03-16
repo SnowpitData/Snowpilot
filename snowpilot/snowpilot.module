@@ -672,18 +672,47 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			'data' => drupal_get_path('module', 'snowpilot'). '/css/jquery.modal.css',
 		);
 		
-		$layer_num = count ($form_state['values']['field_layer']['und'])- 2;
-		watchdog('snowpilot', var_export($layer_num,TRUE)) ;
+		$layer_num = count ($form_state['values']['field_layer']['und']) - 2;
  		$form['field_layer']['und'][$layer_num]['field_grain_type_select_link'] = array( 
+	  	'#type' => 'container',
+	  	'#weight' => '6',
+	  	'und' => array ( 
+	  	  'markup' => array (
+	        '#markup' => '<a href = "#grain-types-modal" class = "modal-open" rel = "modal:open" id="modal-trigger" >Click for Grain Types</a>
+					<span class ="grain-type-primary-display grain-types field-suffix" > </span> ',
+				),
+					
+		  ),	
+			'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
+			
+	  );
+		
+ 		$form['field_layer']['und'][$layer_num]['field_grain_type_secondary_select_link'] = array( 
 	  	'#type' => 'container',
 	  	'#weight' => '7',
 	  	'und' => array ( 
-	  	'markup' => array (
-	      '#markup' => '<a href = "#grain-types-modal" class = "modal-open" rel = "modal:open" id="modal-trigger" >Select Grain Type</a>'.
-					'<div class ="grain-type-display primary-grain-type grain-types" > </div> ',),
+	  	  'markup' => array (
+	        '#markup' => '<a href = "#grain-types-secondary-modal" class = "modal-open" rel = "modal:open" id="modal-trigger-secondary" >Secondary Grain Type</a> (optional)
+					<span class ="grain-type-secondary-display grain-types field-suffix" >X</span> ',
+				),
+					
 		  ),	
+			'#attributes' => array( 'class' => array('grain-type-secondary-display-wrapper') ),
+			
 	  );
 		
+		
+ 		$form['field_layer']['und'][$layer_num]['field_use_multiple_grain_type']['und']['#field_suffix'] = ' ';
+		
+ 		/*$form['field_layer']['und'][$layer_num]['field_grain_type_secondary_display'] = array( 
+	  	'#type' => 'container',
+	  	'#weight' => '8',
+	  	'und' => array ( 
+	  	'markup' => array (
+	      '#markup' => '<div class ="grain-type-secondary-display grain-types" >X</div> ',),
+		  ),	
+	  );
+		*/
 	return $form;
 }
 
