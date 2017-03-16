@@ -406,7 +406,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				//
 				//  _tid2snowsymbols($tid)  returns the unicode result from custom snowsymbols file.
 				//
-				
+				$markup = '';
 				$markup .= '<div class = "scotch-modal" id = "grain-types-modal" ><div class = "scotch-content dropdown">';
 				$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
 				foreach( $grain_types_vocab as $grain_type ){
@@ -436,8 +436,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			  	'#weight' => '7',
 			  	'und' => array ( 
 			  	'markup' => array (
-			      '#markup' => '<a href = "#grain-types-modal" class = "modal-open" rel = "modal:open" id="modal-trigger" >Select Grain Type</a>'.
-							'<div class ="grain-type-display grain-types" > </div> '. $markup .'',),
+			      '#markup' =>  $markup ,),
 				  ),	
 			  );
 				
@@ -672,6 +671,18 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/css/jquery.modal.css',
 		);
+		
+		$layer_num = count ($form_state['values']['field_layer']['und'])- 2;
+		watchdog('snowpilot', var_export($layer_num,TRUE)) ;
+ 		$form['field_layer']['und'][$layer_num]['field_grain_type_select_link'] = array( 
+	  	'#type' => 'container',
+	  	'#weight' => '7',
+	  	'und' => array ( 
+	  	'markup' => array (
+	      '#markup' => '<a href = "#grain-types-modal" class = "modal-open" rel = "modal:open" id="modal-trigger" >Select Grain Type</a>'.
+					'<div class ="grain-type-display primary-grain-type grain-types" > </div> ',),
+		  ),	
+	  );
 		
 	return $form;
 }
