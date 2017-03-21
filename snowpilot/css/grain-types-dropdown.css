@@ -4,25 +4,64 @@
 
 #content a.modal-open{
 	color: #3b6e8b;
-	text-decoration: underline;
+}
+
+#content .field-suffix a.modal-open{
+	color: #3b6e8b;
+}
+
+.grain-type-primary-display-wrapper,
+.grain-type-secondary-display-wrapper{
+	vertical-align:middle;
+	display:block;	
+	text-decoration: none;
 }
 
 .grain-type-primary-display-wrapper .field-suffix,
+.grain-type-secondary-display-wrapper .field-suffix,
 .field-name-field-use-multiple-grain-type .field-suffix{
-	font-size: larger;
+  font-size: 1.7em;
+
+
+}
+
+.grain-type-primary-display-wrapper .field-suffix,
+.grain-type-secondary-display-wrapper .field-suffix{
 	padding-right:45px;
-	vertical-align:middle;
-	display:inline-block;	
 	float: right;
 }
 
+.field-name-field-use-multiple-grain-type .field-suffix{
+	padding-right:0px;
+	width: 0;
+	float: right;
+}
+
+.button-like {
+  text-decoration: none;
+  background-color: #EEEEEE;
+  color: #333333;
+  padding: 2px 6px 2px 6px;
+  border-top: 1px solid #CCCCCC;
+  border-right: 1px solid #333333;
+  border-bottom: 1px solid #333333;
+  border-left: 1px solid #CCCCCC;
+	border-radius:7px;
+	-webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+	    -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+	    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+	
+}
+
 .grain-type-primary-display-wrapper{
-	padding-top: 3px;
+	padding-top: 7px;
 	margin-top: 2px;
 	border-top: solid 1px #c87931;
+	margin-bottom: 10px;
 }
+.grain-type-secondary-display-wrapper,
 .field-name-field-use-multiple-grain-type{
-	padding-bottom: 3px;
+	padding-bottom: 7px;
 	margin-bottom: 2px;
 	border-bottom: solid 1px #c87931;
 	

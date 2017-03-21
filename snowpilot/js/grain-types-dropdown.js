@@ -14,7 +14,19 @@
 		$('.field-name-field-grain-type').hide();
 		// Hide the secondary grain type select dropdown
 		$('.field-name-field-grain-type-secondary').hide();
+		// Hide 'use multiple grain types' checkbox 
+		//$('.field-name-field-use-multiple-grain-type').hide();
+		$('#edit-field-layer-und-0-field-use-multiple-grain-type-und').change(function(){
+		  if (this.checked) {
+				$('#grain-types-secondary-modal').modal();
+		  }else{
+		  	// unset the form item select list
+				// similar to setting it, but we don't know layer number ....
 				
+				// help joe
+				
+		  }
+		});
 		// Attach listener to save layer number when modal is opened
 		$('#edit-field-layer', context).once('grain_modal_layer', function () {       
 			$('#edit-field-layer', context).delegate( 'a#modal-trigger', 'click', function (event) {
@@ -49,7 +61,9 @@
 		});
     //
 		// Secondary grain type
-		$('#grain-types-secondary-modal', context).once('modal_click_listener', function () {       
+		
+		
+		$('#grain-types-secondary-modal', context).once('modal_click_listener_secondary', function () {       
 			$('#grain-types-secondary-modal', context).delegate( 'a.parent, a.child', 'click', function (event) {
 				
 				// Set div image in Layers Form

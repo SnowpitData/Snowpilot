@@ -400,11 +400,9 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			}
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
 				
-				$grain_types_vocab = taxonomy_get_tree('3');
-				dsm($grain_types_vocab);
-				
+				$grain_types_vocab = taxonomy_get_tree('3');				
 				//
-				//  _tid2snowsymbols($tid)  returns the unicode result from custom snowsymbols file.
+				//  
 				//
 				$markup = '';
 				$markup .= '<div class = "scotch-modal" id = "grain-types-modal" ><div class = "scotch-content dropdown">';
@@ -429,7 +427,31 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					$markup .= "</div>"; // end dropdown-content
 					
 				
+				$markup .= "</div> </div>";// end scotch modal wrappers
+				
+				//
+				//  begin secondary grain types dropdown modal
+				//
+				$markup .= '<div class = "scotch-modal" id = "grain-types-secondary-modal" ><div class = "scotch-content dropdown">';
+				$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
+
+					foreach ( $grain_type_groups as $grain_type_parent ){
+						$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+						foreach ( $grain_types_vocab as $grain_type_child ){
+							if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
+								$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+								
+							}
+						}
+						
+						$markup .=  "</div>"; // end dropright-content
+						$markup .= "</div>";  // end dropdown-item
+					}
+					$markup .= "</div>"; // end dropdown-content
+					
+				
 				$markup .= "</div> </div>";// scotch modal wrappers
+				// end secondary grain types modal dropdown
 				
 				$form['field_layer']['und'][0]['field_grain_type_display'] = array( 
 			  	'#type' => 'container',
@@ -673,36 +695,67 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 		);
 		
 		$layer_num = count ($form_state['values']['field_layer']['und']) - 2;
- 		$form['field_layer']['und'][$layer_num]['field_grain_type_select_link'] = array( 
-	  	'#type' => 'container',
-	  	'#weight' => '6',
-	  	'und' => array ( 
-	  	  'markup' => array (
-	        '#markup' => '<a href = "#grain-types-modal" class = "modal-open" rel = "modal:open" id="modal-trigger" >Click for Grain Types</a>
-					<span class ="grain-type-primary-display grain-types field-suffix" > </span> ',
-				),
-					
-		  ),	
-			'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
+		
+		
+		foreach ( $form_state['values']['field_layer']['und'] as $key => $layer ){
+			$primary_gt = '' ; $secondary_gt = '';
 			
-	  );
+			if ( is_numeric( $key ) && ( $layer_num <> $key )){ // this is a layer other than the current one ... give existing 
+				watchdog('snowpilot',  var_export($form['field_layer']['und'][$key]['field_grain_type']['und']['#default_value'] , TRUE) );
+				if ( isset( $form['field_layer']['und'][$key]['field_grain_type']['und']['#default_value'])) {
+					$primary_gt = _tid2snowsymbols($form['field_layer']['und'][$key]['field_grain_type']['und']['#default_value'][0]);
+				}
+				if ( isset( $form['field_layer']['und'][$key]['field_grain_type_secondary']['und']['#default_value'][0])) {
+					$secondary_gt = _tid2snowsymbols($form['field_layer']['und'][$key]['field_grain_type_secondary']['und']['#default_value'][0]);
+				}
+			 		$form['field_layer']['und'][$key]['field_grain_type_select_link'] = array( 
+				  	'#type' => 'container',
+				  	'#weight' => '6',
+				  	'und' => array ( 
+				  	  'markup' => array (
+				       '#markup' => '<a href = "#grain-types-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+							 Primary  <span class ="grain-type-primary-display grain-types" >'. $primary_gt  .'</span> </a> ',
+					   ),
+					 ),	
+					'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
+				);
+				
+		 		//$form['field_layer']['und'][$key]['field_grain_type_secondary_select_link'] = array( 
+					$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['#suffix']='<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+						 Secondary <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
+				
+
+			}elseif ( is_numeric( $key ) && ( $layer_num == $key ) ){ // this IS the current layer, let's use button-like css and suffix
+				
+		 		$form['field_layer']['und'][$layer_num]['field_grain_type_select_link'] = array( 
+			  	'#type' => 'container',
+			  	'#weight' => '5',
+			  	'und' => array ( 
+			  	  'markup' => array (
+			        '#markup' => '<a href = "#grain-types-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" ><b>Click</b> for Grain Type</a>
+							<span class ="grain-type-primary-display grain-types field-suffix" >'. $primary_gt  .'</span> ',
+						),
+				  ),	
+					'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
+			  );
+		 	/*	$form['field_layer']['und'][$layer_num]['field_grain_type_secondary_select_link'] = array( 
+			  	'#type' => 'container',
+			  	'#weight' => '7',
+			  	'und' => array ( 
+			  	  'markup' => array (
+			        '#markup' => '<a href = "#grain-types-secondary-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >Secondary Grain Type</a>
+							<span class ="grain-type-secondary-display grain-types field-suffix" >'. $secondary_gt  .'</span> ',
+						),
+				  ),	
+					'#attributes' => array( 'class' => array('grain-type-secondary-display-wrapper') ),
+			  );
+				*/
+			}
+		}
 		
- 		$form['field_layer']['und'][$layer_num]['field_grain_type_secondary_select_link'] = array( 
-	  	'#type' => 'container',
-	  	'#weight' => '7',
-	  	'und' => array ( 
-	  	  'markup' => array (
-	        '#markup' => '<a href = "#grain-types-secondary-modal" class = "modal-open" rel = "modal:open" id="modal-trigger-secondary" >Secondary Grain Type</a> (optional)
-					<span class ="grain-type-secondary-display grain-types field-suffix" >X</span> ',
-				),
-					
-		  ),	
-			'#attributes' => array( 'class' => array('grain-type-secondary-display-wrapper') ),
-			
-	  );
 		
-		
- 		$form['field_layer']['und'][$layer_num]['field_use_multiple_grain_type']['und']['#field_suffix'] = ' ';
+ 		$form['field_layer']['und'][$layer_num]['field_use_multiple_grain_type']['und']['#field_suffix'] = '<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+						 <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
 		
  		/*$form['field_layer']['und'][$layer_num]['field_grain_type_secondary_display'] = array( 
 	  	'#type' => 'container',
