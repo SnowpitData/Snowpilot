@@ -1971,8 +1971,10 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 		if ( isset ($test->field_length_of_saw_cut['und'][0]['value']) && 
 				isset( $test->field_length_of_isolated_col_pst['und'][0]['value'] ) && 
 				isset ($test->field_data_code_pst['und'][0]['value'])){
-			$string = 'PST'. $test->field_length_of_saw_cut ['und'][0]['value']."/". 
-				$test->field_length_of_isolated_col_pst['und'][0]['value'].
+					$length_of_saw_cut = $test->field_length_of_saw_cut ['und'][0]['value'] + 0 ;
+					$length_of_column = $test->field_length_of_isolated_col_pst['und'][0]['value'] + 0;
+			$string = 'PST'. $length_of_saw_cut ."/". 
+				$length_of_column .
 				" (". $test->field_data_code_pst['und'][0]['value']. ")". 
 				$fracture;
 		}else{ 
