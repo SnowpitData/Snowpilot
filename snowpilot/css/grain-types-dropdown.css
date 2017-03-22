@@ -19,22 +19,26 @@
 
 .grain-type-primary-display-wrapper .field-suffix,
 .grain-type-secondary-display-wrapper .field-suffix,
-.field-name-field-use-multiple-grain-type .field-suffix{
+.field-name-field-use-multiple-grain-type .field-suffix,
+.grain-type-primary-display .field-suffix,
+.grain-type-secondary-display .field-suffix{
   font-size: 1.7em;
-
-
+	float: right;
+	padding-right:25px;
+  vertical-align: middle;
 }
 
-.grain-type-primary-display-wrapper .field-suffix,
-.grain-type-secondary-display-wrapper .field-suffix{
-	padding-right:45px;
-	float: right;
+.grain-type-primary-display .field-suffix,
+.grain-type-secondary-display .field-suffix{
+	
 }
 
 .field-name-field-use-multiple-grain-type .field-suffix{
-	padding-right:0px;
-	width: 0;
+	padding-right: 5px;
 	float: right;
+	width: 0;
+	top: -3px;
+	position: relative;
 }
 
 .button-like {
@@ -67,12 +71,14 @@
 	
 }
 
-#grain-types-modal{
+#grain-types-modal,
+#grain-types-secondary-modal{
 	width: 250px;
 	vertical-align:top;
 	top:70px;
 	right:10%;
 	padding: 0;
+	border-radius: 0px;
 }
 
 /* Dropdown CSS */
@@ -83,7 +89,6 @@
 
 .dropdown-content {
     position: absolute;
-    left: 5px;
     background-color: #f9f9f9;
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);

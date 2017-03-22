@@ -701,8 +701,10 @@ var SnowProfile = {};
     var primarySubShape = primaryShapes[1];
     //var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
     //var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
-    var secondaryShape = "";
-	var secondarySubShape = "";
+	var secondaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]').val());
+		
+    var secondaryShape = secondaryShapes[0];
+	  var secondarySubShape = secondaryShapes[1];
 	
 	var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
     if (sizeMin === "_none") {

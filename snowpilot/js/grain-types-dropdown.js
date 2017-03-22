@@ -54,6 +54,8 @@
 				
 				// Fire event to update live profile
 				$(selector).trigger('change');
+				// don't try to go to the #id-value
+				event.preventDefault();
 				
 				// Close modal window after click
 				$.modal.close();
@@ -79,6 +81,8 @@
 				
 				// Fire event to update live profile
 				$(selector).trigger('change');
+				// don't follow link to the #id-value
+				event.preventDefault();
 				
 				// Close modal window after click
 				$.modal.close();
