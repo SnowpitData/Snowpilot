@@ -16,23 +16,24 @@
 		$('.field-name-field-grain-type-secondary').hide();
 		// Hide 'use multiple grain types' checkbox 
 		//$('.field-name-field-use-multiple-grain-type').hide();
-		$('#edit-field-layer-und-0-field-use-multiple-grain-type-und').change(function(){
-		  if (this.checked) {
-				$('#grain-types-secondary-modal').modal();
-		  }else{
-		  	// unset the form item select list
-				// similar to setting it, but we don't know layer number ....
-				
-				// help joe
-				
-		  }
-		});
+		
 		// Attach listener to save layer number when modal is opened
-		$('#edit-field-layer', context).once('grain_modal_layer', function () {       
+		$('#edit-field-layer', context).once('grain_modal_layer_listeners', function () {       
 			$('#edit-field-layer', context).delegate( 'a#modal-trigger', 'click', function (event) {
 				var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
 				layerNum = parseInt(layerString, 10);
 			});
+      
+      // Listener for secondary, also opens model if checkbox is checked
+      $('#edit-field-layer', context).delegate( "input[id*='field-use-multiple-grain-type-und']", 'change', function (event) {
+        var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
+				layerNum = parseInt(layerString, 10);
+        if (this.checked) {
+          $('#grain-types-secondary-modal').modal();
+        } else {
+          $('div.layer_num_' + layerNum + ' span.grain-type-secondary-display').html('');
+        }
+      });
 		});
 		
 		// Attach listener to detect user clicks in grain type modal popup
@@ -61,15 +62,14 @@
 		});
     //
 		// Secondary grain type
-		
-		
 		$('#grain-types-secondary-modal', context).once('modal_click_listener_secondary', function () {       
 			$('#grain-types-secondary-modal', context).delegate( 'a.parent, a.child', 'click', function (event) {
 				
 				// Set div image in Layers Form
 				var selected_grain = $(this).children("div.grain-types").eq(0).html();
         $('div.layer_num_' + layerNum + ' span.grain-type-secondary-display').html(selected_grain);				
-				// Parse TID from class attribute
+				
+        // Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
 				var tid = parseInt(selected_tid, 10);
 				
