@@ -43,7 +43,7 @@
 				// Set div image in Layers Form
 				var selected_grain = $(this).children("div.grain-types").eq(0).html();
 				$('div.layer_num_' + layerNum + ' span.grain-type-primary-display').html(selected_grain);
-				
+								
 				// Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
 				var tid = parseInt(selected_tid, 10);
@@ -69,7 +69,11 @@
 				
 				// Set div image in Layers Form
 				var selected_grain = $(this).children("div.grain-types").eq(0).html();
-        $('div.layer_num_' + layerNum + ' span.grain-type-secondary-display').html(selected_grain);				
+        $('div.layer_num_' + layerNum + ' span.grain-type-secondary-display').html(selected_grain);		
+				
+				// Set Secondary grain types checkbox		
+				
+				$('#edit-field-layer-und-' + layerNum + '-field-use-multiple-grain-type-und').prop('checked' , true);
 				
         // Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];

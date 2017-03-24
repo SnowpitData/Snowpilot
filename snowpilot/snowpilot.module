@@ -713,15 +713,15 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 				  	'und' => array ( 
 				  	  'markup' => array (
 				       '#markup' => '<a href = "#grain-types-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
-							 Primary  <span class ="grain-type-primary-display grain-types field-suffix" >'. $primary_gt  .'</span> </a> ',
+							 Primary grain type <span class ="grain-type-primary-display grain-types field-suffix" >'. $primary_gt  .'</span> </a> ',
 					   ),
 					 ),	
 					'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
 				);
-									
-					$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = $form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] .
-						'<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
-							<span class ="grain-type-secondary-display grain-types field-suffix" >'. $secondary_gt  .'</span> </a>'; 
+				$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = '';
+		 		$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#field_suffix'] = 
+					'<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+								 Secondary grain type <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
 
 			}elseif ( is_numeric( $key ) && ( $layer_num == $key ) ){ // this IS the current layer, let's use button-like css and suffix
 				
@@ -736,13 +736,14 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 				  ),	
 					'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
 			  );
-				
-		 		$form['field_layer']['und'][$layer_num]['field_use_multiple_grain_type']['und']['#field_suffix'] = '<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
-								 <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
+				$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = '';
+		 		$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#field_suffix'] = 
+					'<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+								 Secondary grain type <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
 			}
+
 		}
 		
-
 	return $form;
 }
 
