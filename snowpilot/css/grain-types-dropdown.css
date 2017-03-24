@@ -1,0 +1,176 @@
+.scotch-modal {
+	display: none;
+}
+
+#content a.modal-open{
+	color: #3b6e8b;
+}
+
+#content .field-suffix a.modal-open{
+	color: #3b6e8b;
+}
+
+.grain-type-primary-display-wrapper,
+.grain-type-secondary-display-wrapper{
+	vertical-align:middle;
+	display:block;	
+	text-decoration: none;
+}
+
+.grain-type-primary-display-wrapper .field-suffix,
+.grain-type-secondary-display-wrapper .field-suffix,
+.grain-type-primary-display,
+.grain-type-secondary-display{
+  font-size: 1.7em;
+	float: right;
+	padding-right:25px;
+  vertical-align: middle;
+}
+
+.grain-type-primary-display{
+	left: -18px;
+	position: relative;
+}
+
+.grain-type-secondary-display{
+	padding-right: 0px;
+}
+
+.grain-type-primary-display .field-suffix,
+.grain-type-secondary-display .field-suffix{
+	
+}
+
+.field-name-field-use-multiple-grain-type .field-suffix{
+	padding-right: 5px;
+	width: 180px;
+	position: relative;
+}
+
+.button-like {
+  text-decoration: none;
+  background-color: #EEEEEE;
+  color: #333333;
+  padding: 2px 6px 2px 6px;
+  border-top: 1px solid #CCCCCC;
+  border-right: 1px solid #333333;
+  border-bottom: 1px solid #333333;
+  border-left: 1px solid #CCCCCC;
+	border-radius:7px;
+	-webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+	    -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+	    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+	
+}
+
+.grain-type-primary-display-wrapper{
+	padding-top: 7px;
+	margin-top: 2px;
+	border-top: solid 1px #c87931;
+	margin-bottom: 10px;
+}
+.grain-type-secondary-display-wrapper,
+.field-name-field-use-multiple-grain-type{
+	padding-bottom: 7px;
+	margin-bottom: 2px;
+	border-bottom: solid 1px #c87931;
+	
+}
+
+#grain-types-modal,
+#grain-types-secondary-modal{
+	width: 250px;
+	vertical-align:top;
+	top:70px;
+	right:10%;
+	padding: 0;
+	border-radius: 0px;
+}
+
+/* Dropdown CSS */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-item{
+	max-height: 45px;
+}
+
+.dropright-content {
+	display: none;
+    position: absolute;
+	margin-left: 100%;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.parent-33 .dropright-content{
+	top: 0px;
+}
+.parent-34 .dropright-content{
+	top: 34px;
+}
+.parent-35 .dropright-content{
+	top: 69px;
+}
+.parent-36 .dropright-content{
+	top: 90px;
+}
+
+.parent-37 .dropright-content{
+	top: 93px;
+}
+.parent-38 .dropright-content{
+	top: 140px;
+}
+.parent-39 .dropright-content{
+	top: 128px;
+}
+.parent-40 .dropright-content{
+	top: 128px;
+}
+.parent-41 .dropright-content{
+	top: 160px;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a,.dropright-content a {
+    color: black;
+    padding: 3px 6px;
+    text-decoration: none;
+    display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover,.dropright-content a:hover {background-color: #f1f1f1}
+
+/* Show submenu to the right when dropdown item is hovered*/
+.dropdown-content .dropdown-item:hover>.dropright-content {
+	display: block;
+}
+
+.child-symbol,
+.parent-symbol{
+	width: 19%;
+	display: inline-block;
+	text-align: right;
+	vertical-align: top;
+	font-size: 1.2em;
+}
+
+a.child div.child-name,
+div.parent-name{
+	display: inline-block;
+	width:80%;
+}

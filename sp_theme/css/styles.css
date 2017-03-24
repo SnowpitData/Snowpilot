@@ -835,7 +835,8 @@ form.node-snowpit_profile-form #edit-field-loaction{
 
 .field-name-field-grain-type select,
 .field-name-field-grain-type-secondary select,
-#messages .messages{
+#messages .messages,
+.grain-types{
 	font-family: snowsymbols, Arial;
 	
 }
@@ -1209,7 +1210,7 @@ body.not-logged-in #edit-uid-current-wrapper{
 #edit-actions2{
 	float: right;
 	position:relative;
-	z-index: 200;
+	z-index: 1;
 	clear: both;
 }
 

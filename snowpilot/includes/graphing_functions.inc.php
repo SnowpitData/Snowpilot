@@ -523,7 +523,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 					) {$test->multiple += 1; $test_compare->multiple = 0;  unset($test_compare); continue 3;	}
 					break;
 					case 'RB':
-				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
+				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&  // update here in master
 					  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_release_type == $test_compare->field_release_type)
 					) {$test->multiple += 1; $test_compare->multiple =0;  unset($test_compare); continue 3;	}				

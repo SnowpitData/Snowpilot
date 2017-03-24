@@ -399,7 +399,69 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				
 			}
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
-			
+				
+				$grain_types_vocab = taxonomy_get_tree('3');				
+				//
+				//  
+				//
+				$markup = '';
+				$markup .= '<div class = "scotch-modal" id = "grain-types-modal" ><div class = "scotch-content dropdown">';
+				$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
+				foreach( $grain_types_vocab as $grain_type ){
+					if ($grain_type->parents[0] == 0 ){
+						$grain_type_groups[] = $grain_type;
+					}
+				}	
+					foreach ( $grain_type_groups as $grain_type_parent ){
+						$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+						foreach ( $grain_types_vocab as $grain_type_child ){
+							if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
+								$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+								
+							}
+						}
+						
+						$markup .=  "</div>"; // end dropright-content
+						$markup .= "</div>";  // end dropdown-item
+					}
+					$markup .= "</div>"; // end dropdown-content
+					
+				
+				$markup .= "</div> </div>";// end scotch modal wrappers
+				
+				//
+				//  begin secondary grain types dropdown modal
+				//
+				$markup .= '<div class = "scotch-modal" id = "grain-types-secondary-modal" ><div class = "scotch-content dropdown">';
+				$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
+
+					foreach ( $grain_type_groups as $grain_type_parent ){
+						$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+						foreach ( $grain_types_vocab as $grain_type_child ){
+							if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
+								$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+								
+							}
+						}
+						
+						$markup .=  "</div>"; // end dropright-content
+						$markup .= "</div>";  // end dropdown-item
+					}
+					$markup .= "</div>"; // end dropdown-content
+					
+				
+				$markup .= "</div> </div>";// scotch modal wrappers
+				// end secondary grain types modal dropdown
+				
+				$form['field_layer']['und'][0]['field_grain_type_display'] = array( 
+			  	'#type' => 'container',
+			  	'#weight' => '7',
+			  	'und' => array ( 
+			  	'markup' => array (
+			      '#markup' =>  $markup ,),
+				  ),	
+			  );
+				
 			// Done wiwth new / or / existing pit logic, now we do things to all pits
 			/*if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
 				$form['#attached']['js'][] = array(
@@ -454,6 +516,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					
 				}
 				$form['#after_build'][] = 'snowpit_list_view_after_build';
+				
 			}	
 		break;
 		case 'user_profile_form':
@@ -595,21 +658,92 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 	// add the js to make lat and long negative if they should be.
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($form_state['node'],'node');  
 	
- if ( $form['field_latitude_type']['und']['#default_value'][0] == 'S' )	{
+  if ( $form['field_latitude_type']['und']['#default_value'][0] == 'S' )	{
 	 $form['#attached']['js'][] = array(
 	    'type' => 'file',
 	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_latitude.js',
-	  );}
- if ( $form['field_longitude_type']['und']['#default_value'][0] == 'W' ){
+	  );
+	}
+  if ( $form['field_longitude_type']['und']['#default_value'][0] == 'W' ){
 	 $form['#attached']['js'][] = array(
 	    'type' => 'file',
 	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_longitude.js',
-	  );}
-		
+	  );
+	}
+
 		$form['#attached']['js'][] = array(
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-existing-pit.js',
 		);
+		
+		$form['#attached']['js'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/js/grain-types-dropdown.js',
+		);
+		$form['#attached']['css'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/css/grain-types-dropdown.css',
+		);
+		$form['#attached']['js'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/js/jquery.modal.js',
+		);
+		
+		$form['#attached']['css'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/css/jquery.modal.css',
+		);
+		
+		$layer_num = count ($form_state['values']['field_layer']['und']) - 2;
+		
+		
+		foreach ( $form_state['values']['field_layer']['und'] as $key => $layer ){
+			$primary_gt = '' ; $secondary_gt = '';
+			if ( isset( $form['field_layer']['und'][$key]['field_grain_type']['und']['#default_value'][0]) ) {
+				$primary_gt = _tid2snowsymbols($form['field_layer']['und'][$key]['field_grain_type']['und']['#default_value'][0]);
+			}
+			if ( isset( $form['field_layer']['und'][$key]['field_grain_type_secondary']['und']['#default_value'][0])) {
+				$secondary_gt = _tid2snowsymbols($form['field_layer']['und'][$key]['field_grain_type_secondary']['und']['#default_value'][0]);
+			}			
+			if ( is_numeric( $key ) && ( $layer_num <> $key )){ // this is a layer other than the current one ... give existing 
+
+			 		$form['field_layer']['und'][$key]['field_grain_type_select_link'] = array( 
+				  	'#type' => 'container',
+				  	'#weight' => '5',
+				  	'und' => array ( 
+				  	  'markup' => array (
+				       '#markup' => '<a href = "#grain-types-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+							 Primary grain type <span class ="grain-type-primary-display grain-types field-suffix" >'. $primary_gt  .'</span> </a> ',
+					   ),
+					 ),	
+					'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
+				);
+				$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = '';
+		 		$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#field_suffix'] = 
+					'<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+								 Secondary grain type <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
+
+			}elseif ( is_numeric( $key ) && ( $layer_num == $key ) ){ // this IS the current layer, let's use button-like css and suffix
+				
+		 		$form['field_layer']['und'][$layer_num]['field_grain_type_select_link'] = array( 
+			  	'#type' => 'container',
+			  	'#weight' => '5',
+			  	'und' => array ( 
+			  	  'markup' => array (
+			        '#markup' => '<a href = "#grain-types-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" ><b>Click</b> for Grain Type
+							<span class ="grain-type-primary-display grain-types field-suffix" >'. $primary_gt  .'</span></a> ',
+						),
+				  ),	
+					'#attributes' => array( 'class' => array('grain-type-primary-display-wrapper') ),
+			  );
+				$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = '';
+		 		$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#field_suffix'] = 
+					'<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+								 Secondary grain type <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
+			}
+
+		}
+		
 	return $form;
 }
 
@@ -1815,8 +1949,10 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 		if ( isset ($test->field_length_of_saw_cut['und'][0]['value']) && 
 				isset( $test->field_length_of_isolated_col_pst['und'][0]['value'] ) && 
 				isset ($test->field_data_code_pst['und'][0]['value'])){
-			$string = 'PST'. $test->field_length_of_saw_cut ['und'][0]['value']."/". 
-				$test->field_length_of_isolated_col_pst['und'][0]['value'].
+					$length_of_saw_cut = $test->field_length_of_saw_cut ['und'][0]['value'] + 0 ;
+					$length_of_column = $test->field_length_of_isolated_col_pst['und'][0]['value'] + 0;
+			$string = 'PST'. $length_of_saw_cut ."/". 
+				$length_of_column .
 				" (". $test->field_data_code_pst['und'][0]['value']. ")". 
 				$fracture;
 		}else{ 

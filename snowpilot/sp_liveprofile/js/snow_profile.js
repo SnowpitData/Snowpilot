@@ -614,8 +614,6 @@ var SnowProfile = {};
    * that fixed, iterate down the snowpack.
    */
   SnowProfile.layout = function() {
-    console.log("INFO: In SnowProfile.layout()");
-    
     var height,
       i,
       featureBottom,
@@ -698,12 +696,17 @@ var SnowProfile = {};
    * @returns {object} data object for use with featObj.describe(data) method.
    */
   SnowProfile.getSnowPilotData = function (layerNum) {
-    console.log("INFO: In SnowProfile.getSnowPilotData(" + layerNum + ")");
-    var primaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-] > div > select")[0].value);
-    var primarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-]").val());
-    var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
-    var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
-    var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
+	var primaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-und"]').val());
+    var primaryShape = primaryShapes[0];
+    var primarySubShape = primaryShapes[1];
+    //var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
+    //var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
+	var secondaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]').val());
+		
+    var secondaryShape = secondaryShapes[0];
+	  var secondarySubShape = secondaryShapes[1];
+	
+	var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
     if (sizeMin === "_none") {
       sizeMin = "";
     }
@@ -744,156 +747,148 @@ var SnowProfile = {};
   };
   
   function translateShape(shapeCode) {
-    
     switch (shapeCode) {
       case "33":
-        return "PP";
+        return ["PP",""];
         break;
       case "34":
-        return "DF";
+        return ["DF",""];
         break;
       case "35":
-        return "RG";
+        return ["RG",""];
         break;
       case "36":
-        return "FC";
+        return ["FC",""];
         break;
       case "37":
-        return "DH";
+        return ["DH",""];
         break;
       case "38":
-        return "SH";
+        return ["SH",""];
         break;
       case "39":
-        return "MF";
+        return ["MF",""];
         break;
       case "40":
-        return "IF";
+        return ["IF",""];
         break;
       case "41":
-        return "MM";
+        return ["MM",""];
         break;
-      default:
-        return "";
-    }
-  }
-  
-  function translateSubShape(shapeCode) {
-    
-    switch (shapeCode) {
-      case "42":
-        return "PPco";
+	  // Start subshapes
+	  case "42":
+        return ["PP","PPco"];
         break;
       case "43":
-        return "PPnd";
+        return ["PP","PPnd"];
         break;
       case "44":
-        return "PPpl";
+        return ["PP","PPpl"];
         break;
       case "45":
-        return "PPsd";
+        return ["PP","PPsd"];
         break;
       case "46":
-        return "PPir";
+        return ["PP","PPir"];
         break;
       case "47":
-        return "PPgp";
+        return ["PP","PPgp"];
         break;
       case "48":
-        return "PPhl";
+        return ["PP","PPhl"];
         break;
       case "49":
-        return "PPip";
+        return ["PP","PPip"];
         break;
       case "50":
-        return "PPrm";
+        return ["PP","PPrm"];
         break;
       case "78":
-        return "DFbk";
+        return ["DF","DFbk"];
         break;
       case "79":
-        return "RGsr";
+        return ["RG","RGsr"];
         break;
       case "80":
-        return "RGlr";
+        return ["RG","RGlr"];
         break;
       case "81":
-        return "RGwp";
+        return ["RG","RGwp"];
         break;
       case "82":
-        return "RGxf";
+        return ["RG","RGxf"];
         break;
       case "83":
-        return "FCsf";
+        return ["FC","FCsf"];
         break;
       case "84":
-        return "FCxr";
+        return ["FC","FCxr"];
         break;
       case "85":
-        return "DHcp";
+        return ["DH","DHcp"];
         break;
       case "86":
-        return "DHpr";
+        return ["DH","DHpr"];
         break;
       case "87":
-        return "DHch";
+        return ["DH","DHch"];
         break;
       case "88":
-        return "DHla";
+        return ["DH","DHla"];
         break;
       case "89":
-        return "DHxr";
+        return ["DH","DHxr"];
         break;
       case "90":
-        return "";
+        return ["", ""];
         break;
       case "91":
-        return "SHcv";
+        return ["SH","SHcv"];
         break;
       case "92":
-        return "SHxr";
+        return ["SH","SHxr"];
         break;
       case "93":
-        return "MFcl";
+        return ["MF","MFcl"];
         break;
       case "94":
-        return "MFpc";
+        return ["MF","MFpc"];
         break;
       case "95":
-        return "MFsl";
+        return ["MF","MFsl"];
         break;
       case "96":
-        return "MFcr";
+        return ["MF","MFcr"];
         break;
       case "97":
-        return "IFil";
+        return ["IF","IFil"];
         break;
       case "98":
-        return "IFic";
+        return ["IF","IFic"];
         break;
       case "99":
-        return "IFbi";
+        return ["IF","IFbi"];
         break;
       case "100":
-        return "IFrc";
+        return ["IF","IFrc"];
         break;
       case "101":
-        return "IFsc";
+        return ["IF","IFsc"];
         break;
       case "102":
-        return "MMrp";
+        return ["MM","MMrp"];
         break;
       case "103":
-        return "MMci";
+        return ["MM","MMci"];
         break;
       case "104":
-        return "DFdc";
+        return ["DF","DFdc"];
         break;
       case "105":
-        return "FCso";
+        return ["FC","FCso"];
         break;
       default:
-        return "";
+        return ["",""];
     }
   }
   
@@ -907,7 +902,6 @@ var SnowProfile = {};
    * @param {number} [testNum] The stability test number, starting at 0 for first test
    */
   SnowProfile.addStabilityTest = function (testNum) {
-    console.log("INFO: In SnowProfile.addStabilityTest(" + testNum + ")");
     var scoreType, scoreValue, testString;
     var testType = $("select[id^=edit-field-test-und-" + testNum + "-field-stability-test-type]").val();
     var shearQuality = $('select[id^=edit-field-test-und-' + testNum + '-field-shear-quality]').val();
@@ -924,11 +918,9 @@ var SnowProfile = {};
     var testDepth = Number(testDepthString);
     // Set anything with no depth yet input to the top
     if (!testDepthString.length) {
-      console.log("No Test Depth Input");
       testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
       testDepthString = "";
     }
-    console.log("testDepth set to " + testDepth);
     
     switch(testType){
       case "ECT":
