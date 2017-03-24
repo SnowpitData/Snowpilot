@@ -31,7 +31,13 @@
         if (this.checked) {
           $('#grain-types-secondary-modal').modal();
         } else {
+          // Clear grain type image from the form
           $('div.layer_num_' + layerNum + ' span.grain-type-secondary-display').html('');
+          // Clear grain type from live profile 
+          var selector = 'select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]';
+          $(selector).val("_none");
+          // Fire event to update live profile
+          $(selector).trigger('change');
         }
       });
 		});
