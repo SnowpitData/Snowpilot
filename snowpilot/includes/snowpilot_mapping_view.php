@@ -1,14 +1,21 @@
 <?php
 $nid = arg(1);
 $node = node_load($nid);
-if ( isset ( $node->field_latitude['und'][0]['value'])){
-     $latitude = $node->field_latitude['und'][0]['value'];
-     if ( $node->field_latitude_type['und'][0]['value'] == 'S' && $latitude > 0) $latitude = 0 - $latitude ;
-} else { $latitude = ''; }
-if ( isset ( $node->field_longitude['und'][0]['value'])){
-     $longitude = $node->field_longitude['und'][0]['value'];
-     if ( $node->field_longitude_type['und'][0]['value'] == 'W' && $longitude > 0) $longitude = 0 - $longitude ;
-}else { $longitude = '';  }
+$longitude = ''; $latitude = '';
+
+
+if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && isset( $node->field_east['und'][0]['value'] ) 
+&& isset( $node->field_north['und'][0]['value'] ) && isset ( $node->field_utm_zone['und'][0]['value'] )){
+	
+	$latlong = Toll( $node->field_north['und'][0]['value'] , $node->field_east['und'][0]['value'], $node->field_utm_zone['und'][0]['value'] );
+	
+	$latitude = $latlong['lat'];
+	$longitude = $latlong['lon'];
+}elseif ( isset ( $node->field_latitude['und'][0]['value'] ) && isset( $node->field_longitude['und'][0]['value']) ){ // if the user set the gmap location ( lat long ) on an older snowpit, this will still work. 
+		$latitude = $node->field_latitude['und'][0]['value'];
+		$longitude = $node->field_longitude['und'][0]['value'];
+	
+}
 ?>
 
 
@@ -39,3 +46,4 @@ if ( isset ( $node->field_longitude['und'][0]['value'])){
 
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIqPh8YaNVnoRZex5LfxLUPnYbFrCaQN0&callback=initMap" async defer></script>
+

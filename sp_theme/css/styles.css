@@ -651,6 +651,7 @@ input#edit-field-elevation-und-0-value{
 #edit-field-ski-penetration,
 #edit-field-precipitation{
 	display: inline-block;
+	vertical-align: top;
 }
 
 #edit-field-slope-angle,
@@ -997,6 +998,44 @@ form.node-snowpit_profile-form label{
 form.node-snowpit_profile-form .group-core-info label{
 	display: inline-block;
 }
+
+form.node-snowpit_profile-form .group-core-info .form-item-field-100-km-grid-square-id-und-0-value label,
+form.node-snowpit_profile-form .group-core-info .form-item-field-east-und-0-value label,
+form.node-snowpit_profile-form .group-core-info .form-item-field-north-und-0-value label,
+form.node-snowpit_profile-form .group-core-info .form-item-field-mgrs-easting-und-0-value label,
+form.node-snowpit_profile-form .group-core-info .form-item-field-mgrs-northing-und-0-value label,
+form.node-snowpit_profile-form .group-core-info .form-item-field-utm-zone-und label{
+	display: block;
+}
+
+form.node-snowpit_profile-form #edit-field-utm-zone,
+form.node-snowpit_profile-form #edit-field-100-km-grid-square-id,
+form.node-snowpit_profile-form #edit-field-mgrs-easting,
+form.node-snowpit_profile-form #edit-field-mgrs-northing,
+form.node-snowpit_profile-form #edit-field-east,
+form.node-snowpit_profile-form #edit-field-north{
+	display: inline-block;
+	padding-right: 8px;
+	
+	
+}
+
+.group-utm-mgrs{
+	padding-bottom: 4px;
+	border-top: 2px solid #c87931;
+	border-bottom: 2px solid #c87931;
+}
+#edit-field-total-height-of-snowpack{
+	border-top: 2px solid #c87931;
+}
+
+/*  
+    override the oabove for MGRS
+*/
+
+
+
+
 
 form.node-snowpit_profile-form .form-item-field-latitude-und-0-value label,
 form.node-snowpit_profile-form .form-item-field-longitude-und-0-value label{

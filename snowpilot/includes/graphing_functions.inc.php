@@ -523,7 +523,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 					) {$test->multiple += 1; $test_compare->multiple = 0;  unset($test_compare); continue 3;	}
 					break;
 					case 'RB':
-				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&  // update here in master
+				  if (( $test->field_stability_test_score_rb == $test_compare->field_stability_test_score_rb) &&  
 					  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_release_type == $test_compare->field_release_type)
 					) {$test->multiple += 1; $test_compare->multiple =0;  unset($test_compare); continue 3;	}				
@@ -685,7 +685,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			strtotime($node->field_date_time['und'][0]['value']))); //Date / Time of observation
 			//dsm($node->field_date_time);
 			$text_pos = imagettftext($img, 11, 0, 193, 53, $black, $label_font, "Co-ord: ");
-			if ($snowpit_unit_prefs['field_coordinate_type'] != 'UTM'){
+			if ($snowpit_unit_prefs['field_coordinate_type'] == 'lat_long'){
 				if (isset($node->field_latitude['und']) && isset($node->field_longitude['und'])){
 					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
 						number_format($node->field_latitude['und'][0]['value'] , 5).
@@ -693,7 +693,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						number_format($node->field_longitude['und'][0]['value'] , 5).
 						$node->field_longitude_type['und'][0]['value']);
 				}
-			}else{ // Not Lat long, their preference is UTM
+			}elseif ( $snowpit_unit_prefs['field_coordinate_type'] == 'UTM' ){ // Not Lat long, their preference is UTM
 				if(isset($node->field_east['und']) && isset($node->field_north['und'])){
 					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
 						$node->field_utm_zone['und'][0]['value'].' '.
@@ -703,6 +703,17 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					  $node->field_latitude_type['und'][0]['value']
 				  );
 				}
+			}elseif ($snowpit_unit_prefs['field_coordinate_type'] == 'MGRS'){
+				if(isset($node->field_mgrs_easting['und']) && isset($node->field_mgrs_northing['und'])){
+					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
+						$node->field_utm_zone['und'][0]['value'].' '.
+						$node->field_100_km_grid_square_id['und'][0]['value'].' '.
+						$node->field_mgrs_easting['und'][0]['value'] .' '.
+					  $node->field_mgrs_northing['und'][0]['value'] 
+				  );
+				}
+				
+				
 			}
 			
 			$text_pos = imagettftext($img, 11, 0, 193, 71, $black, $label_font, "Slope Angle: ");
