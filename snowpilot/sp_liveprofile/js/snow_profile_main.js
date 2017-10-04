@@ -349,8 +349,7 @@
           userInput = userInput.replace(/,/g, ".");
             
           // Top Depth was changed
-          if($(this).parents('.field-name-field-height').length)
-          {
+          if($(this).parents('.field-name-field-height').length) {
             // Update layer depth value
             if (SnowProfile.depthRef === "s") 
               SnowProfile.snowLayers[layerNum].depth(userInput);
@@ -366,8 +365,7 @@
             SnowProfile.layout();
           }
           // Bottom Depth was changed
-          if($(this).parents('.field-name-field-bottom-depth').length)
-          {
+          if($(this).parents('.field-name-field-bottom-depth').length) {
             // If not last (now hidden) layer, update the layer below depth value
             if((layerNum + 1) != SnowProfile.snowLayers.length){
               if (SnowProfile.depthRef === "s") 
@@ -384,6 +382,15 @@
               SnowProfile.snowLayers[layerNum].draw();
             }
             SnowProfile.layout();
+          }
+          // Multiple grain size checkbox
+          if($(this).parents('.field-name-field-use-multiple-grain-size').length) {
+            // When unchecked, set 2nd grain size dropdown to 0 to clear live profile
+            if(!this.checked) {
+              var selector = `edit-field-layer-und-${layerNum}-field-grain-size-max-und`;
+              $("[id^='" + selector + "']").val("_none");
+              $("[id^='" + selector + "']").trigger("change");
+            }
           }
           // Stop Event 
           event.stopPropagation();
