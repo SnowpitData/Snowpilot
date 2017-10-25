@@ -1487,7 +1487,9 @@ body.node-type-snowpit-profile{
 	color: #fcfcfc;
 	font-size: 1.1em;
 }
-
+.view-snowpit-list .view-header{
+	padding-left: 15px;
+}
 
 .view-snowpit-list table td > div.views-field-title,
 .view-new-test-search table td > div.views-field-title{

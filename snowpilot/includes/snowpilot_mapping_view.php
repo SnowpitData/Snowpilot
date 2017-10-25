@@ -25,7 +25,6 @@ if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && isset( $node-
     <script>
       function initMap() {
         var myLatLng = {lat: <?php echo $latitude  ?>, lng: <?php  echo $longitude; ?>};
-        var myLatLng2 = {lat: 45.63, lng: -110.74};
         
         // Create a map object and specify the DOM element for display.
         var map = new google.maps.Map(document.getElementById('map'), {
@@ -40,7 +39,7 @@ if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && isset( $node-
         var marker = new google.maps.Marker({
           map: map,
           position: myLatLng,
-          title: '<?php echo $node->nid; ?>'
+          title: '<?php echo $node->title; ?>'
         });
       }
 

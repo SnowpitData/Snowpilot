@@ -714,6 +714,10 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/geo_utils/mgrs.js',
 		);		
+		$form['#attached']['js'][] = array(
+			'type' => 'file',
+			'data' => drupal_get_path('module', 'snowpilot'). '/js/geographic-scripts.js',
+		);		
 		
 		$layer_num = count ($form_state['values']['field_layer']['und']) - 2;
 		
@@ -1100,6 +1104,7 @@ function snowpilot_entity_presave($entity, $type){
 
 function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	// Add serverside validation for stability tests
+	dsm($form_state['values']['field_mgrs_easting']);
 	foreach( $form_state['values']['field_test']['und'] as $key => $test){
 		if ( isset( $test['field_depth']['und'][0]['value'])){
 		  $test['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $test['field_depth']['und'][0]['value']);
