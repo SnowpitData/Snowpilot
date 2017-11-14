@@ -951,6 +951,20 @@ var SnowProfile = {};
           testString = scoreType + scoreValue + ", " + shearQuality + " @ " + testDepthString;
         }
         break;
+      case "DT":
+        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-deep-tap-test-score]').val();
+        scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-dt-score]').val();
+        if (scoreType === "_none") {
+          testString = testType + " @ " + testDepthString;
+        } else if (scoreType === "DTV") {
+          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
+        } else if (scoreType === "DTN") {
+          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
+          testString = scoreType;
+        } else {
+          testString = scoreType + scoreValue + ", " + shearQuality + " @ " + testDepthString;
+        }
+        break;
       case "RB":
         scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-rb]').val();
         scoreValue = "";

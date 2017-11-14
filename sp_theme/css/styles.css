@@ -652,6 +652,7 @@ input#edit-field-elevation-und-0-value{
 #edit-field-precipitation{
 	display: inline-block;
 	vertical-align: top;
+	padding-bottom: 4px;
 }
 
 #edit-field-slope-angle,
@@ -715,7 +716,7 @@ fieldset.group-location legend span,
 fieldset.group-weather legend span{
 	padding-right: 27px;
 	padding-left: 27px;
-	
+	background-color: #fff;
 }
 
 form.node-snowpit_profile-form .fieldset-wrapper{
@@ -1246,8 +1247,13 @@ body.not-logged-in #edit-uid-current-wrapper{
     width: 220px;
 }
 
+form.node-snowpit_profile-form .vertical-tabs{
+	margin-right: 350px;
+}
+
 #edit-actions2{
 	float: right;
+	margin-right: 300px;
 	position:relative;
 	z-index: 1;
 	clear: both;
@@ -1536,7 +1542,7 @@ body.node-type-snowpit-profile{
 }
 
 .region-bottom{
-	min-height: 50px;
+	min-height: 500px;
 	/*background: #1b2d3d; /* Old browsers */
 	/*background: -moz-linear-gradient(top, #1e506d 0%,#112f40 100%); /* FF3.6-15 */
 	/*background: -webkit-linear-gradient(top, #1e506d 0%,#112f40 100%); /* Chrome10-25,Safari5.1-6 */

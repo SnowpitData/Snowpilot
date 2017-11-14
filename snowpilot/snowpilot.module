@@ -312,18 +312,6 @@ function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 	$user_agent = $_SERVER['HTTP_USER_AGENT'];
-	if ( strpos($user_agent , 'Mac OS X') && ( strpos($user_agent , 'Chrome') || strpos($user_agent , 'Safari') ) ){
-		if ( (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'snowpit-profile') || arg(0) == 'user' ){
-			drupal_set_message("You are using Mac OSX in combination with Safari or Chrome. 
-				<p>Firefox is the recommended browser for Mac OSX because the 'grain type symbols' display correctly in the dropdown list of the 'Add New Snowpit' form.
-				 <p>Note that the grain types will be displayed properly in all other settings, such as the 'live profile' section, and on the final graph.
-			   <p>However, for the best user experience, it is recommended that you swith to using Firefox.", 'warning');
-			
-		}
-		
-		
-		
-	}
 	
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
@@ -1104,7 +1092,6 @@ function snowpilot_entity_presave($entity, $type){
 
 function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	// Add serverside validation for stability tests
-	dsm($form_state['values']['field_mgrs_easting']);
 	foreach( $form_state['values']['field_test']['und'] as $key => $test){
 		if ( isset( $test['field_depth']['und'][0]['value'])){
 		  $test['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $test['field_depth']['und'][0]['value']);
@@ -1152,6 +1139,13 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 						}  // end if ct score is not empty
 		      } // end "if" we have full CT test results
           break;
+					case 'DT':
+			      if ( !isset( $test['field_deep_tap_test_score']['und'][0]['value']  ) || ($test['field_deep_tap_test_score']['und'][0]['value'] == '' ) ){
+						   	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_deep_tap_test_score", "Please enter a Deep Tap test score result.");
+						}elseif( (!isset($test['field_depth']['und'][0]['value']) || $test['field_depth']['und'][0]['value'] == '') &&  $test['field_deep_tap_test_score']['und'][0]['value'] <> 'DTN' ){ 
+							form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , "Please enter a value for depth.");
+						}
+					break;
 					case 'RB':
 				    if ( $test['field_stability_test_score_rb']['und'][0]['value'] == ''  ) {
 				  		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_rb", "Please enter a Rutschblock test result.");
@@ -1198,6 +1192,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 				//  Check to see if test depth is inside pit depth
 				//
 				if ( ( ( isset ( $test['field_stability_test_score_ct']['und'][0]['value'] )  && $test['field_stability_test_score_ct']['und'][0]['value'] <> 'CTN' && $test['field_stability_test_type']['und'][0]['value'] == 'CT' )
+					|| ( isset ( $test['field_deep_tap_test_score']['und'][0]['value'] )  && $test['field_deep_tap_test_score']['und'][0]['value'] <> 'DTN' && $test['field_deep_tap_test_score']['und'][0]['value'] == 'DT' )
 					|| ( isset ( $test['field_stability_test_score_ect']['und'][0]['value'] )  && $test['field_stability_test_score_ect']['und'][0]['value'] <> 'ECTX' && $test['field_stability_test_type']['und'][0]['value'] == 'ECT' )
 					||	(isset ( $test['field_stability_test_score_rb']['und'][0]['value'] ) && $test['field_stability_test_score_rb']['und'][0]['value'] <> 'RB7' && $test['field_stability_test_type']['und'][0]['value'] == 'RB' )
 					|| ( isset ($test['field_stability_test_score_st']['und'][0]['value'] ) && $test['field_stability_test_score_st']['und'][0]['value'] <> 'STN' && $test['field_stability_test_type']['und'][0]['value'] == 'ST' )
@@ -1378,7 +1373,8 @@ function _set_test_result_single($test_result){
 		case 'ECT':	return $test_result->field_stability_test_score_ect['und'][0]['value'];
 		break;
 		case 'CT':	return $test_result->field_stability_test_score_ct['und'][0]['value'];
-		
+		break;
+		case 'DT':	return $test_result->field_deep_tap_test_score['und'][0]['value'];
 		break;
 		case 'RB':	return $test_result->field_stability_test_score_rb['und'][0]['value'];
 		
@@ -1406,7 +1402,7 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 		if (isset($form['field_density_profile']['und'][$next_layer])){ $collapsed = ' collapsed'; 
 		
 		$form['field_density_profile']['und'][$x]['#prefix'] = "<div class='collapsible-container density_num_". $x ." '>".
-			"<h3 class='collapsible-handle density-title'>Density Measurement " . $next_layer. ": ". 
+			"<h3 class='collapsible-handle density-title'>Density " . $next_layer. ": ". 
 				$form['field_density_profile']['und'][$x]['field_density_top']['und'][0]['value']['#default_value'] . 
 					_density_unit_fix($snowpit_unit_prefs['field_density_units']).
 						" @ ". $form['field_density_profile']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
@@ -1991,6 +1987,13 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 		  	$string = $test->field_stability_test_score_ct['und'][0]['value'] . $fracture;
 			}
 		break;	
+		case 'DT':
+			if (($test->field_deep_tap_test_score['und'][0]['value'] == 'DT') && isset($test->field_dt_score['und'][0]['value'])){
+				$string = 'DT' . $test->field_dt_score['und'][0]['value'] . $fracture;
+			}else{
+		  	$string = $test->field_deep_tap_test_score['und'][0]['value'] . $fracture;
+			}
+		break;	
 		case 'RB':
 		case 'ST':
 		case 'SB':		
@@ -2031,6 +2034,12 @@ function stability_test_score_shorthand_form($stab_test){
 	  	$string = $stab_test['field_stability_test_score_ct']['und']['#default_value'][0];
 			if (in_array($stab_test['field_stability_test_score_ct']['und']['#default_value'][0], array('CTE','CTM', 'CTH', 'CTN'  )) && isset($stab_test['field_ct_score']['und'][0]['value']['#default_value'])){
 				$string .= $stab_test['field_ct_score']['und'][0]['value']['#default_value'] . $shear_quality;
+			}
+		break;	
+		case 'DT':
+	  	$string = $stab_test['field_deep_tap_test_score']['und']['#default_value'][0];
+			if (($stab_test['field_deep_tap_test_score']['und']['#default_value'][0] == 'DT' ) && isset($stab_test['field_dt_score']['und'][0]['value']['#default_value'])){
+				$string .= $stab_test['field_dt_score']['und'][0]['value']['#default_value'] . $shear_quality;
 			}
 		break;	
 		case 'RB':
