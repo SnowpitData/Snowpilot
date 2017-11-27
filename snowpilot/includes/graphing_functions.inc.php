@@ -658,7 +658,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				if ( isset ( $node->field_loaction['und'][1]['tid'] )){
 					$term_obj_region = taxonomy_term_load($node->field_loaction['und'][1]['tid']);
 					
-					imagettftext($img, 11, 0, 14, 35, $black, $value_font, $term_obj_region->name);
+					imagettftext($img, 11, 0, 14, 35, $black, $value_font, substr($term_obj_region->name , 0, 24 ));
 					
 				}
 
@@ -924,7 +924,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 					// write density measurements that are from the 'Layers' tab into the rho column ( in addition to Densities )
 					if ( isset ( $layer->field_density_top['und'][0]['value'] )){
 						imageline($img, 667, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']), 707, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']),$black);
-						imagettftext($img, 8, 0, 669, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])-5,$black, $label_font, $layer->field_density_top['und'][0]['value']);
+						imagettftext($img, 8, 0, 670, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])+13,$black, $label_font, $layer->field_density_top['und'][0]['value']);
 						
 					}
 					

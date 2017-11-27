@@ -962,18 +962,17 @@ form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion .ui
 	border-top: 3px solid #c87931;
   padding: 0px 4px 4px;
   top: 1px;
-	min-height: 480px;
 }	
 /*
 ** override for tests form width
  */
 form.node-snowpit_profile-form .form-field-name-field-test table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
-	min-height:300px;
+	/*min-height:300px;*/
 }
 
 form.node-snowpit_profile-form .form-field-name-field-temp-collection table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active,
 form.node-snowpit_profile-form .form-field-name-field-density-profile table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
-	min-height: 50px;
+	/*min-height: 50px;*/
 }
 
 form.node-snowpit_profile-form table.field-multiple-table{
@@ -1229,6 +1228,31 @@ body.page-node-add-snowpit-profile #main{
 	
 }
 
+body.page-node-edit.node-type-snowpit-profile #content,
+body.page-node-add-snowpit-profile #content{
+	min-width: 1100px;
+}
+
+.create-new-item {
+    background: #fff;
+}
+
+a.help-link {
+    background: transparent url('/sites/all/modules/advanced_help/help.png') no-repeat top left;
+        background-position-x: left;
+        background-position-y: top;
+    background-position: 0px 0px;
+    display: inline-block;
+    height: 12px;
+    margin-top: 2px;
+    padding: 0px;
+    width: 12px;
+}
+
+.views-count{
+  padding-top: 5px;
+}
+	
 #main, #header, #footer{
 	max-width: 1360px;
 	margin: 0 auto;

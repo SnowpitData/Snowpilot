@@ -1057,6 +1057,14 @@ function snowpilot_entity_presave($entity, $type){
 		
 		// this sets a specific field ( Stability test score ) when the field collection item is saved
 		$entity->field_stability_test_score['und'][0]['value'] = _set_test_result_single($entity);
+		if ( in_array( $entity->field_stability_test_score['und'][0]['value'] , array( 'CTN' , 'ECTX', 'RB7', 'SBN', 'STN' ) )){
+			//$entity->field_depth['und'][0]['value'] = NULL;
+			unset($entity->field_shear_quality['und'][0]['value']);
+			unset ( $entity->field_depth['und'][0]['value'] );
+		  unset($entity->field_ec_score['und'][0]['value']);
+			unset($entity->field_ct_score['und'][0]['value']);
+			
+		}
 		// We only reset this depth value if it is not null. For Null depth test results ( e.g. ECTX or CTN ), it needs to be null
 		if ( isset($entity->field_depth['und'][0]['value']) ) $entity->field_depth['und'][0]['value'] = str_replace( ',' , '.' , $entity->field_depth['und'][0]['value']) ;
 	}elseif ( $type == 'field_collection_item' && $entity->field_name =='field_layer' ){
@@ -1086,7 +1094,7 @@ function snowpilot_entity_presave($entity, $type){
 	
 	if ($type == 'node' && $entity->type == 'snowpit_profile' && isset( $entity->field_air_temp['und'][0]['value']) ){ 
 		$entity->field_air_temp['und'][0]['value'] = str_replace( ',', '.' ,$entity->field_air_temp['und'][0]['value'] );
-		dsm ( $entity); }
+	 }
 	return $entity;
 }
 
@@ -1733,7 +1741,6 @@ function snowpilot_node_view($node, $view_mode){
 }		
 
 function snowpilot_graintypes_tweak($element){
-	dsm($element);
 	return ;
 }
 
