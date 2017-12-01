@@ -81,6 +81,8 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			
 			'field_direction_format' => _helper_cleaner($entity, 'field_direction_format' ),
 			
+			'field_org_ownership' => _helper_cleaner($entity , 'field_org_ownership', 'tid'),
+			
 	  );
 	
 			//////
@@ -99,9 +101,34 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 		
 			$unit_prefs['field_professional'] =  _helper_cleaner($entity,'field_professional');
 			$unit_prefs['prof'] = _helper_cleaner($entity,'field_professional');
+						
+			$unit_prefs['field_professional_affiliation'] =  _helper_cleaner($entity, 'field_professional_affiliation','tid', 0 );
 			
-			$unit_prefs['field_professional_affiliation'] = _helper_cleaner($entity, 'field_professional_affiliation','tid');
-			$unit_prefs['affil']  = _helper_cleaner($entity, 'field_professional_affiliation', 'tid') ;// tid needs to be converted to name
+			if ( NULL !== ($second_affiliation = _helper_cleaner($entity, 'field_professional_affiliation','tid', 1 ) ) && $second_affiliation <> $unit_prefs['field_professional_affiliation']){
+				// change to array
+				$first_affiliation = $unit_prefs['field_professional_affiliation'];
+				$unit_prefs['field_professional_affiliation'] = array( 0 => $first_affiliation , 1 => $second_affiliation ) ;	
+		  	if ( NULL !== ( $third_affiliation = _helper_cleaner($entity, 'field_professional_affiliation','tid', 2 ) ) && ! in_array ($third_affiliation , $unit_prefs['field_professional_affiliation'] ) ){
+		  		$unit_prefs['field_professional_affiliation'][2] = $third_affiliation; 
+	  		}
+	  		if ( NULL !== ( $fourth_affiliation = _helper_cleaner($entity, 'field_professional_affiliation','tid', 3 ) )  && ! in_array ($fourth_affiliation , $unit_prefs['field_professional_affiliation'] ) ){
+		  		$unit_prefs['field_professional_affiliation'][3] = $fourth_affiliation; 
+		  	}
+				
+				// this reorders the array of groups, putting the default first [0]
+		  	if ( NULL !== _helper_cleaner($entity, 'field_org_ownership','tid', 0 ) ){
+			  	$n = 0 ;
+			  	while ( ($unit_prefs['field_professional_affiliation'][0] <> _helper_cleaner($entity, 'field_org_ownership','tid', 0 )) && isset($unit_prefs['field_professional_affiliation'][$n]) ){
+			  		$switched_val = $unit_prefs['field_professional_affiliation'][$n];
+				  	$unit_prefs['field_professional_affiliation'][$n] = $unit_prefs['field_professional_affiliation'][0] ;
+				  	$unit_prefs['field_professional_affiliation'][0] = $switched_val ;
+				  	$n++;
+				  }
+					
+			  }
+			}
+			
+			$unit_prefs['affil']  = $unit_prefs['field_professional_affiliation'];// tid needs to be converted to name
 
 			$unit_prefs['name'] = $entity->name; // hey, this is the same key name in both core drupal and avscience db!	
 			$unit_prefs['mail'] = $entity->mail;
@@ -138,7 +165,7 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 	//	$form['field_loaction']['und'][0]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_0'];
 	//	$form['field_loaction']['und'][1]['tid']['#default_value'] = $snowpit_unit_prefs['field_loaction_1'];
 		foreach( $snowpit_unit_prefs as $key => $pref){
-			if ($key != 'field_loaction_0' 
+			if ( $key != 'field_loaction_0' 
 				&& $pref != 'field_loaction_1' 
 				&& substr($key,0,6) == 'field_' 
 			  && isset($form[$key])){

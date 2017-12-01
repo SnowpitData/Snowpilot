@@ -366,7 +366,22 @@ div.ctools-modal-content .form-item label {
     padding-top: 10px;
 }
 
+.form-item.form-item-snowpilot-add-affiliation{
+	margin-top: 0;
+}
 
+#edit-field-snowpit-visibility,
+#edit-field-org-ownership{
+	display: inline-block;
+}
+
+#snowpit-profile-node-form #edit-field-org-ownership label,
+#snowpit-profile-node-form #edit-field-snowpit-visibility label{
+	display: block;
+}
+#snowpit-profile-node-form #edit-field-org-ownership{
+	margin-left: 15px;
+}
 
 @font-face {
 	font-family:snowsymbols;
