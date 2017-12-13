@@ -209,7 +209,15 @@ header #block-block-6 a{
 .view-display-id-page .view-filters{
 	background-color: #c87931;
 }
+.view.view-sharing-with-my-group.view-id-sharing_with_my_group.view-display-id-block_1 {
 
+    display: inline-block;
+    padding-left: 20px;
+}
+
+.group-snowpits-link {
+    display: inline-block;
+}
 nav#secondary-menu{
 	position: relative;
 	bottom: 70px;
