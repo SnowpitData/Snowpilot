@@ -34,6 +34,15 @@
 	width: 350px;
 }
 
+.org-admin-links{
+	background: #fff;
+}
+
+.org-admin-links ul{
+	margin-top: 3px;
+	padding-bottom: 8px;
+}
+
 #navigation {
     padding: 0 2px;
 		border-top: 1px solid #4a657f;

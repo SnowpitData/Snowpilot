@@ -83,7 +83,7 @@ function snowpilot_menu(){
 function snowpilot_org_admin_page($tid ){ // an access check function
 	global $user;
 	$full_user = user_load($user->uid);
-	if ( in_array( 'administrator' , $full_user->roles ) )
+	//if ( in_array( 'administrator' , $full_user->roles ) )
 	if ( !in_array ( $tid, array_column( $full_user->field_org_admin_groups['und'] , 'tid' )  	)
 	|| !in_array( 'org admin' , $full_user->roles )){
 		return FALSE;
@@ -128,7 +128,7 @@ function snowpilot_organization(){
 }
 
 function snowpilot_org_admin_page_links( $groups ){
-	$result = '<div class ="org-admin-links"><ul>';
+	$result = '<div class ="org-admin-links"><h2>Groups you may administer:</h2> <ul>';
 	foreach ( $groups as $group ){
 		$result .= '<li><a href ="/organizations/'. $group->tid .'">'. $group->name .'</a>  </li>';
 	}
@@ -694,7 +694,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				unset($form['field_org_admin_groups']);
 			}else{
 		    foreach ( $form['field_org_admin_groups']['und']['#options'] as $tid => $option ){
-			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  ) unset ( $form['field_org_admin_groups']['und']['#options'][$tid] );
+			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  && $tid <> $snowpit_unit_prefs['field_professional_affiliation']  ) unset ( $form['field_org_admin_groups']['und']['#options'][$tid] );
 		    }
 				
 			}
@@ -1159,29 +1159,30 @@ function snowpilot_snowpit_set_frac_cat(&$form, $snowpit_unit_prefs){
 function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 	unset($form['field_snowpit_visibility']['und']['#options']['_none']);
 
-	
-  if ( (! is_array($snowpit_unit_prefs['field_professional_affiliation']) || count ($snowpit_unit_prefs['field_professional_affiliation'] ) < 2 ) && !user_access('administer nodes')){
+  if ( (! is_array($snowpit_unit_prefs['field_professional_affiliation']) || count ($snowpit_unit_prefs['field_professional_affiliation'] ) < 2 ) && !user_access('administer nodes')  ){
 
   	$form['field_org_ownership']['#access'] = FALSE ; 
-
+		if (!isset($snowpit_unit_prefs['field_professional_affiliation']) || $snowpit_unit_prefs['field_professional_affiliation'] == '57'){
+			unset ($form['field_snowpit_visibility']['und']['#options']['group']);
+		}else{
+			$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
+		
+		  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
+			//dsm($form['field_snowpit_visibility']['und']['#options']);
+		}
   }else{ // we have an array of more than one organizations
 	  foreach ( $form['field_org_ownership']['und']['#options'] as $tid => $option ){
 			// hide invalid
-		  if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  && !user_access('administer nodes')  ) unset ( $form['field_org_ownership']['und']['#options'][$tid] );
+		  if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  && !user_access('administer nodes')  ) {
+				unset ( $form['field_org_ownership']['und']['#options'][$tid] );
+			}
 		}
 		// if the default value is not already in there, add it back in
-		if ( ! in_array ( $form['field_org_ownership']['und']['#default_value'][0]  , array_keys($form['field_org_ownership']['und']['#options']) )) $form['field_org_ownership']['und']['#options'][$form['field_org_ownership']['und']['#default_value'][0]] = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name ;
-  }
-	
-	if (!isset($snowpit_unit_prefs['field_professional_affiliation']) || $snowpit_unit_prefs['field_professional_affiliation'] == '57'){
-		unset ($form['field_snowpit_visibility']['und']['#options']['group']);
-	}else{
-		$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
-		
-	  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
-		//dsm($form['field_snowpit_visibility']['und']['#options']);
-	}
-	
+		if ( isset($form['field_org_ownership']['und']['#default_value'][0]) && 
+		! in_array ( $form['field_org_ownership']['und']['#default_value'][0]  , array_keys($form['field_org_ownership']['und']['#options']) )){ 
+			$form['field_org_ownership']['und']['#options'][$form['field_org_ownership']['und']['#default_value'][0]] = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name ;
+		}	
+  }	
 }
 
 function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
