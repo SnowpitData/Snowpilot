@@ -1,0 +1,9 @@
+name = Snowpilot Avscience connect
+description = A SnowPilot submodule to connect avscience snowpits into the local database.
+core = 7.x
+
+;files[] = snowpilot_avscience.module
+
+version = "7.x-0.01"
+core = "7.x"
+project = "snowpilot"

@@ -839,7 +839,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			if (isset($node->field_density_profile['und'])){
 				foreach ( $node->field_density_profile['und'] as $x => $density_item){
 					$density = field_collection_item_load($density_item['value']);
-					dsm($density);
 					// this use of imageline will need to be updated to include some kind of cluster management
 					imageline($img, 667, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']), 707, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']),$black);
 					imagettftext($img, 8, 0, 671, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])+12,$black, $label_font, $density->field_density_top['und'][0]['value']);
@@ -858,11 +857,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				
 				foreach($all_layers as $x => $layer){
 					if($snowpit_unit_prefs['field_depth_0_from'] == 'top'){
-						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] )); 
-						$layer->y_val = $y_val = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] )); 
+						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2); 
+						$layer->y_val = $y_val = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2 ); 
 					}else{
-						$layer->y_val =		$y_val = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] )); 
-						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] )); 
+						$layer->y_val =		$y_val = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2 ); 
+						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2 ); 
 					}
 				}
 				

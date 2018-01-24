@@ -84,7 +84,7 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			'field_org_ownership' => _helper_cleaner($entity , 'field_org_ownership', 'tid'),
 			
 	  );
-	
+			
 			//////
 			/*
 			     These fields are not present in the 'node' variable that this function works on.
@@ -103,6 +103,11 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			$unit_prefs['prof'] = _helper_cleaner($entity,'field_professional');
 						
 			$unit_prefs['field_professional_affiliation'] =  _helper_cleaner($entity, 'field_professional_affiliation','tid', 0 );
+			
+			// $unit_prefs['field_professional_affiliation'] is still a single value at this point
+			if ( NULL !== $unit_prefs['field_professional_affiliation'] && $unit_prefs['field_org_ownership'] == '' ){
+				$unit_prefs['field_org_ownership'] = $unit_prefs['field_professional_affiliation'] ;
+			}
 			
 			if ( NULL !== ($second_affiliation = _helper_cleaner($entity, 'field_professional_affiliation','tid', 1 ) ) && $second_affiliation <> $unit_prefs['field_professional_affiliation']){
 				// change to array

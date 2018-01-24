@@ -122,8 +122,8 @@ function snowpilot_organization(){
 		$org_admin_user->save();
 		$default_org = $org_admin_user->field_org_ownership->value(); // we need to refill this variable since it changed
 	}	
-	$result .= views_embed_view( 'new_test_search' , 'page', $default_org->tid );
-	drupal_set_title ( t('Manage Organization Users and Snowpits: '.$default_org->name ));
+	//$result .= views_embed_view( 'new_test_search' , 'page', $default_org->tid );
+	//drupal_set_title ( t('Manage Organization Users and Snowpits: '.$default_org->name ));
 	return $result;
 }
 
@@ -347,7 +347,26 @@ function snowpilot_user_org(&$argument){
 	$user_wrapper = entity_metadata_wrapper( 'user' , $user);
 	$user_info = $user_wrapper->field_org_ownership->value();
 	$argument->validated_title = $user_wrapper->field_org_ownership->label();
-	return $user_info->tid;
+	$default_org = $user_wrapper->field_org_ownership;
+	if ( in_array(6,  $user_wrapper->roles->value()) ){
+		//dsm('this far: in org admin role');
+		$org_admin_groups = $user_wrapper->field_org_admin_groups->value();
+		if ( !in_array($default_org , $org_admin_groups  )){  // If this organization is not one they can manage, reset their default org to something standard.
+			if ( ! isset( $org_admin_groups[0]) ) {
+				$result .= 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.';
+			  return $result;
+			}else{
+			  //$user_wrapper->field_org_ownership->set( $org_admin_groups[0]->tid );
+			  //$user_wrapper->save();
+			  //$default_org = $user_wrapper->field_org_ownership->value(); // we need to refill this variable since it changed
+		  }
+		}	
+		
+		
+	}
+	//dsm($default_org->tid->value());
+	//dsm('hello');
+	return $default_org->tid->value();
 }
 
 function snowpilot_org_admin_access($item){
@@ -656,14 +675,17 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			if( $form['#id'] == 'views-exposed-form-snowpit-list-page'){
 				//$form['field_loaction_tid']['#size'] = '3';
 				$form['uid_current']['#options'] = array( 'All' => 'All Snowpits', 1 => 'Just my snowpits');
-				$form['field_practice_pit_value']['#options'] = array(  0 => 'Exclude Practice Pits' ,'All' => 'Include Practice Pits');
 				if ( $user->uid == 0 ){
-					$form['uid_current']['#access'] = FALSE;
-					
+					$form['uid_current']['#access'] = FALSE;		
 				}
 				$form['#after_build'][] = 'snowpit_list_view_after_build';
 				
 			}	
+			if ( isset($form['field_practice_pit_value']) ){
+				$form['field_practice_pit_value']['#options'] = array(  0 => 'Exclude Practice Pits' ,'All' => 'Include Practice Pits');
+			
+			}
+			
 		break;
 		case 'user_profile_form':
 			// this works, but needs to be expanded to include all/any fields that are not filled in, but should be.
@@ -1100,6 +1122,7 @@ function snowpilot_timezone_modify($form, &$form_state){
 			|| $zone == 'Asia/Karachi'
 			|| $zone == 'Asia/Kolkata'
 			|| $zone == 'Asia/Kathmandu'
+			|| $zone == 'Asia/Tokyo'
 			|| $zone == 'Pacific/Auckland'
 				
 		){
@@ -1164,8 +1187,7 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
   	$form['field_org_ownership']['#access'] = FALSE ; 
 		if (!isset($snowpit_unit_prefs['field_professional_affiliation']) || $snowpit_unit_prefs['field_professional_affiliation'] == '57'){
 			unset ($form['field_snowpit_visibility']['und']['#options']['group']);
-		}else{
-			$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
+		}else{			$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
 		
 		  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
 			//dsm($form['field_snowpit_visibility']['und']['#options']);
