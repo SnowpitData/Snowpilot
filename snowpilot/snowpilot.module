@@ -312,6 +312,19 @@ function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 	$user_agent = $_SERVER['HTTP_USER_AGENT'];
+
+	/*if ( strpos($user_agent , 'Mac OS X') && ( strpos($user_agent , 'Chrome') || strpos($user_agent , 'Safari') || strpos($user_agent , 'Firefox') ) ){
+		if ( (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'snowpit-profile') || arg(0) == 'user' ){
+			drupal_set_message("You are using Mac OSX in combination with Safari, Firefox, or Chrome. 
+				<p>Older versions of Firefox are the only browsers for Mac OSX which properly display 'grain type symbols' in the dropdown list of the 'Add New Snowpit' form.
+			   <p>This is a known issue for the Mac and we are working to resolve it with an improved grain type selection process. We will notify the SnowPilot community via email when this problem is fixed.
+				 <p>Note that the grain types will be displayed properly in all other settings, such as the 'live profile' section, and on the final graph.", 'warning');
+			
+		}
+		
+		
+		
+	}*/
 	
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
