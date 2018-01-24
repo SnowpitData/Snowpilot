@@ -1,0 +1,233 @@
+<?php
+
+
+include_once('includes/populate_layers_table.php');
+include_once('includes/populate_shear_tests_table.php');
+include_once('includes/populate_XML_field.php');
+include_once('includes/populate_pit_fields.php');
+include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
+use \ForceUTF8\Encoding;
+
+error_reporting(E_ALL);
+
+
+function avscience_connect_menu(){
+
+	$items['snowpilot/avscience_connect'] = array(
+		'title' => 'Review differences between the kc and live avscience dbs',
+		'page callback' => array('snowpilot_connect_page'),
+		//'page arguments' => array('snowpilot_connect_form'),
+		'access callback' => TRUE, // for some reason, user_has_role doesn't work here, nor does snowpilot_user_has_role. Imlementing in the called page form function
+		'access_arguments' => 'administrator',
+		'type' => MENU_CALLBACK,		
+	);
+	
+	return $items;
+}
+
+function snowpilot_connect_page (){
+	$output = 'Introductory text';
+	$new_pits_list = array();
+	$new_pits_list = snowpilot_avscience_fetch_new_pits();
+	dsm($new_pits_list);
+
+	
+	//dsm(drupal_get_form(snowpilot_connect_form($form, $form_state)));
+	$default = implode( array_keys($new_pits_list['new_pits'] ), ',');
+	$form_output = drupal_get_form('snowpilot_connect_form',$default);
+	$output .= drupal_render($form_output);
+	return $output;
+}
+
+function snowpilot_connect_form($form, &$form_state, $default){
+	$form['snowpilot_connect_single'] = array(
+		'#type' => 'textfield',
+		'#size' => 120,
+		'#title' => t('SERIAL of snowpit to convert'  ),
+		'#description' => t('A comma separated list of SERIAL IDs to convert. Is automatically populated with this from diff between last week\'s avscience db and this week.' ),	
+		'#weight' => '15',
+		'#default_value' => $default,
+		'#required' => TRUE,
+	);
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => 'Convert Snowpits',
+		'#weight' => '25',
+	);
+	
+	return $form;
+}
+function snowpilot_connect_form_submit($form, &$form_state){
+	error_reporting(E_ALL);
+	$serial_ids = $form_state['values']['snowpilot_connect_single'];
+			watchdog('avscience_connect', "Avscience connect form submission.".var_export($form_state['values']['snowpilot_connect_single'], TRUE));
+			snowpilot_connect_convert_multi($serial_ids);
+	return $form;
+}
+
+function avscience_connect_form_alter($form, &$form_state, $form_id){
+	if ( $form_id == 'snowpilot_connect_single'){
+		
+	}
+		return $form;
+}
+
+function snowpilot_connect_convert_multi($serial_ids){
+	$current_snowpits_link = new mysqli();
+	$current_snowpits_link->connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_app") ;
+	
+	$snowpilot_avscience = new mysqli();
+	$snowpilot_avscience->connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_avscience") ;
+	
+	$query1 = "SELECT * FROM PIT_TABLE WHERE SERIAL IN (".$serial_ids.") ";
+	$new_pits = $current_snowpits_link->query($query1);
+	while ( $new_pit = $new_pits->fetch_array(MYSQLI_ASSOC) ){
+		$result_codes = array();
+		$critical = FALSE;
+		unset($new_pit['PIT_DATA']);
+		unset($new_pit['RANGE']);
+		$keys = array_keys($new_pit);
+		$keys_string = "(".implode(",", $keys )  . ")";
+
+		$values_string = "('" . implode("','", $new_pit ). "')";
+		$query2 = "INSERT INTO PIT_TABLE ".$keys_string." VALUES ".$values_string;
+		if ( $snowpilot_avscience->query($query2) ){;
+		  watchdog('avscience_connect', "Successfully added: ".$new_pit['SERIAL'] . " to the avscience db.");
+		}else{
+		  watchdog('avscience_connect', "Unable to add: ".$new_pit['SERIAL'] . " to the avscience db.", array() , WATCHDOG_WARNING);
+			$critical = TRUE;
+			$result_codes[] = array( 'continue' => TRUE, 'first' => $new_pit['SERIAL'].' could not be added to the avscience db.');
+		}
+// 		//		We keep adding the other functions to populate avscience here:
+
+		if ( !$critical  ){		
+			$xml_result_code = snowpilot_avscience_populate_xml($new_pit['SERIAL']);
+			if ( $xml_result_code['continue'] ) {
+				$result_codes[] = $xml_result_code;
+				watchdog('avscience_connect', $xml_result_code['message'] );
+			}else { 
+				$critical = TRUE; watchdog('avscience_connect', $xml_result_code['message'] , array() , WATCHDOG_WARNING);
+			}
+		}		
+		
+/*		if ( !$critical ){	
+			$image_result_code = populate_snowpit_image($new_pit['SERIAL']);
+			if ( $image_result_code['continue'] ) {
+				$result_codes[] = $image_result_code;
+				watchdog('avscience_connect', $image_result_code['message'] );
+			}	else{
+				$critical = TRUE; watchdog('avscience_connect', $image_result_code['message'] , array() , WATCHDOG_WARNING);
+			}
+		}
+		*/
+// /*		
+		if ( !$critical ){		
+			$pit_fields_result_code = snowpilot_avscience_populate_pit_fields($new_pit['SERIAL']);
+			if ( $pit_fields_result_code['continue'] ) {
+				$result_codes[] = $pit_fields_result_code;
+				watchdog('avscience_connect', $pit_fields_result_code['message'] );
+			}else { 
+				$critical = TRUE; watchdog('avscience_connect', $pit_fields_result_code['message'] , array() , WATCHDOG_WARNING);
+			}
+		}		
+		
+		if ( !$critical ){
+		  $layers_result_code = populate_layers_table($new_pit['SERIAL']);
+			if ( $layers_result_code['continue']){
+				$result_codes[] = $layers_result_code;
+				watchdog('avscience_connect', $layers_result_code['message'] );			
+			}else{
+				$critical = TRUE; watchdog('avscience_connect', $layers_result_code['message'] , array() , WATCHDOG_WARNING);
+			}
+		}
+		if ( !$critical){
+			$tests_result_code = populate_shear_tests_table($new_pit['SERIAL']);
+			if ($tests_result_code['continue']){
+				$result_codes[] = $tests_result_code;
+				watchdog('avscience_connect', $tests_result_code['message'] );			
+			}else{
+				$critical = TRUE; watchdog('avscience_connect', $tests_result_code['message'] , array() , WATCHDOG_WARNING);
+			}  
+		}
+//		*/
+		if ( $critical ) dsm( $result_codes);
+		
+		///
+		
+	}
+	return $result_codes;
+}
+
+function populate_snowpit_image($SERIAL){
+	$critical = FALSE; 
+	$message = 'default image message';
+	if( !file_exists( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/graph-serial-'.$SERIAL. '.jpg' )){
+//			if( !file_exists( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/graph-serial-'.$record->SERIAL. '.jpg' )){
+			$kc_serial = avscience_connect_fetch_kc_serial($SERIAL);
+			$kc_img_src = file_get_contents( "http://www.kahrlconsulting.com:8084/avscience/PitServlet?TYPE=PITIMAGE&SERIAL=".$kc_serial );
+			$local_image = fopen( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/graph-serial-'.$SERIAL. '.jpg' , 'w');
+			if ( $local_image ){ 
+				fwrite($local_image, $kc_img_src);
+			  sleep(1);
+				
+			  fclose($local_image);
+			}else{
+				$critical = TRUE; 
+				$message = 'Could not open connection to kahlrconsulting server for SERIAL: '.$SERIAL;
+			}
+//			}
+		if ( !$critical ){
+			$pre_img_url = '/sites/default/files/avscience-profiles/graph-serial-'.$SERIAL. '.jpg';
+			$pre_img = imagecreatefromjpeg( DRUPAL_ROOT.$pre_img_url);
+			$new_img = imagecreatetruecolor(466,613);
+			$result = imagecopy($new_img, $pre_img, 0,0, 14,140,466,613 );
+			$success = imagejpeg( $new_img , DRUPAL_ROOT. '/sites/default/files/avscience-profiles/layers/layers-serial-'.$SERIAL. '.jpg');
+			if ( $success ) $message = 'All images created successfully for '.$SERIAL;
+		}
+	}
+	return array( 'continue' => !($critical) , 'message' => $message );
+}
+
+function snowpilot_avscience_fetch_new_pits(){
+  $older_snowpits_link = new mysqli();
+	$current_snowpits_link = new mysqli();
+  $snowpilot_avscience = new mysqli();
+
+	$older_snowpits_link->connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_app_old") ;
+	$current_snowpits_link->connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_app") ;
+	$snowpilot_avscience->connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_avscience") ;
+	
+	$query1 = 'SELECT MAX(`SERIAL`) FROM `PIT_TABLE`';
+	
+	$first_results = $older_snowpits_link->query($query1)->fetch_row()[0];
+
+	$query2 = 'SELECT `SERIAL`, `LOCAL_SERIAL`, `OBS_DATE` from `PIT_TABLE` where `SERIAL` > '. $first_results ;
+	$new_pits_result = $current_snowpits_link->query($query2);
+	//dsm($new_pits_result);
+	
+	while ( $new_pit = $new_pits_result->fetch_array(MYSQLI_ASSOC) ){
+    $all_pits_list[$new_pit['SERIAL']] = $new_pit;
+		$query3 = "SELECT COUNT(`SERIAL`) FROM `PIT_TABLE` WHERE `LOCAL_SERIAL` = '". $new_pit['LOCAL_SERIAL']."'";
+		//dsm($query3);
+		
+		$existing_pit_check = $snowpilot_avscience->query($query3) or die(mysqli_error());
+		$existing_pit = $existing_pit_check->fetch_row()[0];
+		
+		if (  $existing_pit == 0){
+			//echo "Genuinely new pit: ". " : ". $new_pit['LOCAL_SERIAL']. " : ".$new_pit['OBS_DATE'] ."<br />";
+			$new_pits[$new_pit['SERIAL']] = $new_pit;
+		}else{
+
+			//echo $existing_pit['SERIAL'] . " : ". $new_pit['LOCAL_SERIAL']. " : ".$new_pit['OBS_DATE'] ."<br />";
+			$dupe_pits[$new_pit['SERIAL']] = $new_pit;
+		}
+		//mysqli_free_result($existing_pit_check);
+		
+	}
+		//
+	
+	
+	return array( 'all_pits' => $all_pits_list, 'dupe_pits' => $dupe_pits, 'new_pits' => $new_pits);
+}
+
+?>

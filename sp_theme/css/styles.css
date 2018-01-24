@@ -34,6 +34,15 @@
 	width: 350px;
 }
 
+.org-admin-links{
+	background: #fff;
+}
+
+.org-admin-links ul{
+	margin-top: 3px;
+	padding-bottom: 8px;
+}
+
 #navigation {
     padding: 0 2px;
 		border-top: 1px solid #4a657f;
@@ -340,28 +349,17 @@ div.ctools-modal-content .form-item label {
 // snowpit list formatting
 */
 
-#content .view-snowpit-list,
-#content .view-new-test-search{
-	background-color: #c87931;
-	padding-bottom: 5px;
-}
-#content .view-snowpit-list table.views-view-grid tr,
-#content .view-new-test-search {
-    border-bottom: 15px solid #c87931;
-}
 
-.view-snowpit-list .views-exposed-form,
-.view-new-test-search .views-exposed-form {
-    border-bottom: 5px solid #1e506d;
-		padding-left: 35px;
-}
 .views-exposed-form label {
     color: #fff;
 }
 
 .views-exposed-form .views-exposed-widget{
 	padding-left: 4px;
-	border-left: 2px solid #fcfcfc;
+	border-left: 1px solid #fcfcfc;
+	border-right: 1px solid #fcfcfc;
+	border-bottom: 2px solid #fcfcfc;
+	border-top: 2px solid #fcfcfc;
 	margin-bottom:0 ;
 }
 .views-exposed-form .views-exposed-widgets{
@@ -374,7 +372,22 @@ div.ctools-modal-content .form-item label {
     padding-top: 10px;
 }
 
+.form-item.form-item-snowpilot-add-affiliation{
+	margin-top: 0;
+}
 
+#edit-field-snowpit-visibility,
+#edit-field-org-ownership{
+	display: inline-block;
+}
+
+#snowpit-profile-node-form #edit-field-org-ownership label,
+#snowpit-profile-node-form #edit-field-snowpit-visibility label{
+	display: block;
+}
+#snowpit-profile-node-form #edit-field-org-ownership{
+	margin-left: 15px;
+}
 
 @font-face {
 	font-family:snowsymbols;
@@ -1257,6 +1270,11 @@ a.help-link {
     width: 12px;
 }
 
+.advanced-help-topic{
+	margin: 0.5rem 1.0rem ;
+}
+
+
 .views-count{
   padding-top: 5px;
 }
@@ -1478,14 +1496,12 @@ body.node-type-snowpit-profile{
 .view-new-test-search table
 {
 	margin: 0 auto;
+	width: 100%;
 }
 .view-snowpit-list.view-display-id-block .view-content  {
 }
 
-.view-snowpit-list table td > div,
-.view-new-test-search table td > div{
-	background-color: #fff;
-}
+
 #block-views-snowpit-list-block,
 #block-views-snowpit-list-block-1{
 	background-color: #c87931;
@@ -1529,13 +1545,21 @@ body.node-type-snowpit-profile{
 	padding-left: 15px;
 }
 
-.view-snowpit-list table td > div.views-field-title,
-.view-new-test-search table td > div.views-field-title{
-	background-color: #5a707f;
-	padding-top: 5px;
+#content .view-snowpit-list,
+#content .view-new-test-search{
+	background-color: #c87931;
 	padding-bottom: 5px;
-	border-top: 7px solid #fff;
-	text-align: center; 
+	padding-top: 5px;
+}
+#content .view-snowpit-list table.views-view-grid tr,
+#content .view-new-test-search {
+    border-bottom: 15px solid #c87931;
+}
+
+.view-snowpit-list .views-exposed-form,
+.view-new-test-search .views-exposed-form {
+    border-bottom: 5px solid #1e506d;
+		padding-left: 35px;
 }
 
 .view-snowpit-list table div.views-field-title,
@@ -1546,10 +1570,22 @@ body.node-type-snowpit-profile{
 .view-new-test-search table div.views-field-field-date-time{
   border-left: 7px solid #fff;
   border-right: 7px solid #fff;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 .view-snowpit-list table td > div.views-field-field-date-time,
 .view-new-test-search table td > div.views-field-field-date-time{
 	border-bottom: 7px solid #fff;
+}
+.view-snowpit-list table tr.even,
+.view-snowpit-list table tr.odd{
+	background-color: #c87931;
+}
+
+.view-snowpit-list .item-wrapper{
+	width: 19%; 
+	display: inline-block;
+	margin: 10px 0;
 }
 
 
@@ -1562,11 +1598,42 @@ body.node-type-snowpit-profile{
 .view-snowpit-list table td div.views-field-title,
 .view-new-test-search table td div.views-field-title {
 		background: #1b2d3d; /* Old browsers */
+		color: #fff;
 		background: -moz-linear-gradient(top, #576b77 0%, #859ca9 100%); /* FF3.6-15 */
 		background: -webkit-linear-gradient(top, #576b77 0%,#859ca9 100%); /* Chrome10-25,Safari5.1-6 */
 		background: linear-gradient(to bottom, #576b77 0%,#859ca9 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
 		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#576b77', endColorstr='#859ca9',GradientType=0 ); /* IE6-9 */
+		background-color: #5a707f;
+		padding-top: 5px;
+		padding-bottom: 5px;
+		border-top: 7px solid #fff;
+		text-align: center; 
 }
+.view-snowpit-list table td > div,
+.view-new-test-search table td > div{
+	background-color: #fff;
+	border-left: 4px solid #c87931;
+	border-right: 4px solid #c87931;
+
+}
+
+
+
+.date-selection,
+.users-orgs-selection,
+.tests-button,
+.geo-selection {
+    padding-top: 4px;
+    border-top: 2px solid #1e506d;
+    margin-top: 4px;
+		color: #fff;
+}
+
+.view-snowpit-list table td > div.views-field-title,
+.view-new-test-search table td > div.views-field-title{
+
+}
+
 
 .view-snowpit-list table td,
 .view-new-test-search table td{
