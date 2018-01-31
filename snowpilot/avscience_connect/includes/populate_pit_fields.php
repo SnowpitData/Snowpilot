@@ -53,8 +53,6 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 				$pits = $doc->getElementsByTagName('Pit_Observation');
 				if ( $pits->length == 0 ) dsm( "XML import creation failed for ". $SERIAL . ' probably due to illegal charachters ( &, < , etc ): '. $corrected_encoding);
 				foreach($pits as $pit_info){
-					drupal_set_message('inside loop');
-
 					
 					$values_list = array();
 					foreach ($pit_attributes as $attr){	// looping through to add values for each of the standard attributes
@@ -102,7 +100,6 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 					  $tf_val = ($user->getAttribute('prof') == "true") ? '1' : '0';
 					  $values_list[] = " prof = '". $tf_val."' ";
 					}
-					dsm($values_list);
 					
 					//
 				}	
@@ -130,5 +127,4 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 }
   return $result_code;
 }
-?>
 

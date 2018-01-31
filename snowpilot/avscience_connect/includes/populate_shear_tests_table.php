@@ -87,6 +87,4 @@ function populate_shear_tests_table($SERIAL){
 	}
 	return $result_code;
 }
-?>
-
 

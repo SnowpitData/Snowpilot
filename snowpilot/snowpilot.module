@@ -409,10 +409,10 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			$node_wrapper->save();
 			watchdog('snowpilot', "Snowpit $node->nid set to LOCKED.");
 			// and save it to the avscience db
-			if ( snowpilot_avscience_pit_write($node)) {
+/*			if ( snowpilot_avscience_pit_write($node)) {
 				watchdog('snowpilot', "Snowpit $node->nid sucessfully saved to avscience db.");
 			}
-			//
+*/		//
 		}
 	}
 	if (node_access('view', $node)){
@@ -432,7 +432,8 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			break;
 			case 'xml':
 				header('Content-type: application/xml');
-				echo snowpilot_node_write_pitxml($node);
+				//var_dump( snowpilot_node_write_pitxml($node));
+				print_r( snowpilot_node_write_pitxml($node));
 			break;
 			case 'caaml':
 				header('Content-type: application/xml');
@@ -457,7 +458,7 @@ function snowpilot_avscience_pit_exists($node){
 	db_set_active('avscience_db');
 	//
 	//   performing query to see if it exists under avscience:LOCAL_SERIAL
-	$query = "SELECT * FROM `PIT_TABLE` WHERE LOCAL_SERIAL = '". $account->name.$node->created."000' ";
+	$query = "SELECT * FROM `PIT_TABLE` WHERE LOCAL_SERIAL = 'drupal-nid-". $node->nid.'-'.$node ->created."000' ";
   $results = db_query($query);
 	$records = array();
   while ( $record = $results->fetch() )	{
@@ -465,18 +466,37 @@ function snowpilot_avscience_pit_exists($node){
   }
 	db_set_active();
 	if ( count( $records)){
-			watchdog('snowpilot' , "snowpit serial exist:$account->name$node->created : true". var_export($records, TRUE));
+			watchdog('snowpilot' , "snowpit serial exist:$account->name $node->created : true". var_export($records, TRUE));
 			return true;
 	}else{
-		watchdog('snowpilot' , "snowpit serial exist:$account->name$node->created :  false");
+		watchdog('snowpilot' , "snowpit serial exist:$account->name $node->created :  false");
 		
 		return false;
 	}
 
 }
+
+//
+// This function transfers snowpit data from the drupal website to the KC server avscience db.
+//
+
 function snowpilot_avscience_pit_write($node){
 	// 
-	
+	$url = 'http://www.kahrlconsulting.com:8084/avscience/PitServlet?TYPE=XMLPIT_SEND';
+	$data = snowpilot_node_write_pitxml($node);
+
+	$options = array(
+	    'http' => array(
+	        'header'  => "Content-type: text/plain\r\n",
+	        'method'  => 'POST',
+	        'content' => $data
+	    )
+	);
+	$context  = stream_context_create($options);
+	$result = file_get_contents($url, false, $context);
+	if ($result === FALSE) { /* Handle error */ }
+
+	watchdog( 'snowpilot' ,$result);
 	return true;
 }
 

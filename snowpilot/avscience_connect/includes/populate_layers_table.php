@@ -152,5 +152,4 @@ $link = mysqli_connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot
 	return $result_code;
 }
 
-?>
 
