@@ -36,6 +36,53 @@
    * @constructor
    */
   SnowProfile.Grid = function() {
+    
+    /**
+     * Draw the temperature scale
+     *
+     * Generate the label, numbers, and tick marks for temperature profile 
+     *   along the top edge of the graph.  Depends on minimum temperature.
+     * @see SnowProfile.gridGroup
+     */
+    function drawTemperatureScale() {
+      // Add temperatures and tick marks 
+      var scale = SnowProfile.Cfg.GRAPH_WIDTH / 10.0,
+        tick_Y_bot = SnowProfile.Cfg.HANDLE_MIN_Y + (SnowProfile.Cfg.HANDLE_SIZE / 2),
+        tick_Y_top, x;
+      
+      for (i = 0; i < 11; i++) {
+        x = SnowProfile.Cfg.DEPTH_LABEL_WD + (i * scale);
+        if (i % 2 === 0) {
+          tick_Y_top = tick_Y_bot - 5;
+          SnowProfile.temperatureGroup.add(SnowProfile.drawing.text(String(i))
+            .addClass("snow_profile_temperature")
+            .font({
+              size: 12,
+              style: 'bold',
+              family: 'sans-serif',
+              fill: SnowProfile.Cfg.LABEL_COLOR})
+            .move(x - 4, tick_Y_top - 18));
+        } else {
+          tick_Y_top = tick_Y_bot - 10;
+        }
+        SnowProfile.temperatureGroup.add(SnowProfile.drawing.line(x, tick_Y_bot, x, tick_Y_top)
+        .addClass("snow_profile_temperature")
+        .stroke({
+          color: SnowProfile.Cfg.OUTLINE_GRID_COLOR,
+          width: 1
+        }));
+      }
+      
+      // Add the label for temperature profile 
+      SnowProfile.temperatureGroup.add(SnowProfile.drawing.text('Temperature')
+      .font({
+        size: 18,
+        style: 'bold',
+        family: 'sans-serif',
+        fll: SnowProfile.Cfg.LABEL_COLOR
+      })
+      .move(SnowProfile.Cfg.GRAPH_WIDTH / 2, 0));
+    } // function drawTemperatureScale()
 
     /**
      * Draw the depth scale
@@ -353,7 +400,9 @@
           .style({fill: SnowProfile.Cfg.BACKGROUND_COLOR})
       );
 
-      // Create inner groups for depth and hardness scales
+      // Create inner groups for temperature, depth, hardness scales
+      SnowProfile.temperatureGroup = SnowProfile.gridGroup.group()
+        .addClass("snow_profile_temperature");
       SnowProfile.depthGroup = SnowProfile.gridGroup.group()
         .addClass("snow_profile_depth");
       SnowProfile.hardnessGroup = SnowProfile.gridGroup.group()
@@ -371,6 +420,9 @@
 
       // Draw the hardness scale
       drawHardnessScale();
+      
+      // Draw the temperature scale
+      drawTemperatureScale();
 
       // Draw labels
       drawLabels();

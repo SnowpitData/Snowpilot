@@ -60,7 +60,15 @@ var SnowProfile = {};
      * @memberof SnowProfile
      * @see SnowProfile.Grid~depthScaleGrp
      */
-   DEFAULT_PIT_DEPTH: 150,
+    DEFAULT_PIT_DEPTH: 150,
+    
+    /**
+     * Default low temperature in Fahrenheit 
+     * @const {number}
+     * @memberof SnowProfile
+     * @see SnowProfile.Grid~temperatureScaleGrp
+     */
+    DEFAULT_LOW_TEMP: 0,
 
     /**
      * Horizontal width in pixels of the depth (vertical) axis label.
@@ -90,7 +98,8 @@ var SnowProfile = {};
      * @memberof SnowProfile
      * @const {number}
      */
-    CTRLS_WD: 120,
+     // prev value = 120
+    CTRLS_WD: 60,
 
     /**
      * Width in pixels of the area used by snow grain shape
@@ -130,7 +139,8 @@ var SnowProfile = {};
      * @memberof SnowProfile
       @const {number}
      */
-    COMMENT_WD: 240,
+     // prev value = 240
+    COMMENT_WD: 300,
 
     /**
      * Vertical height in pixels of the temperature (horizontal) axis label.
