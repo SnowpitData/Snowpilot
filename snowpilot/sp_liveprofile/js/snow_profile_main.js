@@ -196,7 +196,8 @@
         //console.log("Element Text: " + elementText);
         
         // Remove stability tests
-        if (elementText === "Remove Test") {
+        var re = /_remove_button/;
+        if (re.test(elementName)) {
           // Find test number
           var testString = elementName.split("_")[3];
           var testNum = parseInt(testString, 10);
