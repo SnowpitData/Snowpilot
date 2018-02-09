@@ -2,11 +2,8 @@
  * @file Contains main program, plus setup for SnowPilot.com Drupal Website
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
- * Modified by Joe DeBruycker
+ * Modified by Joe DeBruycker for snowpilot.org
  */
-
-/* global SnowProfile */
-/* global SVG */
 
 (function($) {
   "use strict";
@@ -299,7 +296,7 @@
           if($(this).parents('.field-name-field-use-multiple-grain-size').length) {
             // When unchecked, set 2nd grain size dropdown to 0 to clear live profile
             if(!this.checked) {
-              var selector = `edit-field-layer-und-${layerNum}-field-grain-size-max-und`;
+              var selector = 'edit-field-layer-und-' + layerNum + '-field-grain-size-max-und';
               $("[id^='" + selector + "']").val("_none");
               $("[id^='" + selector + "']").trigger("change");
             }
