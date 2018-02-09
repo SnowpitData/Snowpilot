@@ -2,7 +2,7 @@
  * @file Define the object that describes the features of a snow layer
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
- * @contributor Joe DeBruycker
+ * @contributor Joe DeBruycker for snowpilot.org
  */
 
 /* global SnowProfile */
@@ -33,23 +33,8 @@
      * The Layer object that owns this Features object
      */
     var layerObj = layerArg;
-
-    /**
-     * "Edit" button
-     *
-     * When the user clicks this button, a modal dialogue appears which allows
-     * the user to describe the features of this layer.
-     * @type {Object}
-     */
-    //var editButton = new SnowProfile.Button("edit");
-    var i = layerObj.getIndex();
-    //var thisEdit = SnowProfile.editGroup.get(i);
-    //if (thisEdit === undefined) {
-    //  SnowProfile.editGroup.add(editButton.getButton());
-    //}
-    //else {
-    //  thisEdit.before(editButton.getButton());
-    //}
+    
+    // var i = layerObj.getIndex();
 
     /**
      * Grain shape of this snow layer.
@@ -201,11 +186,6 @@
     // featDescr.add(giBox);
 
     /**
-     * Y position of top of bounding box
-     */
-    var yPos;
-
-    /**
      * Height needed by the feature description, in pixels.
      *
      * Based on the bounding box of the description.
@@ -213,23 +193,6 @@
      * @type {number}
      */
     this.height = 0;
-
-    /**
-     * Get or set Y value of the feature description.
-     *
-     * @param {number} yArg Y value of the top of the bounding box of features.
-     */
-    // this.y = function(yArg) {
-    //   if (yArg === undefined) {
-    //     return yPos;
-    //   }
-    //   else {
-    //     console.log('y =', yArg);
-    //     yPos = yArg;
-    //     editButton.setY(yArg + SnowProfile.Cfg.MIN_FEAT_PAD);
-    //     featDescr.y(yArg + SnowProfile.Cfg.MIN_FEAT_PAD);
-    //  }
-    //};
 
     /**
      * Get or set the layer hardness
@@ -595,7 +558,7 @@
      *
      * @param {string} comment User comment string
      */
-    function setCommentDescr(comment) {
+    /*function setCommentDescr(comment) {
 
       var words = [],
         testLine = [];
@@ -643,7 +606,7 @@
         // Blank the test buffer
         testLineDescr.text("");
       }
-    } // function setCommentDescr(comment)
+    } // function setCommentDescr(comment) */
     
     /**
      * Set the stability test text for SnowPilot, which uses the original "commentDescr" area 
@@ -676,7 +639,7 @@
         commentDescr.build(true);
         
       }
-    } // function setCommentDescr(comment)
+    } // function setStabTest(sTests)
 
     /**
      * Get or set description of this snow layer
@@ -809,14 +772,7 @@
     this.layout = function(top, bottom) {
       // Midpoint of space for description
       var spaceMidY = top + ((bottom - top) / 2);
-
-      // Edit button straddles midpoint
-      //editButton.setY(spaceMidY - 11);
-
-      if (self.height === 0) {
-        // No feature description to lay out, forget it
-        //return;
-      }
+      
       featDescr.y(spaceMidY - (self.height / 2) +
         (3 * SnowProfile.Cfg.MIN_FEAT_PAD));
     };
@@ -868,18 +824,9 @@
      * Remove and destroy all SVG objects belonging to this Features object.
      */
     this.destroy = function() {
-      //editButton.destroy();
       lineBelow.remove();
       featDescr.clear();
     };
-
-    // When Edit button clicked, pop up a modal dialog form.
-    /*$(document).bind("SnowProfileButtonClick", function(evt, extra) {
-      if (extra.buttonObj === editButton) {
-        SnowProfile.PopUp(self.describe());
-      }
-    });*/
-
   };  //SnowProfile.Features = function()
 })(jQuery);
 

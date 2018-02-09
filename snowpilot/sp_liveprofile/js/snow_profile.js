@@ -2,7 +2,7 @@
  * @file Defines the primary functions of the snow profile editor.
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
- * Modified by Joe DeBruycker Q1 2016
+ * Modified by Joe DeBruycker for snowpilot.org
  */
 
 (function($) {
