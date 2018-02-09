@@ -46,15 +46,17 @@
      */
     function drawTemperatureScale() {
       // Add temperatures and tick marks 
-      var scale = SnowProfile.Cfg.GRAPH_WIDTH / 10.0,
+      var px_scale = SnowProfile.Cfg.GRAPH_WIDTH / 10.0,
+        temp_scale = (SnowProfile.Cfg.DEFAULT_MAX_TEMP - (SnowProfile.MIN_TEMP || SnowProfile.Cfg.DEFAULT_MIN_TEMP)) / 10.0,
         tick_Y_bot = SnowProfile.Cfg.HANDLE_MIN_Y + (SnowProfile.Cfg.HANDLE_SIZE / 2),
-        tick_Y_top, x;
+        tick_Y_top, x, temp;
       
       for (i = 0; i < 11; i++) {
-        x = SnowProfile.Cfg.DEPTH_LABEL_WD + (i * scale);
+        x = SnowProfile.Cfg.DEPTH_LABEL_WD + (i * px_scale);
+        temp = Math.round(i * temp_scale * 10) / 10;
         if (i % 2 === 0) {
           tick_Y_top = tick_Y_bot - 5;
-          SnowProfile.temperatureGroup.add(SnowProfile.drawing.text(String(i))
+          SnowProfile.temperatureGroup.add(SnowProfile.drawing.text(String(temp))
             .addClass("snow_profile_temperature")
             .font({
               size: 12,

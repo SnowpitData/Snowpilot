@@ -26,7 +26,8 @@ function sp_liveprofile_init(){
 	drupal_add_js(LIBRARY_PATH.'jquery.ui.resizable.min.js', 'file' );
 	drupal_add_js(LIBRARY_PATH.'opentip-jquery.js', 'file' );
 	//drupal_add_js(LIBRARY_PATH.'', 'file' );
-
+  
+  drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_config.js', 'file' );
 	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile.js', 'file' );
 	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_std.js', 'file' );
 	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_button.js', 'file' );
