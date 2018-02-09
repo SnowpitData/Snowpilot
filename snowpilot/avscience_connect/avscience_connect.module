@@ -24,48 +24,53 @@ function avscience_connect_menu(){
 		'type' => MENU_CALLBACK,		
 	);
 	$items['snowpilot-query-feed.xml'] = array(
-		'Title' => 'query feed page',
+		'title' => 'query feed page',
 		'page callback' => 'snowpilot_query_xml',
 		'access callback' => TRUE,
 	//	'access_arguments' => 'administrator',
 		'type' => MENU_CALLBACK,	
 	);
 	$items['avscience-query-feed.xml'] = array(
-		'Title' => 'avscience query feed page',
+		'title' => 'avscience query feed page',
 		'page callback' => 'avscience_query_xml',
 		'access callback' => TRUE,
 	//	'access_arguments' => 'administrator',
 		'type' => MENU_CALLBACK,	
 	);
 	$items['avscience-query'] = array(
-		'Title' => 'Advanced Snowpit query page',
-		'page callback' => 'avscience_query_page',
+		'title' => 'Advanced Snowpit query page',
+		'page callback' => array('avscience_query_page'),
 		'access callback' => TRUE,
-	//	'access_arguments' => 'administrator',
-		'type' => MENU_CALLBACK,	
+		'access_arguments' => 'administrator',
+		'type' => MENU_NORMAL_ITEM,	
 	);
 	$items['snowpilot-query'] = array(
-		'Title' => 'Recent Online Snowpits query page',
-		'page callback' => 'snowpilot_query_page',
+		'title' => 'Recent Online Snowpits query page',
+		'page callback' => array('snowpilot_query_page'),
 		'access callback' => TRUE,
-	//	'access_arguments' => 'administrator',
-		'type' => MENU_CALLBACK,	
+		'access_arguments' => 'administrator',
+		'type' => MENU_NORMAL_ITEM,	
 	);
 	
 	return $items;
 }
 
+function avscience_query_title(){
+	return "Avscience Query MegaPage";
+}
+
 function snowpilot_query_page(){
-	drupal_set_title('Recent Online Snowpits query page');
-	$output = 'This page is intended for snow scientists to query the snowpits that have been added to the online database only! 
-		This page does not query for snopits entered via the installed application, for that go to the <a href ="/avscience-query">AvScience Query page</a> '.
-	'<p>After finding parameters acceptable for your uses, you may use the XML feed link at the bottom of this page to subscribe to a feed. Use \'per_page\' variable in the query string to obtain a diffferent number ofresutls ( than 10 ).';
-	return $output . snowpilot_query_output();
+	drupal_set_title('Online Snowpits query page');
+	$output = 'This page is intended for snow scientists to query the snowpits that have been added to the online database. 
+		This page does not query for snowpits entered via the installed application, for that go to the <a href ="/avscience-query">AvScience Query page</a> '.
+	'<p>After finding parameters acceptable for your uses, you may use the XML Feed link at the bottom of this page to subscribe to a feed.';
+	return $output . snowpilot_query_output() ;
 }
 
 function avscience_query_page(){
 	
-	return avscience_query_output();
+	$output = avscience_query_output();
+	return t($output);
 }
 
 
@@ -145,7 +150,7 @@ function snowpilot_connect_convert_multi($serial_ids){
 		}else{
 		  watchdog('avscience_connect', "Unable to add: ".$new_pit['SERIAL'] . " to the avscience db.", array() , WATCHDOG_WARNING);
 			$critical = TRUE;
-			$result_codes[] = array( 'continue' => TRUE, 'first' => $new_pit['SERIAL'].' could not be added to the avscience db.');
+			$result_codes[] = array( 'continue' => TRUE, 'first' => $new_pit['SERIAL'].' could not be added to the avscience db.: '.$query2);
 		}
 // 		//		We keep adding the other functions to populate avscience here:
 
@@ -289,7 +294,7 @@ function snowpilot_avscience_fetch_new_pits(){
 	
 	$first_results = $older_snowpits_link->query($query1)->fetch_row()[0];
 
-	$query2 = 'SELECT `SERIAL`, `LOCAL_SERIAL`, `OBS_DATE` from `PIT_TABLE` where `SERIAL` > '. $first_results. ' LIMIT 1500, 400';  // .' AND OBS_DATE > "'. date( 'Y-m-d' , time() - 60*60*24*7*4).'"' ; // thereby only fetching new pits in the last four weeks, I want to avoid giant regurgitation!
+	$query2 = 'SELECT `SERIAL`, `LOCAL_SERIAL`, `OBS_DATE` from `PIT_TABLE` where `SERIAL` > '. $first_results. '' ; //' AND OBS_DATE > "'. date( 'Y-m-d' , time() - 60*60*24*7*4).'"' ; // thereby only fetching new pits in the last four weeks, I want to avoid giant regurgitation!
 	
 	// Temproarily include all pits no matter the obs date, so to include the drupal nodes 
 	$new_pits_result = $current_snowpits_link->query($query2);
@@ -297,8 +302,9 @@ function snowpilot_avscience_fetch_new_pits(){
 	
 	while ( $new_pit = $new_pits_result->fetch_array(MYSQLI_ASSOC) ){
     $all_pits_list[$new_pit['SERIAL']] = $new_pit;
-		$query3 = "SELECT COUNT(`SERIAL`) FROM `PIT_TABLE` WHERE `LOCAL_SERIAL` = '". $new_pit['LOCAL_SERIAL']."'";
-		//dsm($query3);
+		//  This query looks for existing pits in the final avscience db with the same local serial as this pit
+		// unless the pit is originally from drupal database, then we allow updating it. 
+		$query3 = "SELECT COUNT(`SERIAL`) FROM `PIT_TABLE` WHERE `LOCAL_SERIAL` = '". $new_pit['LOCAL_SERIAL']."'";  
 		
 		$existing_pit_check = $snowpilot_avscience->query($query3) or die(mysqli_error());
 		$existing_pit = $existing_pit_check->fetch_row()[0];
@@ -1070,16 +1076,16 @@ $output .=
 
 	if ( in_array('administrator' , $user->roles )){
 		$where_clause .= '';
-	}elseif( in_array('authenticated user' , $user->roles)){
+/*	}elseif( in_array('authenticated user' , $user->roles)){
 		$where_clause .= " AND ( SHARE = '1' OR (SHARE = '0' AND USERNAME = :user) ) ";
 	  $query_args[':user'] = $user->name;
-	}else{
+*/	}else{ 
 		$where_clause .= " AND SHARE = '1' ";
 	
 	}
 		//
 		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
-		$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
+		$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL, LOCAL_SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
 		
 		$query2 = "SELECT count(SERIAL) FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause ;
 
@@ -1116,7 +1122,7 @@ $output .=
 			//  
 			  $links = array();
 			  $links[] = array('title' => t('JPG'), 'href' => '/sites/default/files/avscience-profiles/graph-serial-'. $record->SERIAL .'.jpg');
-			  $links[] = array('title' => t('SnowPilot XML'), 'href' => '/sites/default/files/avscience-profiles/graph-serial-'.$record->SERIAL. '.jpg');
+			  $links[] = array('title' => t('SnowPilot XML'), 'href' => '/sites/default/files/snowpit-xml/node-'.$record->SERIAL. '.xml');
 			
 				$this_item = '
 	              <div class = "item-wrapper">
@@ -1201,7 +1207,7 @@ function avscience_pit_xml_doc($serials ){
 }
 
 function snowpilot_query_output(){
-	
+	global $user;
 	
 	$query = new EntityFieldQuery();
 	$query->entityCondition('entity_type', 'node')
@@ -1209,9 +1215,9 @@ function snowpilot_query_output(){
 	  ->propertyCondition('status', NODE_PUBLISHED);
 	
   // See the comment about != NULL above.
-	if( isset( $_GET['STATE']) && $_GET['STATE'] <> ''){
+	if( isset( $_GET['STATE']) && count($_GET['STATE']) > 0){
 		$state = $_GET['STATE'];
-    $query->fieldCondition('field_loaction', 'tid', $state, '=');
+    $query->fieldCondition('field_loaction', 'tid', $state, 'IN');
 	}
   $query->addTag('debug');
 	
@@ -1233,7 +1239,7 @@ function snowpilot_query_output(){
 		foreach ( $region as $key2=>$location){
 			$selected = '';
 			
-			if ( $state == $key2) $selected = ' selected = "selected" ';
+			if ( in_array( $key2, $state )) $selected = ' selected = "selected" ';
 			
 			$state_options .= '<option value ="'.$key2.'" '. $selected .'>'.$location.'</option>';
 		}
@@ -1259,7 +1265,7 @@ function snowpilot_query_output(){
 	if (isset( $_GET['USERNAME']) && $_GET['USERNAME'] <> ''  ){
 			$username = $_GET['USERNAME'];
 			
-		  $query->propertyCondition('uid', '%' . $username . '%', 'like'); // Equal to "contains"
+		  $query->propertyCondition('uid',  $username , '='); // Equal to 
 	}
 
 
@@ -1302,6 +1308,11 @@ function snowpilot_query_output(){
 		}
 	}
 	
+	$per_page = (isset($_GET['per_page']) && $_GET['per_page'] > 0) ? $_GET['per_page'] : 10 ; // default per_page is 10
+  if ( $per_page > 100 ) $per_page = 100; // limiting to select 100 items
+	$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
+	
+	
 	$output .='
 	<div class = "view-snowpit-list">
 		<div class= "views-exposed-form">
@@ -1313,7 +1324,7 @@ function snowpilot_query_output(){
 	  	</div>
 	    <div style = "display: inline-block; width : 160px; vertical-align: top;">
 	  	State/Province/Country<br />
-		  <select type = "select" name = "STATE" id = "STATE" >
+		  <select type = "select" name = "STATE[]" id = "STATE" multiple = "multiple" >
 	  	  '.$state_options.'
 	    </select>
 	    </div>
@@ -1324,7 +1335,7 @@ function snowpilot_query_output(){
 			  <div style ="display: inline-block;">maximum: <br /><input type = "date" name = "OBS_DATE_MAX" value= "'. $obsdatemax .'" /> </div>
 			</div>
 			<div class = "users-orgs-selection"  style = "display: inline-block; vertical-align: top;" >
-				<div >User ID \'contains\': <br /><input type = "text" name = "USERNAME" value= "'. $username. '" /> </div> 
+				<div >User ID: <br /><input type = "text" name = "USERNAME" value= "'. $username. '" /> </div> 
 			  <div ><select name = "AFFIL" id = "AFFIL" /> 
 				'. $affil_options . '
 				</select></div>
@@ -1333,32 +1344,33 @@ function snowpilot_query_output(){
 	  </div>
 
 		<div class = "tests-button">
-			<div style ="display: inline-block;"><input type = "select" name = "per_page" >
-			<option value  = "1">1</option>
-			<option value  = "5">5</option>
-			<option value  = "10">10</option>
-			<option value  = "50">50</option>
-			<option value  = "100">100</option>  </select></div>
+			<div style ="display: inline-block; margin-right: 25px;">
+			Number of records to return: <select type = "select" name = "per_page" value = "10">';
+			
+			$num_options = array(1,5,10,50,100);
+			foreach ( $num_options as $num_option){
+				$selected = ($per_page == $num_option) ? ' selected = "selected" ' : '' ;
+				$output .= '<option value  = "'.$num_option.'" '. $selected .'>'. $num_option .'</option>';
+				
+			}
+
+				
+$output .='</select></div>
+		  <div style ="display: inline-block; margin-right: 25px;">Include test Pits?<input type = "checkbox" name = "testpit" value = "1" '. $test_pit_checked .'/></div>
 			<div style ="display: inline-block;"><input type = "submit" name = "submit" value = "Get Pits" /></div>
-		  <div style ="display: inline-block;">Include test Pits?<input type = "checkbox" name = "testpit" value = "1" '. $test_pit_checked .'/></div>
+			
 	  </div>
 	<br />
 
 	</form>
 	</div>';
- 
 
 	if ( in_array('administrator' , $user->roles )){
 	
 	}else{
 	  $query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');
 	}
-		//
-		$per_page = (isset($_GET['per_page']) && $_GET['per_page'] > 0) ? $_GET['per_page'] : 10 ; // default per_page is 10
-		
-		if ( $per_page > 100 ) $per_page = 100; // limiting to select 100 items
-		
-		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
+	//
 
 
     $query_count = $query;
@@ -1447,9 +1459,17 @@ function snowpilot_query_output(){
 function  avscience_xml_link($url)  {
 	$query_array = array();
 	unset($_GET['q']);
+	unset($_GET['page']);
+	
 		foreach ($_GET as $key => $var ){
-			$query_array[] = $key.'='.$var ;
-
+		  if ( is_array($var)){ 
+				
+				foreach( $var as $ind_region){
+					$query_array[] = $key.'[]='.$ind_region;
+				}
+			}else{
+			  $query_array[] = $key.'='. $var ;
+      }
 		}
 	$query_string = '?' . implode($query_array , '&' );
 	return  '<div style = "text-align:center;"><a href ="/'.$url.$query_string.'" style ="color: #00f;"><img src="/misc/feed.png"  /> XML feed link</a>';
@@ -1464,10 +1484,10 @@ function snowpilot_query_xml(){
 	$query->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'snowpit_profile')
 	  ->propertyCondition('status', NODE_PUBLISHED);
-	if( isset( $_GET['STATE']) && $_GET['STATE'] <> ''){
+	if( isset( $_GET['STATE']) && count($_GET['STATE'] ) > 0 ){
 		$state = $_GET['STATE'];
 		//dsm($state);
-    $query->fieldCondition('field_loaction', 'tid', $state, '=');
+    $query->fieldCondition('field_loaction', 'tid', $state, 'IN');
 	}
 
 	if (isset( $_GET['OBS_DATE_MIN']) && $_GET['OBS_DATE_MIN'] <> ''  ){
@@ -1486,7 +1506,7 @@ function snowpilot_query_xml(){
 	if (isset( $_GET['USERNAME']) && $_GET['USERNAME'] <> ''  ){
 			$username = $_GET['USERNAME'];
 			
-		  $query->propertyCondition('uid', '%' . $username . '%', 'like'); // Equal to "contains"
+		  $query->propertyCondition('uid', $username , '='); // Equal to "contains"
 	}
 
 

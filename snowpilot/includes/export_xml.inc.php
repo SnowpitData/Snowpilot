@@ -2,10 +2,10 @@
 
 /*
 //  This function creates a pitxml based on the node information passed to it. should be compliant with the snowpilot datamodel.
-//
+//  $format can be 'full' or 'restricted' - full will return the User element as well, shouldn't be saved.
 //
 */
-function snowpilot_node_write_pitxml($node){
+function snowpilot_node_write_pitxml($node, $format = 'restricted'){
 	$xml_filename = '/sites/default/files/snowpit-xml/node-'.$node->nid.'.xml';
 	if ( !file_exists(DRUPAL_ROOT. $xml_filename)){
 		watchdog('snowpilot', "Snowpit $node->nid xml does not exist.");
@@ -18,7 +18,7 @@ function snowpilot_node_write_pitxml($node){
 		//  however, only the 'User-info free' version should be saved to the snowpit-xml directory, for private or group pits.
 		// this could be moved to the very end of the function, where the saving and returning of values happens
 		// or left up here and rolled in with the 'if file exists stuff above
-	  if ( $node->field_snowpit_visibility['und'][0]['value'] == 'public' ){
+	  if ( $node->field_snowpit_visibility['und'][0]['value'] == 'public' || $format == 'full'){
 			$snowpilot_PitCore->appendChild($snowpilot_User);
 		}
 		$snowpilot_Location = $snowpilot_xmldoc->createElement("Location"); $snowpilot_PitCore->appendChild($snowpilot_Location);
@@ -246,10 +246,24 @@ function snowpilot_node_write_pitxml($node){
 		  	$user_preferences[$key] = $snowpilot_xmldoc->createAttribute( $key );
 				
 		  	$preferences[$key]->value = $pref;
+				$user_preferences[$key]->value = $pref;
+				
 		  	$snowpilot_User->appendChild($user_preferences[$key]);
 				$snowpilot_PitCore->appendChild($preferences[$key]);
 		  }
 		}
+		//
+		//  share
+		//   this needs to become trinary, not just boolean
+		//   A tricky way to do this: anything but 'true' is interpretted as false, some we set to one of 'true' ( which is 'public') , 'private' , or 'group'
+		//
+		$UserpitShare = $snowpilot_xmldoc->createAttribute('share');	
+		$pitShare = $snowpilot_xmldoc->createAttribute('share');
+		
+		$UserpitShare->value = $pitShare->value = ($node->field_snowpit_visibility['und'][0]['value'] == 'public') ? 'true' : $node->field_snowpit_visibility['und'][0]['value'];
+		
+		$snowpilot_User->appendChild($UserpitShare);
+		$snowpilot_PitCore->appendChild($pitShare);
 		
 		//
 		// The $user object will only be included on public snowpits
@@ -284,14 +298,7 @@ function snowpilot_node_write_pitxml($node){
 		$snowpilot_User->appendChild($fullName);
 	
 	
-		//
-		//  share
-		//   this needs to become trinary, not just boolean
-		//   A tricky way to do this: anything but 'true' is interpretted as false, some we set to one of 'true' ( which is 'public') , 'private' , or 'group'
-		//
-		$pitShare = $snowpilot_xmldoc->createAttribute('share');
-		$pitShare->value = ($node->field_snowpit_visibility['und'][0]['value'] == 'public') ? 'true' : $node->field_snowpit_visibility['und'][0]['value'];
-		$snowpilot_User->appendChild($pitShare);
+
 		//
 		//  phone of submitter
 		//
@@ -317,7 +324,11 @@ function snowpilot_node_write_pitxml($node){
 		// affil - Affilliation
 		//
 		$profAffil = $snowpilot_xmldoc->createAttribute('affil');
-		$profAffil->value = isset ($account->field_professional_affiliation['und'][0]['tid']) ? taxonomy_term_load($account->field_professional_affiliation['und'][0]['tid'])->name : '';
+		$pitprofAffil  = $snowpilot_xmldoc->createAttribute('affil');
+		
+		$pitprofAffil->value = $profAffil->value = isset ($node->field_org_ownership['und'][0]['tid']) ? taxonomy_term_load($node->field_org_ownership['und'][0]['tid'])->name : '';
+		
+		$snowpilot_PitCore->appendChild($pitprofAffil);
 		$snowpilot_User->appendChild($profAffil);
 		//
 		//  Location Element
@@ -645,9 +656,14 @@ function snowpilot_node_write_caaml($node){
 	$account = user_load($node->uid);
 	$snowpilot_caaml = new DOMDocument('1.0', 'UTF-8');
 	$snowpilot_SnowProfile = $snowpilot_caaml->createElement( 'SnowProfile'); $snowpilot_caaml->appendChild($snowpilot_SnowProfile);
+	$snowpilot_SnowProfile->setAttributeNS(
+	  'http://www.w3.org/2001/XMLSchema-instance',
+	  'xsi:schemaLocation',
+	  'http://caaml.org/Schemas/V5.0/Profiles/SnowProfileIACS http://caaml.org/Schemas/V5.0/Profiles/SnowprofileIACS/CAAMLv5_SnowProfileIACS.xsd');
 	
-	$snowpilot_SnowProfile->setAttributeNS('http://www.snowpilot.org', 'app:NodeID' , $node->nid);
-	$snowpilot_SnowProfile->setAttributeNS('http://www.opengis.net/gml', 'gml:id' ,'test');
+	
+	//$snowpilot_SnowProfile->setAttributeNS('http://www.snowpilot.org', 'app:NodeID' , $node->nid);
+	//$snowpilot_SnowProfile->setAttributeNS('http://www.opengis.net/gml', 'gml:id' ,'test');
 	$snowpilot_metaDataProperty = $snowpilot_caaml->createElement('metaDataProperty'); $snowpilot_SnowProfile->appendChild($snowpilot_metaDataProperty);
 	$snowpilot_validTime = $snowpilot_caaml->createElement('validTime'); $snowpilot_SnowProfile->appendChild($snowpilot_validTime);
 	$snowpilot_snowProfileResultsOf = $snowpilot_caaml->createElement('snowProfileResultsOf'); $snowpilot_SnowProfile->appendChild($snowpilot_snowProfileResultsOf);

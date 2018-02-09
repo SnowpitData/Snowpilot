@@ -409,10 +409,10 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			$node_wrapper->save();
 			watchdog('snowpilot', "Snowpit $node->nid set to LOCKED.");
 			// and save it to the avscience db
-/*			if ( snowpilot_avscience_pit_write($node)) {
+			if ( snowpilot_avscience_pit_write($node)) {
 				watchdog('snowpilot', "Snowpit $node->nid sucessfully saved to avscience db.");
 			}
-*/		//
+		//
 		}
 	}
 	if (node_access('view', $node)){
@@ -483,7 +483,7 @@ function snowpilot_avscience_pit_exists($node){
 function snowpilot_avscience_pit_write($node){
 	// 
 	$url = 'http://www.kahrlconsulting.com:8084/avscience/PitServlet?TYPE=XMLPIT_SEND';
-	$data = snowpilot_node_write_pitxml($node);
+	$data = snowpilot_node_write_pitxml($node, 'full');
 
 	$options = array(
 	    'http' => array(
@@ -712,7 +712,6 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					$form['uid_current']['#access'] = FALSE;		
 				}
 				$form['#after_build'][] = 'snowpit_list_view_after_build';
-				
 			}	
 			if ( isset($form['field_practice_pit_value']) ){
 				$form['field_practice_pit_value']['#options'] = array(  0 => 'Exclude Practice Pits' ,'All' => 'Include Practice Pits');
@@ -1049,14 +1048,7 @@ function get_optgroup_by_taxonomy($taxonomy_name) {
 }
 
 function snowpit_list_view_after_build($form, &$form_state){
-	//
-	$form['field_professional_affiliation_tid']['#options'] = get_optgroup_by_taxonomy('professional_affiliation');
-	
-	$form['field_professional_affiliation_tid']['#options'] = array_reverse($form['field_professional_affiliation_tid']['#options']);
-	$form['field_professional_affiliation_tid']['#options']['All'] = 'All Snowpits';
-	$form['field_professional_affiliation_tid']['#options'] = array_reverse($form['field_professional_affiliation_tid']['#options']);
-	$form['field_practice_pit_value']['#default_value'] = '0';
-	
+	if ( $form['field_org_ownership_tid']['#value'] == '' ) $form['field_org_ownership_tid']['#value'] = '_none';
 	return $form;
 }
 
@@ -1254,61 +1246,6 @@ function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 	}	
 	//dsm($form['field_stability_on_similar_slope']);
 	
-}
-
-function snowpilot_lock_professional_affil(&$form){
-	$top_level_prof_affil = array ('none', 108, 57, 59, 60, 62, 58, 61, 172);
-	$group_admin_text = '';
-	if (isset( $form['field_professional_affiliation']['und']['#default_value'][0]  ) 
-	  && !in_array($form['field_professional_affiliation']['und']['#default_value'][0], $top_level_prof_affil )
-	  && !snowpilot_user_has_role('administrator') 
-	){
-		  $form['field_professional_affiliation']['#access'] = FALSE ; 
-		  $ids = array();
-		  foreach ( $form['field_professional_affiliation']['und']['#default_value'] as $affiliation) $ids[] = $affiliation ;
-		 
-		  $terms = taxonomy_term_load_multiple( $ids );
-		
-		  $terms_list_formatted = '';
-		  foreach( $terms as $tid => $term) {
-		  	$terms_list_formatted .= 	'<div class="inner"> ' . $term->name.' </div>';
-		  		  //
-			//
-			//
-			  $user_wrapper = entity_metadata_wrapper( 'user', user_load($form['#user']->uid));
-	      $query = new EntityFieldQuery();
-	      $query->entityCondition('entity_type', 'user')
-	        ->fieldCondition('field_professional_affiliation' ,  'tid' , $affiliation , '=');
-	      $result = $query->execute();
-			  $group_users = array_keys($result['user']);
-		  	$group = user_load_multiple($group_users);
-				
-		  	foreach($group as $individual){
-		  		if ( isset($individual->roles[6])){
-		  			$org_admins[] = $individual;
-		  		}
-		  	}
-			
-		  	if ( !count ( $org_admins) && !in_array( $tid , array ('none', 108, 57, 59, 60, 62, 58, 61, 172) ) && $form['field_professional']['und']['#default_value'] == '1' ){
-		      $group_admin_text = 'If you are an <em>administrator or senior user</em> within the '. $user_wrapper->field_professional_affiliation->label().' group, and would like to manage other users and snowpits within your group, please contact us at <a href ="mailto:admin@snowpilot.org">admin@snowpilot.org</a></div>';
-		  	}
-				
-			}
-      $to_change_affil_text = '<div class = "inner">If your <em>Organization Affiliation</em> is incorrect, please contact us at <a href ="mailto:admin@snowpilot.org">admin@snowpilot.org</a> to update it.</div>';
-			
-			
-			//
-			//
-			$form['field_professional_affiliation_display'] = array( 
-		  	'#type' => 'container',
-		  	'#weight' => '25',
-		  	'und' => array ( 
-		  	'markup' => array (
-		      '#markup' => '<div class = "professional_affil_wrapper"><label>Organization Affiliation</label>' . $terms_list_formatted . $to_change_affil_text . $group_admin_text .' </div>',),
-			  ),	
-		  );
-			$form['#group_children']['field_professional_affiliation_display'] = 'group_profs';
-	}
 }
 
 function snowpilot_entity_presave($entity, $type){
@@ -1563,9 +1500,8 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
       $density_item['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_depth']['und'][0]['value'] );
   	}
 		if ( strpos( $density_item['field_density_top']['und'][0]['value'] , ',')){
-			$density_item['field_density_top']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_density_top']['und'][0]['value'] ); 
-		}
-		
+		  $density_item['field_density_top']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_density_top']['und'][0]['value'] ); 
+		}		
 		
 		if ( is_numeric($key )  && isset( $density_item['field_density_top']['und'][0]['value'] ) && is_numeric( $density_item['field_density_top']['und'][0]['value'] ) && $density_item['field_density_top']['und'][0]['value'] > 1000 ){ 
 			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_density_top", t('Density values should be 1000 kg/m-3 or less.'));
@@ -1955,14 +1891,14 @@ function snowpilot_node_grants($account, $op) {
     $grants['snowpit-owner'] = array( $account->uid );
 		//
 		// set group visibility ; set shared org visibility; for all roles except merely 'authenticated user', which is disabled from group permissions
-	  if ( count( $current_user->field_professional_affiliation['und']) && (in_array( 'forecaster' , $current_user->roles) || in_array( 'limited' , $current_user->roles) || in_array( 'org admin' , $current_user->roles) || in_array( 'researcher' , $current_user->roles))){
+	  if ( isset( $current_user->field_professional_affiliation['und']) && (in_array( 'forecaster' , $current_user->roles) || in_array( 'limited' , $current_user->roles) || in_array( 'org admin' , $current_user->roles) || in_array( 'researcher' , $current_user->roles))){
 	  	foreach ($current_user->field_professional_affiliation['und'] as $user_groups ) {
 	  	$grants['snowpit_group'][] = $user_groups['tid'];
 			$grants['org_shared'][] = $user_groups['tid'];
 		}
 			//
 			// likewise, org admins get more permissions for edit/delete
-			if ( in_array( 'org admin' , $current_user->roles)  && $current_user->field_org_admin_groups['und']  ){
+			if ( in_array( 'org admin' , $current_user->roles)  && isset($current_user->field_org_admin_groups['und'])  ){
 				foreach ( $current_user->field_org_admin_groups['und'] as $admin_of_group){
 			    $grants['org_admin'][] = array($admin_of_group['tid']);
 			  }
