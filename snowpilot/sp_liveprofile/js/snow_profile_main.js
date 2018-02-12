@@ -389,10 +389,31 @@
             SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
           }
         });
-        // Layers input mouseover delegation for submit bug
+        // Stability test input mouseover delegation for submit bug
         $('#edit-field-test', context).delegate( 'input', 'mouseover', function (event) {
           if($(this).hasClass("field-add-more-submit")) {
-            // When user hovers over Add Layer button, quickly blur and refocus element to trigger listeners
+            // When user hovers over Add Test button, quickly blur and refocus element to trigger listeners
+            var elem = document.activeElement;
+            elem.blur();
+            elem.focus();
+          }
+          // Stop Event 
+          event.stopPropagation();
+        });
+        // Temperature profile input delegation
+        $('#edit-field-temp-collection', context).delegate( 'input', 'blur', function (event) {
+          // Get temperature number 
+          var tempString = $(this).parents("div[class*='temp_num_']")[0].className.split(" ")[1].split("_")[2];
+          var tempNum = parseInt(tempString, 10);
+          // Try to add a temperature object to the array
+          SnowProfile.addTemperatureReading(tempNum);
+          // Update live profile
+          SnowProfile.drawTemperatures();
+        });
+        // Temperatures input mouseover delegation for submit bug
+        $('#edit-field-temp-collection', context).delegate( 'input', 'mouseover', function (event) {
+          if($(this).hasClass("field-add-more-submit")) {
+            // When user hovers over Add Temperature button, quickly blur and refocus element to trigger listeners
             var elem = document.activeElement;
             elem.blur();
             elem.focus();

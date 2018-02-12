@@ -233,6 +233,18 @@
       SnowProfile.Cfg.HANDLE_MIN_Y;
     return y;
   };
+  
+  /**
+   *  Convert a temperature value to a drawing X axis position 
+   *  
+   *  @method 
+   *  @memberof SnowProfile 
+   *  @param {number} (temperature) Temperature reading at a snow layer 
+   *  @returns {number} X position
+   */
+  SnowProfile.temperature2x = function(temperature) {
+    // TODO: add width of depth label to temp * temp_scale
+  }
 
   /**
    * Position the feature description and connecting lines on the drawing.
@@ -655,7 +667,36 @@
       SnowProfile.stabilityTests[testNum] = testObj;
     } else SnowProfile.stabilityTests.push(testObj);
     
-  };
+  };  // function addStabilityTest(testNum)
+  
+  /**
+   *  Checks the temperature form and attempts to add a new temperature reading 
+   *  to the array of temperature data, and if successful draws the updated 
+   *  temperature profile to the live profile.
+   *  
+   *  @method 
+   *  @memberof SnowProfile 
+   *  @param {number} (temperatureIndex) The index of the temperature reading to check
+   */
+  SnowProfile.addTemperatureReading = function (temperatureIndex) {
+    console.log("addTemperatureReading() called with temp number: " + temperatureIndex);
+    //SnowProfile.temperatureData.push({'temp': 20, 'depth': 10});
+    // TODO:  have this trigger on temperature inputs
+  }; // function addTemperatureReading(temperatureIndex)
+  
+  /**
+   *  Sorts and displays the temperature readings on the live profile
+   *  
+   *  @method
+   *  @memberof SnowProfile 
+   */
+  SnowProfile.drawTemperatures = function () {
+    // TODO:  Sort and plot temp points and draw lines, add SVG to temperatureGroup, make sure to keep on top 
+    console.log("drawTemperatures() called");
+    //for (var temp in SnowProfile.temperatureData) {
+      
+    //}
+  }; // function drawTemperatures()
 
   /**
    * Create a new snow layer with associated Features object
@@ -784,6 +825,17 @@
     SnowProfile.gridGroup = SnowProfile.drawing.group()
       .addClass("snow_profile_grid");
     SnowProfile.mainGroup.add(SnowProfile.gridGroup);
+    
+    /**
+     * SnowProfile temperature group
+     *
+     * @see  {@link http://http://documentup.com/wout/svg.js#parent-elements/groups Groups}
+     * @type {object}
+     * @memberof SnowProfile
+     */
+    SnowProfile.temperatureGroup = SnowProfile.drawing.group()
+      .addClass("snow_profile_temperature");
+    SnowProfile.mainGroup.add(SnowProfile.temperatureGroup);
     
     // Add the reference grid to the SVG drawing
     new SnowProfile.Grid();
