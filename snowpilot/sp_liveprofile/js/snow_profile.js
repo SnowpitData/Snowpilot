@@ -691,7 +691,8 @@
    *  @param {number} (temperatureIndex) The index of the temperature reading to check
    */
   SnowProfile.addTemperatureReading = function (temperatureIndex) {
-    console.log("addTemperatureReading() called with temp number: " + temperatureIndex);
+    // TODO:  trigger graph rescale if a new low temperature is observed
+    //console.log("addTemperatureReading() called with temp number: " + temperatureIndex);
     var temperature = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-temp-temp-]').val().trim();
     var depth = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-depth-]').val().trim();
     temperature = parseFloat(temperature);
@@ -708,8 +709,8 @@
    *  @memberof SnowProfile 
    */
   SnowProfile.drawTemperatures = function () {
-    // TODO:  Sort and plot temp points and draw lines, add SVG to temperatureGroup, make sure to keep on top 
-    console.log("drawTemperatures() called");
+    // TODO:  make sure draws properly after rescale
+    // console.log("drawTemperatures() called");
     var sortedTemps = SnowProfile.temperatureData.slice().sort(function(a,b) {
       return a.depth - b.depth;
     }),
@@ -723,7 +724,7 @@
       if (sortedTemps[i]) {
         // console.log(sortedTemps[i].temperature);
         // console.log(sortedTemps[i].depth);
-        tempPoint = SnowProfile.drawing.circle(8)
+        tempPoint = SnowProfile.drawing.circle(SnowProfile.Cfg.TEMPERATURE_SIZE)
           .fill(SnowProfile.Cfg.TEMPERATURE_COLOR)
           .move(SnowProfile.temperature2x(sortedTemps[i].temperature) - 
               (SnowProfile.Cfg.TEMPERATURE_SIZE / 2),
@@ -749,6 +750,7 @@
       }
     }
     
+    // Ensure temperature group stays on front of graph
     SnowProfile.temperatureGroup.front();
   }; // function drawTemperatures()
 

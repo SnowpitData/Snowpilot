@@ -48,6 +48,7 @@
      * @see SnowProfile.temperatureGroup
      */
     SnowProfile.drawTemperatureScale = function () {
+      // TODO:  detect and draw scale according to temperature units
       // Add temperatures and tick marks 
       var px_scale = SnowProfile.Cfg.GRAPH_WIDTH / 10.0,
         temp_scale = (SnowProfile.Cfg.DEFAULT_MAX_TEMP - (SnowProfile.MIN_TEMP || SnowProfile.Cfg.DEFAULT_MIN_TEMP)) / 10.0,
@@ -405,9 +406,7 @@
           .style({fill: SnowProfile.Cfg.BACKGROUND_COLOR})
       );
 
-      // Create inner groups for temperature, depth, hardness scales
-      SnowProfile.temperatureGroup = SnowProfile.gridGroup.group()
-        .addClass("snow_profile_temperature");
+      // Create inner groups for depth and hardness scales
       SnowProfile.depthGroup = SnowProfile.gridGroup.group()
         .addClass("snow_profile_depth");
       SnowProfile.hardnessGroup = SnowProfile.gridGroup.group()
