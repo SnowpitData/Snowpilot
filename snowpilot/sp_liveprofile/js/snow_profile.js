@@ -50,6 +50,16 @@
    * @see SnowProfile.Grid~depthScaleGrp
    */
   SnowProfile.depthRef = "s";
+  
+  /**
+   *  Minimum temperature on the temperature profile scale
+   *  
+   *  The lower of either the default temperature value or the lowest temperature 
+   *  input into the form.
+   *  @memberof SnowProfile 
+   *  @type {number}
+   */
+  SnowProfile.minTemp = SnowProfile.Cfg.DEFAULT_MIN_TEMP;
 
   /**
    * Snow stratigraphy snow layers.
@@ -243,7 +253,11 @@
    *  @returns {number} X position
    */
   SnowProfile.temperature2x = function(temperature) {
-    // TODO: add width of depth label to temp * temp_scale
+    var x = (temperature / 
+      (SnowProfile.Cfg.DEFAULT_MAX_TEMP - SnowProfile.minTemp) * 
+      SnowProfile.Cfg.GRAPH_WIDTH) +
+      SnowProfile.Cfg.DEPTH_LABEL_WD + 1;
+    return x;
   }
 
   /**
@@ -662,10 +676,8 @@
     // Build the object to store in SnowProfile.stabilityTests
     var testObj = { description: testString, depth: testDepth };
     
-    // Add object to SnowProfile.stabilityTests, or overwrite if it already exists
-    if (SnowProfile.stabilityTests.length > testNum) {
-      SnowProfile.stabilityTests[testNum] = testObj;
-    } else SnowProfile.stabilityTests.push(testObj);
+    // Add object to SnowProfile.stabilityTests (will overwrite)
+    SnowProfile.stabilityTests[testNum] = testObj;
     
   };  // function addStabilityTest(testNum)
   
@@ -680,8 +692,13 @@
    */
   SnowProfile.addTemperatureReading = function (temperatureIndex) {
     console.log("addTemperatureReading() called with temp number: " + temperatureIndex);
-    //SnowProfile.temperatureData.push({'temp': 20, 'depth': 10});
-    // TODO:  have this trigger on temperature inputs
+    var temperature = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-temp-temp-]').val().trim();
+    var depth = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-depth-]').val().trim();
+    temperature = parseFloat(temperature);
+    depth = parseFloat(depth);
+    if (!(isNaN(temperature) || isNaN(depth))){
+      SnowProfile.temperatureData[temperatureIndex] = {temperature: temperature, depth: depth};
+    }
   }; // function addTemperatureReading(temperatureIndex)
   
   /**
@@ -693,9 +710,46 @@
   SnowProfile.drawTemperatures = function () {
     // TODO:  Sort and plot temp points and draw lines, add SVG to temperatureGroup, make sure to keep on top 
     console.log("drawTemperatures() called");
-    //for (var temp in SnowProfile.temperatureData) {
+    var sortedTemps = SnowProfile.temperatureData.slice().sort(function(a,b) {
+      return a.depth - b.depth;
+    }),
+      tempPoint, 
+      tempLine;
       
-    //}
+    SnowProfile.temperatureGroup.clear();
+    SnowProfile.drawTemperatureScale();
+      
+    for (var i = 0; i < sortedTemps.length; i++) {
+      if (sortedTemps[i]) {
+        // console.log(sortedTemps[i].temperature);
+        // console.log(sortedTemps[i].depth);
+        tempPoint = SnowProfile.drawing.circle(8)
+          .fill(SnowProfile.Cfg.TEMPERATURE_COLOR)
+          .move(SnowProfile.temperature2x(sortedTemps[i].temperature) - 
+              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2),
+            SnowProfile.depth2y(sortedTemps[i].depth) - 
+              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2)
+          );
+            
+        SnowProfile.temperatureGroup.add(tempPoint);
+            
+        if (i > 0) {    
+          tempLine = SnowProfile.drawing.line(
+            SnowProfile.temperature2x(sortedTemps[i-1].temperature),
+            SnowProfile.depth2y(sortedTemps[i-1].depth),
+            SnowProfile.temperature2x(sortedTemps[i].temperature),
+            SnowProfile.depth2y(sortedTemps[i].depth))
+            .stroke({
+              color: SnowProfile.Cfg.TEMPERATURE_COLOR,
+              width: 2
+            });
+            
+          SnowProfile.temperatureGroup.add(tempLine);
+        }
+      }
+    }
+    
+    SnowProfile.temperatureGroup.front();
   }; // function drawTemperatures()
 
   /**

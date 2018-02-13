@@ -42,9 +42,12 @@
      *
      * Generate the label, numbers, and tick marks for temperature profile 
      *   along the top edge of the graph.  Depends on minimum temperature.
-     * @see SnowProfile.gridGroup
+     * We expose this as a public method so the scale can be redrawn if needed.
+     * @type method
+     * @memberof SnowProfile 
+     * @see SnowProfile.temperatureGroup
      */
-    function drawTemperatureScale() {
+    SnowProfile.drawTemperatureScale = function () {
       // Add temperatures and tick marks 
       var px_scale = SnowProfile.Cfg.GRAPH_WIDTH / 10.0,
         temp_scale = (SnowProfile.Cfg.DEFAULT_MAX_TEMP - (SnowProfile.MIN_TEMP || SnowProfile.Cfg.DEFAULT_MIN_TEMP)) / 10.0,
@@ -84,7 +87,7 @@
         fll: SnowProfile.Cfg.LABEL_COLOR
       })
       .move(SnowProfile.Cfg.GRAPH_WIDTH / 2, 0));
-    } // function drawTemperatureScale()
+    }; // function SnowProfile.drawTemperatureScale()
 
     /**
      * Draw the depth scale
@@ -424,7 +427,7 @@
       drawHardnessScale();
       
       // Draw the temperature scale
-      drawTemperatureScale();
+      SnowProfile.drawTemperatureScale();
 
       // Draw labels
       drawLabels();

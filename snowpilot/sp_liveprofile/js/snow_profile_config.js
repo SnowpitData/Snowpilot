@@ -150,7 +150,7 @@ var SnowProfile = {};
     COMMENT_WD: 300,
 
     /**
-     * Vertical height in pixels of the temperature (horizontal) axis label.
+     * Vertical height in pixels of the temperature (top horizontal) axis label.
      * @memberof SnowProfile
      * @const {number}
      */
@@ -164,7 +164,7 @@ var SnowProfile = {};
     DESCR_HEIGHT: 40,
 
     /**
-     * Vertical height in pixels of the hardness (horizontal) axis label.
+     * Vertical height in pixels of the hardness (bottom horizontal) axis label.
      * @memberof SnowProfile
      * @const {number}
      */
@@ -176,6 +176,13 @@ var SnowProfile = {};
      * @const {number}
      */
     HANDLE_SIZE: 11,
+    
+    /**
+     *  Diameter in pixels of the temperature points
+     *  @memeber of SnowProfile.Cfg 
+     *  @const {number} 
+     */
+    TEMPERATURE_SIZE: 8,
 
     /**
      * Color of the background of the graph
@@ -239,6 +246,13 @@ var SnowProfile = {};
      * @const {string}
      */
     BUTTON_FOCUS_COLOR: "#000",
+    
+    /**
+     *  Color of temperature plot 
+     *  @memeber of SnowProfile.Cfg 
+     *  @const {string}
+     */
+    TEMPERATURE_COLOR: "#ff0000",
 
     /**
       Depth scale in pixels per cm
