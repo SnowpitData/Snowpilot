@@ -52,14 +52,12 @@
   SnowProfile.depthRef = "s";
   
   /**
-   *  Minimum temperature on the temperature profile scale
+   *  Temperature unit preference on SnowPilot, pulled from the form 
    *  
-   *  The lower of either the default temperature value or the lowest temperature 
-   *  input into the form.
-   *  @memberof SnowProfile 
-   *  @type {number}
+   *  @memberof SnowProfile
+   *  @type {!string}
    */
-  SnowProfile.minTemp = SnowProfile.Cfg.DEFAULT_MIN_TEMP;
+  SnowProfile.tempUnit = 'F';
 
   /**
    * Snow stratigraphy snow layers.
@@ -252,11 +250,14 @@
    *  @param {number} (temperature) Temperature reading at a snow layer 
    *  @returns {number} X position
    */
-  SnowProfile.temperature2x = function(temperature) {
-    var x = (temperature / 
-      (SnowProfile.Cfg.DEFAULT_MAX_TEMP - SnowProfile.minTemp) * 
-      SnowProfile.Cfg.GRAPH_WIDTH) +
-      SnowProfile.Cfg.DEPTH_LABEL_WD + 1;
+  SnowProfile.temperature2x = function(temp) {
+    var temp_scale = SnowProfile.maxTemp - SnowProfile.minTemp,
+        px_scale = SnowProfile.Cfg.GRAPH_WIDTH / temp_scale,
+        x = SnowProfile.tempUnit === 'F' ? 
+          SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
+          ((temp - SnowProfile.maxTemp) * px_scale) :
+          SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
+          (temp * px_scale);
     return x;
   }
 
@@ -709,7 +710,6 @@
    *  @memberof SnowProfile 
    */
   SnowProfile.drawTemperatures = function () {
-    // TODO:  make sure draws properly after rescale
     // console.log("drawTemperatures() called");
     var sortedTemps = SnowProfile.temperatureData.slice().sort(function(a,b) {
       return a.depth - b.depth;

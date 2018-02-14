@@ -48,35 +48,40 @@
      * @see SnowProfile.temperatureGroup
      */
     SnowProfile.drawTemperatureScale = function () {
-      // TODO:  detect and draw scale according to temperature units
-      // Add temperatures and tick marks 
-      var px_scale = SnowProfile.Cfg.GRAPH_WIDTH / 10.0,
-        temp_scale = (SnowProfile.Cfg.DEFAULT_MAX_TEMP - (SnowProfile.MIN_TEMP || SnowProfile.Cfg.DEFAULT_MIN_TEMP)) / 10.0,
-        tick_Y_bot = SnowProfile.Cfg.HANDLE_MIN_Y + (SnowProfile.Cfg.HANDLE_SIZE / 2),
-        tick_Y_top, x, temp;
+      SnowProfile.tempUnit = $('div[id^=field-temp-collection-und-0-field-temp-temp-add-more-wrapper] span')
+        .html().indexOf('F') > 0 ? 'F' : 'C';
+      SnowProfile.maxTemp = SnowProfile.tempUnit === 'F' ? 
+        SnowProfile.Cfg.DEFAULT_MAX_TEMP_F : SnowProfile.Cfg.DEFAULT_MAX_TEMP_C;
+      SnowProfile.minTemp = SnowProfile.minTemp || (SnowProfile.tempUnit === 'F' ? 
+        SnowProfile.Cfg.DEFAULT_MIN_TEMP_F : SnowProfile.Cfg.DEFAULT_MIN_TEMP_C);
+        
+      // console.log("Unit: " + SnowProfile.tempUnit + " , Min/Max: " + SnowProfile.minTemp + "/" + SnowProfile.maxTemp);
       
-      for (i = 0; i < 11; i++) {
-        x = SnowProfile.Cfg.DEPTH_LABEL_WD + (i * px_scale);
-        temp = Math.round(i * temp_scale * 10) / 10;
-        if (i % 2 === 0) {
-          tick_Y_top = tick_Y_bot - 5;
-          SnowProfile.temperatureGroup.add(SnowProfile.drawing.text(String(temp))
-            .addClass("snow_profile_temperature")
-            .font({
-              size: 12,
-              style: 'bold',
-              family: 'sans-serif',
-              fill: SnowProfile.Cfg.LABEL_COLOR})
-            .move(x - 4, tick_Y_top - 18));
-        } else {
-          tick_Y_top = tick_Y_bot - 10;
-        }
+      // Add temperatures and tick marks 
+      var temp_scale = SnowProfile.maxTemp - SnowProfile.minTemp,
+        tick_Y_bot = SnowProfile.Cfg.HANDLE_MIN_Y + (SnowProfile.Cfg.HANDLE_SIZE / 2),
+        tick_Y_top = tick_Y_bot - 5,
+        increment = temp_scale > 28 ? 4 : (temp_scale > 14 ? 2 : 1),
+        x;
+      
+      var temp = SnowProfile.maxTemp;
+      while (temp >= SnowProfile.minTemp) {
+        x = SnowProfile.temperature2x(temp);
+        SnowProfile.temperatureGroup.add(SnowProfile.drawing.text(String(temp))
+          .addClass("snow_profile_temperature")
+          .font({
+            size: 12,
+            style: 'bold',
+            family: 'sans-serif',
+            fill: SnowProfile.Cfg.LABEL_COLOR})
+          .move(x - 4, tick_Y_top - 18));
         SnowProfile.temperatureGroup.add(SnowProfile.drawing.line(x, tick_Y_bot, x, tick_Y_top)
         .addClass("snow_profile_temperature")
         .stroke({
           color: SnowProfile.Cfg.OUTLINE_GRID_COLOR,
           width: 1
         }));
+        temp -= increment;
       }
       
       // Add the label for temperature profile 
