@@ -726,20 +726,20 @@
         // console.log(sortedTemps[i].depth);
         tempPoint = SnowProfile.drawing.circle(SnowProfile.Cfg.TEMPERATURE_SIZE)
           .fill(SnowProfile.Cfg.TEMPERATURE_COLOR)
-          .move(SnowProfile.temperature2x(sortedTemps[i].temperature) - 
-              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2),
-            SnowProfile.depth2y(sortedTemps[i].depth) - 
-              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2)
-          );
+          .cx(SnowProfile.temperature2x(sortedTemps[i].temperature))
+          .cy(SnowProfile.depth2y(sortedTemps[i].depth) + 
+            (SnowProfile.Cfg.TEMPERATURE_SIZE / 2));
             
         SnowProfile.temperatureGroup.add(tempPoint);
             
         if (i > 0) {    
           tempLine = SnowProfile.drawing.line(
             SnowProfile.temperature2x(sortedTemps[i-1].temperature),
-            SnowProfile.depth2y(sortedTemps[i-1].depth),
+            SnowProfile.depth2y(sortedTemps[i-1].depth) + 
+              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2),
             SnowProfile.temperature2x(sortedTemps[i].temperature),
-            SnowProfile.depth2y(sortedTemps[i].depth))
+            SnowProfile.depth2y(sortedTemps[i].depth) +
+              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2))
             .stroke({
               color: SnowProfile.Cfg.TEMPERATURE_COLOR,
               width: 2
