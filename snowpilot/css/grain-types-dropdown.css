@@ -166,7 +166,9 @@
 	display: inline-block;
 	text-align: right;
 	vertical-align: top;
-	font-size: 1.2em;
+	position: relative;
+	right: 15px;
+	font-size: 1.5em;
 }
 
 a.child div.child-name,

@@ -402,67 +402,67 @@ function _tid2snowsymbols($tid = NULL, $all = FALSE){
 	
 	
 	$tid2snowsymbols = array(
-		'33' => '&#x0792;', // Precipitation particles
-		'34' => '&#x0794;', // Decomposing & fragmented PP
-		'35' => '&#x0795;', // Rounded Grains
-		'36' => '&#x0779;', // Faceted crystals
-		'37' => '&#x077c;',  // depth hoar
-		'38' => '&#x0781;',  // surface hoar
-		'39' => '&#x0799;',  // melt forms
-		'40' => '&#x079a;',  // ice formations
-		'41' => '&#x0793;',  // machine made snow
+		'33' => '&#xe000;', // Precipitation particles
+		'34' => '&#xe002;', // Decomposing & fragmented PP
+		'35' => '&#xe003;', // Rounded Grains
+		'36' => '&#xe004;', // Faceted crystals
+		'37' => '&#xe005;',  // depth hoar
+		'38' => '&#xe006;',  // surface hoar
+		'39' => '&#xe007;',  // melt forms
+		'40' => '&#xe008;',  // ice formations
+		'41' => '&#xe001;',  // machine made snow
 		
 		// Precipitation Particles types
-		'42' => '&#x079b;', //PP -> columns
-		'43' => '&#x079c;', // PP -> Needles
-		'44' => '&#x079d;', // PP -> plates
-		'45' => '&#x079e;', // PP -> stellars, dendrites
-		'46' => '&#x079f;', // irregular crystals
-		'47' => '&#x07a0;', // graupel
-		'48' => '&#x07a1;', // Hail
-		'49' => '&#x07a2;', // Ice pellets
-		'50' => '&#x07A3;', // rime
+		'42' => '&#xe009;', //PP -> columns
+		'43' => '&#xe00a;', // PP -> Needles
+		'44' => '&#xe00b;', // PP -> plates
+		'45' => '&#xe00c;', // PP -> stellars, dendrites
+		'46' => '&#xe00d;', // irregular crystals
+		'47' => '&#xe00e;', // graupel
+		'48' => '&#xe00f;', // Hail
+		'49' => '&#xe010;', // Ice pellets
+		'50' => '&#xe011;', // rime
 		
 		// Decomposing and fragmented precip particles
-		'104' => '&#x0794;', // partly decomposed PP
-		'78' => '&#x07A7;', // wind-broken particles
+		'104' => '&#xe014;', // partly decomposed PP
+		'78' => '&#xe015;', // wind-broken particles
 		//  Rounded grain types
-		'79' => '&#x07A8;', // small rounded particles
-		'80' => '&#x07A9;', //large rounded particles
-		'81' => '&#x07AA;', //Wind packed
-		'82' => '&#x07ab;', // faceted rounded particles
+		'79' => '&#xe016;', // small rounded particles
+		'80' => '&#xe017;', //large rounded particles
+		'81' => '&#xe018;', //Wind packed
+		'82' => '&#xe019;', // faceted rounded particles
 		// Faceted crystal types
-		'105' => '&#x0779;', // Solid faceted particles
-		'83' => '&#x077A;', // Near surface faceted particles
-		'84' => '&#x077b;',  // Rounding faceted particles 
+		'105' => '&#xe01a;', // Solid faceted particles
+		'83' => '&#xe01b;', // Near surface faceted particles
+		'84' => '&#xe01c;',  // Rounding faceted particles 
 		
 		// Surface Hoar types
-		'90' => '&#x0798;', // surface hoar crystals
-		'91' => '&#x0782;', // cavity or crevasse hoar
-		'92' => '&#x0783;', // Rounding surface hoar
+		'90' => '&#xe022;', // surface hoar crystals
+		'91' => '&#xe023;', // cavity or crevasse hoar
+		'92' => '&#xe024;', // Rounding surface hoar
 		// Depth Hoar types
-		'85' => '&#x077c;', // Hollow cups
-		'86' => '&#x077d;', //Hollow Prizms
-		'87' => '&#x077e;', // Chains of depth hoar
-		'88' => '&#x077f;', // large striated crystals
-		'89' => '&#x0780;', // rounding depth Hoar
+		'85' => '&#xe01d;', // Hollow cups
+		'86' => '&#xe01e;', //Hollow Prizms
+		'87' => '&#xe01f;', // Chains of depth hoar
+		'88' => '&#xe020;', // large striated crystals
+		'89' => '&#xe021;', // rounding depth Hoar
 		
 		// Melt forms types
-		'93' => '&#x0784;',// clustered rounded grains
-		'94' => '&#x0785;', //rounded polycrystals
-		'95' => '&#x0786;', // Slush
-		'96' => '&#x0787;', //Melt-freeze crust
+		'93' => '&#xe025;',// clustered rounded grains
+		'94' => '&#xe026;', //rounded polycrystals
+		'95' => '&#xe027;', // Slush
+		'96' => '&#xe028;', //Melt-freeze crust
 		
 		// Ice Formations
-		'97' => '&#x0788;',// Ice Layer
-		'98' => '&#x0789;',// Ice column
-		'99' => '&#x078A;',// Basal Ice
-		'100' => '&#x078B;',//  Rain crust
-		'101' => '&#x078C;',// Sun crust
+		'97' => '&#xe029;',// Ice Layer
+		'98' => '&#xe02a;',// Ice column
+		'99' => '&#xe02b;',// Basal Ice
+		'100' => '&#xe02c;',//  Rain crust
+		'101' => '&#xe02d;',// Sun crust
 		
 		// Machine made snow types
-		'102' => '&#x07A4;', // rounded Polycrystalline particles
-		'103' => '&#x07A5;', // crushed Ice Particles  
+		'102' => '&#xe012;', // rounded Polycrystalline particles
+		'103' => '&#xe013;', // crushed Ice Particles  
 		
 	);
 	

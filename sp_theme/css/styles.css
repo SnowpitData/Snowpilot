@@ -391,7 +391,9 @@ div.ctools-modal-content .form-item label {
 
 @font-face {
 	font-family:snowsymbols;
-	src:url('/sites/all/libraries/fonts/ArialMT28.ttf') format('truetype');
+	src:url('/sites/all/libraries/fonts/SnowSymbolsIACS.eot'); /* IE9 Compat Modes */
+	src: url('/sites/all/libraries/fonts/SnowSymbolsIACS.eot?') format('embedded-opentype'),
+	url('/sites/all/libraries/fonts/SnowSymbolsIACS.ttf') format('truetype');
 }
 
 body {
@@ -858,10 +860,8 @@ form.node-snowpit_profile-form #edit-field-loaction{
 
 .field-name-field-grain-type select,
 .field-name-field-grain-type-secondary select,
-#messages .messages,
 .grain-types{
 	font-family: snowsymbols, Arial;
-	
 }
 /*  Formatting the width and position of the layers, stability tests, density and temp collection tables */ 
 

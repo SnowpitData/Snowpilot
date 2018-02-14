@@ -1478,7 +1478,7 @@ function  avscience_xml_link($url)  {
 function snowpilot_query_xml(){
 	
 	header('Content-type: application/xml');
-  header('Content-Disposition: attachment; filename="query-results.xml"');
+  //header('Content-Disposition: attachment; filename="query-results.xml"');
 	
 	$query = new EntityFieldQuery();
 	$query->entityCondition('entity_type', 'node')
@@ -1557,7 +1557,7 @@ function snowpilot_query_xml(){
 
 function avscience_query_xml(){
 	header('Content-type: application/xml');
-  header('Content-Disposition: attachment; filename="avscience-query-results.xml"');
+  //header('Content-Disposition: attachment; filename="avscience-query-results.xml"');
 	
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 	global $user;
