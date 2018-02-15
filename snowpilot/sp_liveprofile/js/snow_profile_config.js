@@ -65,7 +65,7 @@ var SnowProfile = {};
      * Default min temperature in Fahrenheit 
      * @const {number}
      * @memberof SnowProfile
-     * @see SnowProfile.Grid~temperatureScaleGrp
+     * @see SnowProfile.temperatureGroup
      */
     DEFAULT_MIN_TEMP_F: 20,
     
@@ -73,7 +73,7 @@ var SnowProfile = {};
      * Default min temperature in Celcius 
      * @const {number}
      * @memberof SnowProfile
-     * @see SnowProfile.Grid~temperatureScaleGrp
+     * @see SnowProfile.temperatureGroup
      */
     DEFAULT_MIN_TEMP_C: -10,
     
@@ -81,7 +81,7 @@ var SnowProfile = {};
      * Default max temperature in Fahrenheit 
      * @const {number}
      * @memberof SnowProfile
-     * @see SnowProfile.Grid~temperatureScaleGrp
+     * @see SnowProfile.temperatureGroup
      */
     DEFAULT_MAX_TEMP_F: 32,
     
@@ -89,9 +89,18 @@ var SnowProfile = {};
      * Default max temperature in Celcius 
      * @const {number}
      * @memberof SnowProfile
-     * @see SnowProfile.Grid~temperatureScaleGrp
+     * @see SnowProfile.temperatureGroup
      */
     DEFAULT_MAX_TEMP_C: 0,
+    
+    /**
+     * Absolute minimum temperature acceptable for drawing on live profile 
+     *
+     * @const {number} 
+     * @memberof SnowProfile 
+     * @see SnowProfile.temperatureGroup
+     */
+    ABSOLUTE_MIN_TEMP: -40,
 
     /**
      * Horizontal width in pixels of the depth (vertical) axis label.

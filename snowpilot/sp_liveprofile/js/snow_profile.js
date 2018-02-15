@@ -692,17 +692,21 @@
    *  @param {number} (temperatureIndex) The index of the temperature reading to check
    */
   SnowProfile.addTemperatureReading = function (temperatureIndex) {
-    // TODO:  trigger graph rescale if a new low temperature is observed
     //console.log("addTemperatureReading() called with temp number: " + temperatureIndex);
     var temperature = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-temp-temp-]').val().trim();
     var depth = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-depth-]').val().trim();
     temperature = parseFloat(temperature);
     depth = parseFloat(depth);
     if (!(isNaN(temperature) || isNaN(depth))){
-      if (SnowProfile.depthRef === 'g') {
-        depth = SnowProfile.pitDepth - depth;
+      if (temperature <= SnowProfile.maxTemp && temperature >= SnowProfile.Cfg.ABSOLUTE_MIN_TEMP) {
+        if (SnowProfile.depthRef === 'g') {
+          depth = SnowProfile.pitDepth - depth;
+        }
+        if (temperature < SnowProfile.minTemp) {
+          SnowProfile.minTemp = temperature;
+        }
+        SnowProfile.temperatureData[temperatureIndex] = {temperature: temperature, depth: depth};
       }
-      SnowProfile.temperatureData[temperatureIndex] = {temperature: temperature, depth: depth};
     }
   }; // function addTemperatureReading(temperatureIndex)
   
