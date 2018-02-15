@@ -780,6 +780,93 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	} // end switch
 	return $form;
 }
+//
+//  Begin customizations for 'add another' more than one!
+//
+//
+
+/**
+ * Implements hook_field_attach_form()
+ * We are looking at our t2imageclient widget after the "Add another item" has been added.
+ * We are going to alter the behavior of this button, to let us add as many new entries as
+ * we want.
+ */
+function snowpilot_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode)
+{
+  $options = array('language' => field_valid_language($langcode));
+
+  // Merge default options.
+  $default_options = array(
+    'default' => FALSE,
+    'deleted' => FALSE,
+    'language' => NULL,
+  );
+  $options += $default_options;
+
+  list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+  $instances = _field_invoke_get_instances($entity_type, $bundle, $options);
+
+  // Iterate through the instances.
+  $return = array();
+  foreach ($instances as $instance) {
+    // field_info_field() is not available for deleted fields, so use
+    // field_info_field_by_id().
+    $field = field_info_field_by_id($instance['field_id']);
+    $field_name = $field['field_temp_collection'];
+
+    //If we are looking at our field type and specific widget type, and we are multiple entries
+    if($field['type'] == 'field_collection' && 
+      $instance['widget']['type'] == 'field_collection_embed' && 
+      $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)
+    {
+			dsm($field);
+			dsm($form);
+      //Check just in case the button is here, and add another #submit function
+      if(isset($form['field_temp_collection']['und']['add_more']))
+      {
+        $form['field_temp_collection']['und']['add_more']['#submit'][] =
+          'snowpilot_field_add_more_submit';
+      }
+    }
+  }
+}
+
+/**
+ * Our extra "Add another item" #submit handler. Copy pasted the field_add_more_submit
+ * function, altered to change the nb of widgets based on our conditions.
+ */
+function snowpilot_field_add_more_submit($form, &$form_state)
+{
+  //Put here the condition for altering the nb of widgets, e.g. it could be based on a 
+  //POST value
+	//dsm($form_state['triggering_element']);
+  if(true /** TODO */)
+  {
+    $button = $form_state['triggering_element'];
+		dsm($button);
+    // Go one level up in the form, to the widgets container.
+    $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -1));
+    $field_name = $element['#field_name'];
+    $langcode = $element['#language'];
+    $parents = $element['#field_parents'];
+
+    // Alter the number of widgets to show. items_count = 0 means 1.
+    $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
+    //Here as an example, I am adding 10
+    //$field_state['items_count'] += 10;
+    //But you can just fix the nb of items, like 5
+    $field_state['items_count'] += 5;
+    field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
+
+    $form_state['rebuild'] = TRUE;
+  }
+}
+//
+//  endo of 'Add more' than one item at a time
+//
+//
+
+
 
 function snowpilot_user_profile_form_submit($form, &$form_state){
 	// get org admins for this group
