@@ -125,10 +125,36 @@
     for (var i = 0; i < numTests; i++) {
       SnowProfile.addStabilityTest(i);
     }
-    // Features
+    // Features (grain type, size, and stability tests) are drawn by the describe() method 
     for (var i = 0; i < layers; i++) {
       SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
     }
+    // Initialize Temperatures:
+    // Loop and check for existence of temperature readings and count them, break when finished
+    var numTemps = 0;
+    while (true) {
+      // special case for first temp, which exist even on new pits, so we check for a value
+      if (numTemps === 0){
+        if ($.trim($("input[id^=edit-field-temp-collection-und-" + numTemps + "-field-temp-temp]").val()).length) {
+          numTemps++;
+        } else {
+          break;
+        }
+      } else {
+        // otherwise we check for field existance
+        if ($("input[id^=edit-field-temp-collection-und-" + numTemps + "-field-temp-temp]").length) {
+          numTemps++;
+        } else {
+          break;
+        }
+      }
+    }
+    // Populate SnowProfile.temperatureData with existing temperature information
+    for (var i = 0; i < numTemps; i++) {
+      SnowProfile.addTemperatureReading(i);
+    }
+    // Draw temperature profile 
+    SnowProfile.drawTemperatures();
   }
   
   // Initialize the live editor one time on document ready 
