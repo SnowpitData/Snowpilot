@@ -698,7 +698,8 @@
     temperature = parseFloat(temperature);
     depth = parseFloat(depth);
     if (!(isNaN(temperature) || isNaN(depth))){
-      if (temperature <= SnowProfile.maxTemp && temperature >= SnowProfile.Cfg.ABSOLUTE_MIN_TEMP) {
+      if (temperature <= SnowProfile.maxTemp && temperature >= SnowProfile.Cfg.ABSOLUTE_MIN_TEMP &&
+          depth <= SnowProfile.pitDepth && depth >= 0) {
         if (SnowProfile.depthRef === 'g') {
           depth = SnowProfile.pitDepth - depth;
         }
