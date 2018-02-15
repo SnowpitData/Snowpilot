@@ -781,6 +781,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					$comment_count = 1;
 			}
 			
+			$xtra_specifics = ''; // we are setting this to empty string early on.
+			
+			//
+			// Looping through stability test results
+			//
+			
 			if (isset($node->field_test['und'])){
 				$ids = array();
 				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];}
@@ -814,9 +820,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 								imagettftext($img, 9, 0, 625, $comment_count*13 + 35, $black, $value_font,$test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'] );
 								$comment_count++;
 							}else{
-								imagettftext($img, 7, 0, 625, $comment_count*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes below ]' );
+								if ( $comment_count == 5 ) {
+									$xtra_specifics .= t('Additional Stability Test Notes') .': ';
+									$comment_count++;
+								}
+								imagettftext($img, 7, 0, 625, 5*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes below ]' );
 								$xtra_specifics .= $test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'].'; ';
-								$comment_count++;
 							}
 						}
 					}
@@ -906,11 +915,13 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 
 						  imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
 							$layer_bottom.'-'.$layer_top. ': '.$layer->field_comments['und'][0]['safe_value']);
-						  $comment_counter++;
 					  }else{
-						  imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments below ]');
+							if( $comment_counter == 6 )  $xtra_specifics .= 'Additional Layer Comments: ';
+						  imagettftext($img, 7, 0, 805, 6*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
 							$xtra_specifics .= $layer_bottom.'-'.$layer_top. ': '.$layer->field_comments['und'][0]['safe_value'].'; ';
 					  }
+					  $comment_counter++;
+						
 					}
 					// write density measurements that are from the 'Layers' tab into the rho column ( in addition to Densities )
 					if ( isset ( $layer->field_density_top['und'][0]['value'] )){
@@ -930,11 +941,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 						$y_redline_top = $layer->y_val_top; $y_redline_bottom = $layer->y_val; /// 
 						$concern_delta = $layer->item_id;
 						
-						if ($comment_counter < 5){
+						if ($comment_counter < 6){
 						 	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font, $layer_bottom.'-'.$layer_top.": Problematic layer");
-						}elseif($comment_counter >= 5){
-							imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
-							$xtra_specifics .= $layer_bottom.'-'.$layer_top.": Problematic layer";
+						}else{
+							if($comment_counter == 6) $xtra_specifics .= 'Additional Layer Comments: ';
+							imagettftext($img, 7, 0, 805, 6*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
+							$xtra_specifics .= $layer_bottom.'-'.$layer_top.": " . t("Problematic layer") . '; ';
 						}
 						
 						$comment_counter++;
@@ -964,8 +976,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			
 			// writing the pit notes now that we have any extra layer or stability test notes that didn't fit
 			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
-			if ( isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' ){ 
-				$notes_lines = _output_formatted_notes($node->body['und'][0]['value'].' '.$xtra_specifics, $value_font);
+			$final_notes_string = (isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' )  ? $node->body['und'][0]['safe_value'] . $xtra_specifics : $xtra_specifics;
+			if ( $final_notes_string <> '' ){ 
+				$notes_lines = _output_formatted_notes($final_notes_string, $value_font);
 				foreach($notes_lines as $x => $line){
 					if ($x <= 3 ){
 					  imagettftext($img, 9, 0, $textpos[2], 779 + $x * 19 ,$black, $value_font,$line);
