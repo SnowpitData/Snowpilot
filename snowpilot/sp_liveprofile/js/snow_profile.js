@@ -699,6 +699,9 @@
     temperature = parseFloat(temperature);
     depth = parseFloat(depth);
     if (!(isNaN(temperature) || isNaN(depth))){
+      if (SnowProfile.depthRef === 'g') {
+        depth = SnowProfile.pitDepth - depth;
+      }
       SnowProfile.temperatureData[temperatureIndex] = {temperature: temperature, depth: depth};
     }
   }; // function addTemperatureReading(temperatureIndex)
