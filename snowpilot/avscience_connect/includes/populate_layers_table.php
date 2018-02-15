@@ -14,7 +14,7 @@ $grain_type_codes = array('PP', 'PPco' , 'PPnd', 'PPpl', 'PPsd', 'PPir', 'PPgp',
 'IF', 'IFil', 'IFic', 'IFbi', 'IFrc', 'IFsc', 
 'RG',  'DHch','MFpc','MF' , 'RGxf', 'DF' , 
 'MFcl', 'MFcr' , 'DF' , 'FCsf', 'FCso' , 
-'PPip', 'MFpc', 'MMCi', 'FC', 'DHcp', 'FCsf', 'RGwp', 'PP', 'FCxr'); 
+'PPip', 'MFpc', 'MMCi', 'FC', 'DHcp', 'FCsf', 'RGwp', 'PP', 'FCxr','SHsu','IF', 'DHcp'); 
 
 $grain_type_labels = array( 'Precipitation Particles', 'Columns', 'Needles', 'Plates', 'Stellars, Dendrites', 'Irregular crystals', 'Graupel', 'Hail','Ice Pellets', 'Rime', 
 'Machine-made', 'Round polycrystalline particles', 'Crushed Ice particles'  ,
@@ -27,7 +27,7 @@ $grain_type_labels = array( 'Precipitation Particles', 'Columns', 'Needles', 'Pl
 'Ice Formations', 'Ice layer', 'Ice column', 'Basal ice', 'Rain crust', 'Sun crust',
 'Rounded Grains', 'PPco of depth hoar', 'Rounded poly-crystals','Wet Grains', 'Mixed forms rounded', 'Decomposing fragmenting particl', 
 'clustered rounded grains' , 'melt-freeze crust', 'Decomposing fragmenting particles', 'small faceted particles', 'Solid faceted particles', 
-'Ice pellets', 'Round polycrystaline particles' ,'Crushed ice particles','Faceted Crystals', 'Hollow cups' , 'Near surface faceted particles' , 'Wind packed', 'Precipitation particles','Faceted rounded particles');
+'Ice pellets', 'Round polycrystaline particles' ,'Crushed ice particles','Faceted Crystals', 'Hollow cups' , 'Near surface faceted particles' , 'Wind packed', 'Precipitation particles','Faceted rounded particles', 'SH crystals' ,'Ice formations', 'Cup-shaped Crystals');
 
 $dryness_labels = array( 'Dry', 'Moist', 'Wet', 'Very Wet', 'Slush' );
 $dryness_codes = array( 'D', 'M', 'W', 'V' , 'S' );
@@ -62,11 +62,10 @@ $link = mysqli_connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot
 				//var_dump($doc);
 				$corrected_encoding = Encoding::toUTF8($row['PIT_XML']);
 				
-				$corrected_encoding = str_replace('grainSuffix="<"' ,'grainSuffix="\<"' , $corrected_encoding);
-				$corrected_encoding = str_replace('grainSuffix=">"' ,'grainSuffix="\>"' , $corrected_encoding);
-				$corrected_encoding = str_replace('sky < 2/8 covered' ,'SCT' , $corrected_encoding);
+				$corrected_encoding = str_replace('grainSuffix="<"' ,'grainSuffix="-"' , $corrected_encoding);
+				$corrected_encoding = str_replace('grainSuffix=">"' ,'grainSuffix="+"' , $corrected_encoding);
+				$corrected_encoding = str_replace('sky < 2/8 covered' ,'FEW' , $corrected_encoding);
 				$corrected_encoding = str_replace('Snow < 0.5 cm/hr' ,'S-1' , $corrected_encoding);
-				
 				if ( $row['PIT_XML'] != '') {
 					$doc->loadXML($corrected_encoding);
 					//var_dump($doc);
@@ -134,11 +133,11 @@ $link = mysqli_connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot
 								if (!$result3){			
 									$result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' Could not insert new layer: '.$layer->getAttribute('layerNumber') . mysqli_error($link). " ".$query3);	
 								}else { 
-									//$result_code = array( 'continue' => TRUE, 'message'=> "Successfullly inserted layer". $layer->getAttribute('layerNumber') ." for SERIAL: ". $SERIAL)  ; 
+									$result_code = array( 'continue' => TRUE, 'message'=> "Successfullly inserted layer". $layer->getAttribute('layerNumber') ." for SERIAL: ". $SERIAL)  ; 
 								}
 						
 							}else{
-								$result_code = array( 'continue' => TRUE, 'message'=> "<br />Layers already exist for serial: ".$SERIAL. ' TRY THIS: '.$query2);
+								//$result_code = array( 'continue' => TRUE, 'message'=> "<br />Layers already exist for serial: ".$SERIAL. ' TRY THIS: '.$query2);
 							}
 							mysqli_free_result($result2);
 					
