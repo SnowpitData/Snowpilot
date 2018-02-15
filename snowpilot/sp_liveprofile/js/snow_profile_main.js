@@ -221,18 +221,36 @@
         //console.log("Element Name: " + elementName);
         //console.log("Element Text: " + elementText);
         
-        // Remove stability tests
-        var re = /_remove_button/;
-        if (re.test(elementName)) {
-          // Find test number
-          var testString = elementName.split("_")[3];
-          var testNum = parseInt(testString, 10);
-          
-          // Remove that test from SnowProfile.stabilityTests
-          SnowProfile.stabilityTests.splice(testNum, 1);
-          
-          for (var i = 0; i < (SnowProfile.snowLayers.length - 1); i++) {
-            SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
+        // Remove stability tests and temperatures on live profile
+        var removeRegex = /_remove_button/;
+        var testRegex = /field_test/;
+        var tempRegex = /field_temp_collection/;
+        if (removeRegex.test(elementName)) {
+          // Stability Tests
+          if (testRegex.test(elementName)) {
+            // Find test number
+            var testString = elementName.split("_")[3];
+            var testNum = parseInt(testString, 10);
+            
+            // Remove that test from SnowProfile.stabilityTests
+            SnowProfile.stabilityTests.splice(testNum, 1);
+            
+            // Redraw features
+            for (var i = 0; i < (SnowProfile.snowLayers.length - 1); i++) {
+              SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
+            }
+          }
+          // Temperatures 
+          if (tempRegex.test(elementName)) {
+            // Find temp number 
+            var tempString = elementName.split("_")[4];
+            var tempNum = parseInt(tempString, 10);
+            
+            // Remove that temp from SnowProfile.temperatureData 
+            SnowProfile.temperatureData.splice(tempNum, 1);
+            
+            // Redraw temperatures 
+            SnowProfile.drawTemperatures();
           }
         }
         
