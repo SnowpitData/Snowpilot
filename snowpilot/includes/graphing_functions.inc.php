@@ -645,7 +645,7 @@ imagefill($img, 0, 0, $white);
 
 $label_font = '/sites/all/libraries/fonts/Arial.ttf';
 $value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
-$snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
+$snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 
 
 // Label Y axis and draw horizontal lines
@@ -759,19 +759,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			
 			
 			imagettftext( $img, 11, 0 , 805, 17, $black, $label_font, 'Layer Notes');
-			
-			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
-			if ( isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' ){ 
-				$notes_lines = _output_formatted_notes($node->body['und'][0]['value'], $value_font);
-				foreach($notes_lines as $x => $line){
-					if ($x <= 3 ){
-					  imagettftext($img, 9, 0, $textpos[2], 779 + $x * 19 ,$black, $value_font,$line);
-					}else {
-						imagettftext($img, 9, 0, 870, 779 + 3 * 19 ,$red_layer, $value_font, "[ ... more notes ]");
-						break;
-					}
-				}
-			}			
+
 			//  write stability tests column and comments 
 			//  TODO : expand into its own function
 			$comment_count = 0;
@@ -826,7 +814,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 								imagettftext($img, 9, 0, 625, $comment_count*13 + 35, $black, $value_font,$test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'] );
 								$comment_count++;
 							}else{
-								imagettftext($img, 7, 0, 625, $comment_count*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes ... ]' );
+								imagettftext($img, 7, 0, 625, $comment_count*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes below ]' );
+								$xtra_specifics .= $test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'].'; ';
+								$comment_count++;
 							}
 						}
 					}
@@ -888,10 +878,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 			  	$secondary_grain_type = '';
 					if (isset($layer->field_grain_type_secondary['und'])){
 						$secondary_grain_type_image = isset($layer->field_grain_type_secondary['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type_secondary['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type_secondary['und'][0]['tid']);
-						$secondary_grain_type = ' ('. $secondary_grain_type_image . ')';
+						$secondary_grain_type = '('. $secondary_grain_type_image . ')';
 					}
 				//output grain symbols
-					imagettftext($img, 9, 0, 525 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image.$secondary_grain_type);
+					imagettftext($img, 14, 0, 525 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image.$secondary_grain_type);
 				
 				// calculate grain size string
 					$grain_size_string = isset($layer->field_grain_size['und']) ? $layer->field_grain_size['und'][0]['value'] : '' ;
@@ -911,13 +901,14 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				  $layer_top = $layer->field_height['und'][0]['value'] + 0;
 
 					if (isset($layer->field_comments['und']) ){
-						if ( $comment_counter <5 ){
+						if ( $comment_counter <6 ){
 
 						  imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
 							$layer_bottom.'-'.$layer_top. ': '.$layer->field_comments['und'][0]['safe_value']);
 						  $comment_counter++;
 					  }else{
-						  imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
+						  imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments below ]');
+							$xtra_specifics .= $layer_bottom.'-'.$layer_top. ': '.$layer->field_comments['und'][0]['safe_value'].'; ';
 					  }
 					}
 					// write density measurements that are from the 'Layers' tab into the rho column ( in addition to Densities )
@@ -940,9 +931,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 						
 						if ($comment_counter < 5){
 						 	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font, $layer_bottom.'-'.$layer_top.": Problematic layer");
-						  $comment_counter++;
-						}elseif($comment_counter == 5){
+						}elseif($comment_counter >= 5){
 							imagettftext($img, 7, 0, 805, $comment_counter*13 + 31, $red_layer, $label_font, '[ More Layer Comments ... ]');
+							$xtra_specifics .= $layer_bottom.'-'.$layer_top.": Problematic layer";
 						}
 						
 						$comment_counter++;
@@ -970,6 +961,19 @@ $snowsymbols_font ='/sites/all/libraries/fonts/ArialMT28.ttf';
 				}
 			}
 			
+			// writing the pit notes now that we have any extra layer or stability test notes that didn't fit
+			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
+			if ( isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' ){ 
+				$notes_lines = _output_formatted_notes($node->body['und'][0]['value'].' '.$xtra_specifics, $value_font);
+				foreach($notes_lines as $x => $line){
+					if ($x <= 3 ){
+					  imagettftext($img, 9, 0, $textpos[2], 779 + $x * 19 ,$black, $value_font,$line);
+					}else {
+						imagettftext($img, 9, 0, 870, 779 + 3 * 19 ,$red_layer, $value_font, "[ ... more notes ]");
+						break;
+					}
+				}
+			}			
 			// Temperature Profile:
 			// If we have temp profile readings,then we'll make the tick marks
 			
