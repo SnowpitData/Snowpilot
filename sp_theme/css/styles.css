@@ -991,9 +991,19 @@ form.node-snowpit_profile-form .form-field-name-field-test table.field-multiple-
 	/*min-height:300px;*/
 }
 
-form.node-snowpit_profile-form .form-field-name-field-temp-collection table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active,
-form.node-snowpit_profile-form .form-field-name-field-density-profile table.field-multiple-table tbody.ui-accordion .ui-accordion-content-active{
-	/*min-height: 50px;*/
+form.node-snowpit_profile-form .form-field-name-field-temp-collection table.field-multiple-table tbody label,
+form.node-snowpit_profile-form .form-field-name-field-density-profile table.field-multiple-table tbody label{
+  display: none;
+}
+
+form.node-snowpit_profile-form .form-field-name-field-temp-collection table.field-multiple-table tbody .temp_num_0 label ,
+form.node-snowpit_profile-form .form-field-name-field-density-profile table.field-multiple-table tbody .density_num_0 label{
+    display: block;
+}
+
+form.node-snowpit_profile-form #edit-field-temp-collection .form-type-textfield,
+form.node-snowpit_profile-form #edit-field-density-profile .form-type-textfield{
+	margin: 0.4rem .2rem .2rem .2rem;
 }
 
 form.node-snowpit_profile-form table.field-multiple-table{

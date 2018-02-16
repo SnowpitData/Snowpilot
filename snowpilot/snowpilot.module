@@ -259,17 +259,15 @@ function snowpilot_remove_affiliation_form_submit($form, &$form_state){
 		
   	if ($form_state['values']['snowpilot_remove_affiliation'] == 'confirm'){
 		  $user_wrapper->field_professional_affiliation->offsetUnset( $offset_value );
+			$user_wrapper->save();
 		  $body = "<h2>The user ".$user_wrapper->label()." has been removed from ". $org_admin_user->field_org_ownership->label()." </h2> ";
-      
+	    drupal_mail('snowpilot', 
+			  $form_state['values']['snowpilot_remove_affiliation'], // mail key equals the value of how to suspend/remove
+				'admin@snowpilot.org,'.$user_mail ,
+				user_preferred_language($user),
+				array ( 'org_admin_user' => $org_admin_user , 'user_wrapper' => $user_wrapper), 'admin@snowpilot.org' , TRUE  
+			);
   	}
-    drupal_mail('snowpilot', 
-		  $form_state['values']['snowpilot_remove_affiliation'], // mail key equals the value of how to suspend/remove
-			'admin@snowpilot.org,'.$user_mail ,
-			 user_preferred_language($user),
-			  array ( 'org_admin_user' => $org_admin_user , 'user_wrapper' => $user_wrapper), 'admin@snowpilot.org' , TRUE  );
-		
-		$user_wrapper->save();
-		
 	}else{
 	  $body = "<h2>The user ".$user_wrapper->label()." is not currently part of ". $org_admin_user->field_org_ownership->label()." </h2> ";
   }
@@ -281,7 +279,7 @@ function snowpilot_mail( $key, &$message, $params){
 	$org_admin_user = $params['org_admin_user'];
 	$user_wrapper = $params['user_wrapper'];
 	switch ($key){
-		case 'removed':
+		case 'confirm':
 	    if (isset($params['subject'])) {
 	      $message['subject'] = $params['subject'];
 	    } else {
@@ -289,7 +287,7 @@ function snowpilot_mail( $key, &$message, $params){
 			}
 	    $message['body'][] = 'Dear '.$user_wrapper->name->value().',
 			
-Thank you for using SnowPilot. Your group affiliation has changed from '. $org_admin_user->field_professional_affiliation->label() .' to "Individual / Unaffiliated" since the group\'s administrator has removed you. Your profile is still active and all your pits are still associated with you. 
+Thank you for using SnowPilot. Your group affiliation has changed from '. $org_admin_user->field_professional_affiliation->label() .' since the group\'s administrator has removed you. Your profile is still active and all your pits are still associated with you. 
 
 If you chose the last group in error, you are free to select your correct group on your User Preferences page: 
 http://snowpilot.org/user/' .$user_wrapper->uid->value(). '/edit
@@ -298,25 +296,6 @@ SnowPilot Admin Team';
 	    if (isset($params['headers']) && is_array($params['headers'])) {   
 	      $message['headers'] += $params['headers'];
   	  }
-		
-		break;
-		case 'suspend':
-      if (isset($params['subject'])) {
-        $message['subject'] = $params['subject'];
-      } else {
-      	$message['subject'] = '[SnowPilot] User '.$user_wrapper->name->value(). ' has been suspended from group '.$org_admin_user->field_professional_affiliation->label();
-		  }
-    $message['body'][] ='Dear '. $user_wrapper->name->value() .',
-
-Thank you for using SnowPilot. Up until now, your profile and all your pits have been associated with the '. $org_admin_user->field_professional_affiliation->label() .' group. The group administer has suspended your account. What this means is:
-
-    1. You can still view and download all your pits using your current username and password.
-    2. If you would like to make new snowpits, create another account with a different username at http://snowpilot.org/user/register .
-    3. Remember, all pits are saved in the database. Nothing is lost. 
-
-All the best,
-
-SnowPilot Admin Team';
 		
 		break;
 		case 'org-admin-notify':
@@ -527,8 +506,8 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['#validate'][] = 'snowpilot_snowpit_profile_node_form_validate';
 			$form['actions']['submit']['#value'] = 'Save and Preview';
 			$form['actions']['delete']['#value'] = 'Delete Snowpit'; 
-			$form['field_density_profile']['und']['add_more']['#value'] = "Add Density";
-			$form['field_temp_collection']['und']['add_more']['#value'] = "Add Temperature";
+			$form['field_density_profile']['und']['add_more']['#value'] = t("Add Densities (groups of 5)");
+			$form['field_temp_collection']['und']['add_more']['#value'] = t("Add Temperatures (groups of 5)");
 			$form['title']['#maxlength'] = 22;
 			$form['title']['#description'] = t('Name must be 22 characters or less.');
 			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
@@ -559,29 +538,13 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 							);
 							$form['field_date_time']['und'][0]['#default_value']['value'] = date('Y-m-d 00:00:00');
 				}
-				// new pits accordian js settings
-				//
-				/*
-				$form['#attached']['js'][] = array(
-					'type' => 'file',
-					'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-new-pit.js',
-				);
-				*/
 				
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
 				$account = user_load($node->uid);
 				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
 
 				$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
-				//
-				// exisiting pits accordion js settings
-				//
-				/*$form['#attached']['js'][] = array(
-					'type' => 'file',
-					'data' => drupal_get_path('module', 'snowpilot'). '/js/accordion-existing-pit.js',
-				);
-				*/
-				
+	
 			}
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
 				
@@ -677,6 +640,10 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			snowpilot_set_visibility_field_options($form, $snowpit_unit_prefs);
 			
 			snowpilot_snowpit_set_tester_fields($form);
+			
+
+			//
+			//
 			
 		} // end case node->type == snowpit profile
 		break;
@@ -791,6 +758,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
  * We are going to alter the behavior of this button, to let us add as many new entries as
  * we want.
  */
+
 function snowpilot_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode)
 {
   $options = array('language' => field_valid_language($langcode));
@@ -811,23 +779,24 @@ function snowpilot_field_attach_form($entity_type, $entity, &$form, &$form_state
   foreach ($instances as $instance) {
     // field_info_field() is not available for deleted fields, so use
     // field_info_field_by_id().
-    $field = field_info_field_by_id($instance['field_id']);
-    $field_name = $field['field_temp_collection'];
+		if (  $instance['field_id'] == 99 || $instance['field_id'] == 102 ){
+	    $field = field_info_field_by_id($instance['field_id']);
 
-    //If we are looking at our field type and specific widget type, and we are multiple entries
-    if($field['type'] == 'field_collection' && 
-      $instance['widget']['type'] == 'field_collection_embed' && 
-      $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)
-    {
-			dsm($field);
-			dsm($form);
-      //Check just in case the button is here, and add another #submit function
-      if(isset($form['field_temp_collection']['und']['add_more']))
-      {
-        $form['field_temp_collection']['und']['add_more']['#submit'][] =
-          'snowpilot_field_add_more_submit';
-      }
-    }
+	    //If we are looking at our field type and specific widget type, and we are multiple entries
+	    if($field['type'] == 'field_collection' && 
+	      $instance['widget']['type'] == 'field_collection_embed' && 
+	      $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)
+	    {
+				dsm($field);
+
+	      //Check just in case the button is here, and add another #submit function
+	      if(isset($form[$field['field_name']]['und']['add_more']))
+	      {
+	        $form[$field['field_name']]['und']['add_more']['#submit'][] =
+	          'snowpilot_field_add_more_submit';
+	      }
+	    }
+		}
   }
 }
 
@@ -843,7 +812,7 @@ function snowpilot_field_add_more_submit($form, &$form_state)
   if(true /** TODO */)
   {
     $button = $form_state['triggering_element'];
-		dsm($button);
+		//dsm($button);
     // Go one level up in the form, to the widgets container.
     $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -1));
     $field_name = $element['#field_name'];
@@ -855,17 +824,17 @@ function snowpilot_field_add_more_submit($form, &$form_state)
     //Here as an example, I am adding 10
     //$field_state['items_count'] += 10;
     //But you can just fix the nb of items, like 5
-    $field_state['items_count'] += 5;
+    $field_state['items_count'] += 4;
     field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
 
     $form_state['rebuild'] = TRUE;
   }
 }
+
 //
 //  endo of 'Add more' than one item at a time
 //
 //
-
 
 
 function snowpilot_user_profile_form_submit($form, &$form_state){
@@ -1681,16 +1650,10 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 		if (isset($form['field_density_profile']['und'][$next_layer])){ $collapsed = ' collapsed'; 
 		
 		$form['field_density_profile']['und'][$x]['#prefix'] = "<div class='collapsible-container density_num_". $x ." '>".
-			"<h3 class='collapsible-handle density-title'>Density " . $next_layer. ": ". 
-				$form['field_density_profile']['und'][$x]['field_density_top']['und'][0]['value']['#default_value'] . 
-					_density_unit_fix($snowpit_unit_prefs['field_density_units']).
-						" @ ". $form['field_density_profile']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
-						" ". $snowpit_unit_prefs['field_depth_units'].
-					 "</h3>". '<div class="collapsible-content collapsed" >';
+			'<div class="collapsible-content collapsed" >';
 		}else{
 			$form['field_density_profile']['und'][$x]['#prefix'] = "<div class='collapsible-container density_num_". $x ." '>".
-				"<h3 class='collapsible-handle density-title'>Density Measurement " . $next_layer. ": </h3>"
-				.'<div class="collapsible-content" >';
+				'<div class="collapsible-content" >';
 		
 		}
 		$form['field_density_profile']['und'][$x]['#suffix'] ="</div> </div>";
@@ -1747,16 +1710,10 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 		$form['field_temp_collection']['und'][$x]['remove_button']['#value'] = "X Remove Temp";
 		if (isset($form['field_temp_collection']['und'][$next_layer])){ 	
 			$form['field_temp_collection']['und'][$x]['#prefix'] = "<div class='collapsible-container temp_num_". $x ." '>".
-			"<h3 class='collapsible-handle temp-title'>Temp Point " . $next_layer. ": ". 
-				$form['field_temp_collection']['und'][$x]['field_temp_temp']['und'][0]['value']['#default_value'] . "&#176;". 
-					$snowpit_unit_prefs['field_temp_units'].
-						" @ ". $form['field_temp_collection']['und'][$x]['field_depth']['und'][0]['value']['#default_value'].
-						" ". $snowpit_unit_prefs['field_depth_units'].
-					 "</h3>". '<div class="collapsible-content collapsed" >';
+			'<div class="collapsible-content collapsed" >';
 		}else {
 			$form['field_temp_collection']['und'][$x]['#prefix'] = "<div class='collapsible-container temp_num_". $x ." '>".
-			"<h3 class='collapsible-handle temp-title'>Temp Point " . $next_layer.
-			": </h3>" . '<div class="collapsible-content" >';
+			'<div class="collapsible-content" >';
 			
 		}
 
