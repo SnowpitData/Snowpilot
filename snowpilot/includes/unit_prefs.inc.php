@@ -83,6 +83,8 @@ function snowpilot_unit_prefs_get($entity, $type = 'user'){
 			
 			'field_org_ownership' => _helper_cleaner($entity , 'field_org_ownership', 'tid'),
 			
+			'field_snowpit_visibility' =>  _helper_cleaner($entity,'field_snowpit_visibility'),
+			
 	  );
 			
 			//////

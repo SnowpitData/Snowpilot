@@ -506,8 +506,8 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['#validate'][] = 'snowpilot_snowpit_profile_node_form_validate';
 			$form['actions']['submit']['#value'] = 'Save and Preview';
 			$form['actions']['delete']['#value'] = 'Delete Snowpit'; 
-			$form['field_density_profile']['und']['add_more']['#value'] = t("Add Densities (groups of 5)");
-			$form['field_temp_collection']['und']['add_more']['#value'] = t("Add Temperatures (groups of 5)");
+			$form['field_density_profile']['und']['add_more']['#value'] = t("Add More Densities");
+			$form['field_temp_collection']['und']['add_more']['#value'] = t("Add More Temperatures");
 			$form['title']['#maxlength'] = 22;
 			$form['title']['#description'] = t('Name must be 22 characters or less.');
 			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
@@ -678,6 +678,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			//$form['field_fracture_category']['#attributes']['class'][] = 'error';
 			//
 			// Clean up the timezone list in a subsequent function, after_build
+			unset($form['field_snowpit_visibility']['und']['#options']['_none']);
 	
 		  if (isset($form['#user']->timezone)) {
 		      // edit timezone list
