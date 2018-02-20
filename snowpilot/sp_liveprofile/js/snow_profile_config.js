@@ -277,7 +277,7 @@ var SnowProfile = {};
      *  @memeber of SnowProfile.Cfg 
      *  @const {string}
      */
-    TEMPERATURE_COLOR: "#ff0000",
+    TEMPERATURE_COLOR: "#b22423",
 
     /**
       Depth scale in pixels per cm
