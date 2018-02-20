@@ -607,7 +607,6 @@
       if (handle.x() !== SnowProfile.Cfg.HANDLE_INIT_X) {
         layerOutline.plot([[SnowProfile.Cfg.HANDLE_INIT_X + SnowProfile.Cfg.HANDLE_SIZE / 2,yTop], [SnowProfile.Cfg.HANDLE_INIT_X + SnowProfile.Cfg.HANDLE_SIZE / 2,yBottom], [slopeHandle.x() + SnowProfile.Cfg.HANDLE_SIZE / 2,yBottom], [handle.x() + SnowProfile.Cfg.HANDLE_SIZE / 2,yTop]]);
       }
-      
     };
 
     /**
@@ -716,6 +715,7 @@
     if (!inserted) {
       SnowProfile.snowLayers.push(this);
       SnowProfile.handlesGroup.add(handle);
+      SnowProfile.handlesGroup.add(slopeHandle);
     }
 
     // Listen for "SnowProfileHideControls" events

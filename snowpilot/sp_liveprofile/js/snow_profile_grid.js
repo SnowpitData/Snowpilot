@@ -36,6 +36,64 @@
    * @constructor
    */
   SnowProfile.Grid = function() {
+    
+    /**
+     * Draw the temperature scale
+     *
+     * Generate the label, numbers, and tick marks for temperature profile 
+     *   along the top edge of the graph.  Depends on minimum temperature.
+     * We expose this as a public method so the scale can be redrawn if needed.
+     * @type method
+     * @memberof SnowProfile 
+     * @see SnowProfile.temperatureGroup
+     */
+    SnowProfile.drawTemperatureScale = function () {
+      SnowProfile.tempUnit = $('div[id^=field-temp-collection-und-0-field-temp-temp-add-more-wrapper] span')
+        .html().indexOf('F') > 0 ? 'F' : 'C';
+      SnowProfile.maxTemp = SnowProfile.tempUnit === 'F' ? 
+        SnowProfile.Cfg.DEFAULT_MAX_TEMP_F : SnowProfile.Cfg.DEFAULT_MAX_TEMP_C;
+      SnowProfile.minTemp = SnowProfile.minTemp || (SnowProfile.tempUnit === 'F' ? 
+        SnowProfile.Cfg.DEFAULT_MIN_TEMP_F : SnowProfile.Cfg.DEFAULT_MIN_TEMP_C);
+        
+      // console.log("Unit: " + SnowProfile.tempUnit + " , Min/Max: " + SnowProfile.minTemp + "/" + SnowProfile.maxTemp);
+      
+      // Add temperatures and tick marks 
+      var temp_scale = SnowProfile.maxTemp - SnowProfile.minTemp,
+        tick_Y_bot = SnowProfile.Cfg.HANDLE_MIN_Y + (SnowProfile.Cfg.HANDLE_SIZE / 2),
+        tick_Y_top = tick_Y_bot - 5,
+        increment = temp_scale > 28 ? 4 : (temp_scale > 14 ? 2 : 1),
+        x;
+      
+      var temp = SnowProfile.maxTemp;
+      while (temp >= SnowProfile.minTemp) {
+        x = SnowProfile.temperature2x(temp);
+        SnowProfile.temperatureGroup.add(SnowProfile.drawing.text(String(temp))
+          .addClass("snow_profile_temperature")
+          .font({
+            size: 12,
+            style: 'bold',
+            family: 'sans-serif',
+            fill: SnowProfile.Cfg.LABEL_COLOR})
+          .move(x - 4, tick_Y_top - 18));
+        SnowProfile.temperatureGroup.add(SnowProfile.drawing.line(x, tick_Y_bot, x, tick_Y_top)
+        .addClass("snow_profile_temperature")
+        .stroke({
+          color: SnowProfile.Cfg.OUTLINE_GRID_COLOR,
+          width: 1
+        }));
+        temp -= increment;
+      }
+      
+      // Add the label for temperature profile 
+      SnowProfile.temperatureGroup.add(SnowProfile.drawing.text('Temperature')
+      .font({
+        size: 18,
+        style: 'bold',
+        family: 'sans-serif',
+        fll: SnowProfile.Cfg.LABEL_COLOR
+      })
+      .move(SnowProfile.Cfg.GRAPH_WIDTH / 2, 0));
+    }; // function SnowProfile.drawTemperatureScale()
 
     /**
      * Draw the depth scale
@@ -371,6 +429,9 @@
 
       // Draw the hardness scale
       drawHardnessScale();
+      
+      // Draw the temperature scale
+      SnowProfile.drawTemperatureScale();
 
       // Draw labels
       drawLabels();

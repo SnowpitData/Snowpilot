@@ -1,271 +1,13 @@
 /**
- * @file Defines the namespace and configuration for the snow profile editor.
+ * @file Defines the primary functions of the snow profile editor.
  * @copyright Walt Haas <haas@xmission.com>
  * @license {@link http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GPLv2}
- * Modified by Joe DeBruycker Q1 2016
+ * Modified by Joe DeBruycker for snowpilot.org
  */
 
-/* global SVG */
-
-/**
- * The svg.js library
- * @external SVG
- * @see {@link http://http://documentup.com/wout/svg.js svg.js}
- */
-
-/**
- * Constants and common functions
- * @type {object}
- * @namespace
- */
-var SnowProfile = {};
-
-/**
- * Layout of the snow profile SVG drawing:
- *
- *       | Top Labels
- * ___________________________________________________________________
- *       |             |          |       | |       |
- * Depth |             |          | Grain | | Grain |
- * Label | Graph       | Controls | Shape | | Size  | Comment
- *       |             |          |       | |       |
- *____________________________________________________________________
- *       | Hardness    |
- *       | Label       |
- */
 (function($) {
   "use strict";
-
-  SnowProfile.Cfg = {
-
-    /**
-     * Maximum snow depth in cm that can be plotted on the graph.
-     * @const {number}
-     * @memberof SnowProfile
-     * @see SnowProfile.Grid~depthScaleGrp
-     */
-    MAX_DEPTH: 300,
-
-    /**
-     * Minimum snow depth in cm that can be set by the user.
-     * @const {number}
-     * @memberof SnowProfile
-     * @see SnowProfile.Grid~depthScaleGrp
-     */
-    MIN_DEPTH: 10,
-
-    /**
-     * Default snow pit depth in cm
-     * @const {number}
-     * @memberof SnowProfile
-     * @see SnowProfile.Grid~depthScaleGrp
-     */
-   DEFAULT_PIT_DEPTH: 150,
-
-    /**
-     * Horizontal width in pixels of the depth (vertical) axis label.
-     * @const {number}
-     * @memberof SnowProfile
-     * @see SnowProfile.Grid~depthScaleGrp
-     */
-    DEPTH_LABEL_WD: 70,
-
-    /**
-     * Depth interval in cm between horizontal grid lines
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    DEPTH_LINE_INT: 10,
-
-    /**
-     * Width in pixels available for plotting data.
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    GRAPH_WIDTH: 350,
-
-    /**
-     * Width in pixels of the area used by buttons and
-     * connectors (diagonal lines).
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    CTRLS_WD: 120,
-
-    /**
-     * Width in pixels of the area used by snow grain shape
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    GRAIN_SHAPE_WD: 60,
-
-    /**
-     * Width in pixels of the space between grain shape and size
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    GRAIN_SPACE_WD: 15,
-
-    /**
-     * Width in pixels of the area used by snow grain size
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    GRAIN_SIZE_WD: 70,
-
-    /**
-     * Font size for feature description text
-     */
-    FEAT_DESCR_FONT_SIZE: 14,
-
-    /**
-     * Width in pixels of the space between grain size and comment
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    COMMENT_SPACE_WD: 5,
-
-    /**
-      Width in pixels of the area used by snow layer comment
-     * @memberof SnowProfile
-      @const {number}
-     */
-    COMMENT_WD: 240,
-
-    /**
-     * Vertical height in pixels of the temperature (horizontal) axis label.
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    TOP_LABEL_HT: 40,
-
-    /**
-     * Minimum height in pixels of the features area for one snow layer.
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    DESCR_HEIGHT: 40,
-
-    /**
-     * Vertical height in pixels of the hardness (horizontal) axis label.
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    HARD_LABEL_HT: 60,
-
-    /**
-     * Size in pixels of the handle square
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    HANDLE_SIZE: 11,
-
-    /**
-     * Color of the background of the graph
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    BACKGROUND_COLOR: '#FFF',
-
-    /**
-     * Color of the labels and axis lines
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    LABEL_COLOR: '#000',
-
-    /**
-     * Color of the outline of the chart grid
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    OUTLINE_GRID_COLOR: '#000',
-
-    /**
-     * Color of the inside lines of the chart grid
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    INSIDE_GRID_COLOR: '#AAA',
-
-    /**
-     * Color of the outlines of a snow layer
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    LAYER_OUTLINE_COLOR: '#5A54AA',
-
-    /**
-     * Fill color inside a layer
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    LAYER_FILL_COLOR: '#9A99D5',
-
-    /**
-     * Opacity of Fill color inside a layer
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    LAYER_FILL_OPACITY: .85,
-
-    /**
-     * Color of a button that is not under the mouse
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    BUTTON_BLUR_COLOR: "#AAA",
-
-    /**
-     * Color of a button that is under the mouse
-     * @memberof SnowProfile
-     * @const {string}
-     */
-    BUTTON_FOCUS_COLOR: "#000",
-
-    /**
-      Depth scale in pixels per cm
-      @const {number}
-      @memberof SnowProfile
-     */
-    DEPTH_SCALE: 5,
-
-    /**
-     * Minimum height of the feature description area in pixels.
-     *
-     * The minimum height is in effect when the feature description is
-     * empty or has a height less than the minimum.
-     * @const {number}
-     * @memberof SnowProfile
-     */
-    MIN_FEAT_HEIGHT: 25,
-
-    /**
-     * Minimum number of pixels of padding above and below features desc.
-     * @const {number}
-     * @memberof SnowProfile
-     */
-    MIN_FEAT_PAD: 2,
-
-    /**
-     * Number of layers initially shown on a fresh copy of the page.
-     */
-    NUM_INIT_LAYERS: 1,
-
-    /**
-     * Depth interval in cm of layers initially shown on a
-     * fresh copy of the page.
-     */
-    INT_INIT_LAYERS: 20,
-
-    /**
-     * Width in pixels of the image to be generated
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    IMAGE_WD: 800
-  }; // SnowProfile.Cfg = {
-
+  
   /**
    * Pit depth (cm)
    *
@@ -275,164 +17,47 @@ var SnowProfile = {};
    * @see SnowProfile.Grid~depthScaleGrp
    */
   SnowProfile.pitDepth = SnowProfile.Cfg.DEFAULT_PIT_DEPTH;
-    /**
-     * Total depth of the snow pack (cm)
-     *
-     * Distance in cm from the snow surface to the ground, as measured
-     *   with a calibrated probe or by digging to the ground.  Null
-     *   if this distance is not known.
-     * @memberof SnowProfile
-     * @type {?number}
-     */
+  
+  /**
+   * Total depth of the snow pack (cm)
+   *
+   * Distance in cm from the snow surface to the ground, as measured
+   *   with a calibrated probe or by digging to the ground.  Null
+   *   if this distance is not known.
+   * @memberof SnowProfile
+   * @type {?number}
+   */
   SnowProfile.totalDepth = SnowProfile.Cfg.DEFAULT_PIT_DEPTH;
-    /**
-     * Maximum Y value allowed for any handle (bottom of graph area)
-     *
-     * @type {number}
-     * @memberof SnowProfile
-     * @see SnowProfile.Grid~adjustGrid
-     */
+  
+  /**
+   * Maximum Y value allowed for any handle (bottom of graph area)
+   *
+   * @type {number}
+   * @memberof SnowProfile
+   * @see SnowProfile.Grid~adjustGrid
+   */
   SnowProfile.handleMaxY = null;
 
-    /**
-     * Depth reference (snow surface or ground)
-     *
-     * A single letter indicating whether snow depth is referenced
-     * to the snow surface ("s") or ground ("g").  Must be one or the
-     * other.  Default is "s".  Ground reference may be used only if
-     * the value of total snow depth (totalDepth) is known.
-     * @memberof SnowProfile
-     * @type {!string}
-     * @see SnowProfile.Grid~depthScaleGrp
-     */
+  /**
+   * Depth reference (snow surface or ground)
+   *
+   * A single letter indicating whether snow depth is referenced
+   * to the snow surface ("s") or ground ("g").  Must be one or the
+   * other.  Default is "s".  Ground reference may be used only if
+   * the value of total snow depth (totalDepth) is known.
+   * @memberof SnowProfile
+   * @type {!string}
+   * @see SnowProfile.Grid~depthScaleGrp
+   */
   SnowProfile.depthRef = "s";
-
+  
   /**
-   * Depth increment in cm to allow when inserting a layer above
-   * or below another layer.
-   * @memberof SnowProfile
-   * @const {number}
+   *  Temperature unit preference on SnowPilot, pulled from the form 
+   *  
+   *  @memberof SnowProfile
+   *  @type {!string}
    */
-  SnowProfile.Cfg.INS_INCR = (SnowProfile.Cfg.HANDLE_SIZE + 1) /
-    SnowProfile.Cfg.DEPTH_SCALE;
-
-  /**
-   * Central x of the data plotting area.
-   *
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.GRAPH_CENTER_X = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
-    (SnowProfile.Cfg.GRAPH_WIDTH / 2);
-
-  /**
-   * Maximum x value allowed for a handle (hardness 'F-').
-   *
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.HANDLE_MAX_X = SnowProfile.Cfg.DEPTH_LABEL_WD + 
-    SnowProfile.Cfg.GRAPH_WIDTH - (SnowProfile.Cfg.HANDLE_SIZE * 1.5);
-
-  /**
-   * Minimum x value allowed for a handle (hardness 'I+').
-   *
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.HANDLE_MIN_X = SnowProfile.Cfg.DEPTH_LABEL_WD -
-    (SnowProfile.Cfg.HANDLE_SIZE / 2);
-
-  /**
-   * Minimum Y value allowed for a handle (top of graph area)
-   *
-   * @const
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.HANDLE_MIN_Y = SnowProfile.Cfg.TOP_LABEL_HT + 1;
-
-  /**
-   * Width in pixels of one hardness band in the CAAML_HARD table
-   *
-   * Calculation depends on knowing there are 18 entries in the table
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.HARD_BAND_WD = (SnowProfile.Cfg.GRAPH_WIDTH -
-    SnowProfile.Cfg.HANDLE_SIZE) / 17;
-
-  /**
-   * Horizontal width in pixels of the SVG drawing
-   *
-   * @const {number}
-   * @memberof SnowProfile
-   */
-   SnowProfile.Cfg.DRAWING_WD = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
-     SnowProfile.Cfg.GRAPH_WIDTH + 1 + SnowProfile.Cfg.CTRLS_WD + 1 +
-     SnowProfile.Cfg.GRAIN_SHAPE_WD + SnowProfile.Cfg.GRAIN_SPACE_WD +
-     SnowProfile.Cfg.GRAIN_SIZE_WD + SnowProfile.Cfg.COMMENT_SPACE_WD +
-     SnowProfile.Cfg.COMMENT_WD;
-
-  /**
-   * Initial X position of the layer handle
-   *
-   * This X position centers the handle over the Right edge of the grid
-   */
-  SnowProfile.Cfg.HANDLE_INIT_X = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH -
-    (SnowProfile.Cfg.HANDLE_SIZE / 2);
-
-  /**
-   * X position of the center line of the insert buttons in the control area
-   */
-  SnowProfile.Cfg.INS_BUTTON_X = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
-    SnowProfile.Cfg.GRAPH_WIDTH + 65;
-
-  /**
-   * X position of the center line of the edit buttons in the control area
-   */
-  SnowProfile.Cfg.EDIT_BUTTON_X = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
-    SnowProfile.Cfg.GRAPH_WIDTH + 90;
-
-  /**
-   * X position of the left edge of the layer description
-   *
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.FEAT_DESCR_LEFT = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
-    SnowProfile.Cfg.GRAPH_WIDTH + 1 + SnowProfile.Cfg.CTRLS_WD;
-
-  SnowProfile.Cfg.FEAT_DESCR_WD = SnowProfile.Cfg.GRAIN_SHAPE_WD +
-    SnowProfile.Cfg.GRAIN_SPACE_WD + SnowProfile.Cfg.GRAIN_SIZE_WD +
-    SnowProfile.Cfg.COMMENT_SPACE_WD + SnowProfile.Cfg.COMMENT_WD;
-
-
-  /**
-   * X position of the left edge of the Grain icons area
-   * within the layer description group
-   *
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.GRAIN_ICON_LEFT = 0;
-
-  /**
-   * X position of the left edge of the Grain size area
-   * within the layer description group
-   *
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.GRAIN_SIZE_LEFT = SnowProfile.Cfg.GRAIN_ICON_LEFT +
-    SnowProfile.Cfg.GRAIN_SHAPE_WD + SnowProfile.Cfg.GRAIN_SPACE_WD;
-
-  /**
-   * X position of the left edge of the Comment text area
-   * @const {number}
-   * @memberof SnowProfile
-   */
-  SnowProfile.Cfg.COMMENT_LEFT = SnowProfile.Cfg.GRAIN_SIZE_LEFT +
-    SnowProfile.Cfg.GRAIN_SIZE_WD + SnowProfile.Cfg.COMMENT_SPACE_WD;
+  SnowProfile.tempUnit = 'F';
 
   /**
    * Snow stratigraphy snow layers.
@@ -461,6 +86,17 @@ var SnowProfile = {};
   * @type {Array}
   */
   SnowProfile.stabilityTests = [];
+  
+  /**
+  * Snowpit Temperature Profile
+  *
+  * An array to hold Temperature measurements taken at different depths in the 
+  * snowpit.  Each temperature object contains a temperature and a depth.
+  *
+  * @memberof SnowProfile
+  * @type {Array}
+  */
+  SnowProfile.temperatureData = [];
 
   /**
    * Make the handle visible if it has not been touched.
@@ -605,6 +241,25 @@ var SnowProfile = {};
       SnowProfile.Cfg.HANDLE_MIN_Y;
     return y;
   };
+  
+  /**
+   *  Convert a temperature value to a drawing X axis position 
+   *  
+   *  @method 
+   *  @memberof SnowProfile 
+   *  @param {number} (temperature) Temperature reading at a snow layer 
+   *  @returns {number} X position
+   */
+  SnowProfile.temperature2x = function(temp) {
+    var temp_scale = SnowProfile.maxTemp - SnowProfile.minTemp,
+        px_scale = SnowProfile.Cfg.GRAPH_WIDTH / temp_scale,
+        x = SnowProfile.tempUnit === 'F' ? 
+          SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
+          ((temp - SnowProfile.maxTemp) * px_scale) :
+          SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
+          (temp * px_scale);
+    return x;
+  }
 
   /**
    * Position the feature description and connecting lines on the drawing.
@@ -1022,99 +677,90 @@ var SnowProfile = {};
     // Build the object to store in SnowProfile.stabilityTests
     var testObj = { description: testString, depth: testDepth };
     
-    // Add object to SnowProfile.stabilityTests, or overwrite if it already exists
-    if (SnowProfile.stabilityTests.length > testNum) {
-      SnowProfile.stabilityTests[testNum] = testObj;
-    } else SnowProfile.stabilityTests.push(testObj);
+    // Add object to SnowProfile.stabilityTests (will overwrite)
+    SnowProfile.stabilityTests[testNum] = testObj;
     
-  };
-
+  };  // function addStabilityTest(testNum)
+  
   /**
-   * Tell listeners to hide anything that should not appear on
-   * the final image.
-   *
-   * This event is fired just before the image is generated
-   * from the drawing.
-   * @event SnowProfileHideControls
-   * @memberof SnowProfile
-   * @type {string}
+   *  Checks the temperature form and attempts to add a new temperature reading 
+   *  to the array of temperature data, and if successful draws the updated 
+   *  temperature profile to the live profile.
+   *  
+   *  @method 
+   *  @memberof SnowProfile 
+   *  @param {number} (temperatureIndex) The index of the temperature reading to check
    */
-
-  /**
-   * Tell listeners to show controls hidden from the image.
-   *
-   * This event is fired after the image has been generated from
-   * the canvas.  It tells listeners they should show anything that was
-   * hidden from the image.
-   * @event SnowProfileShowControls
-   * @memberof SnowProfile
-   * @type {string}
-   */
-
-  /**
-   * Tell listeners the reference grid has changed.
-   *
-   * This event is fired when the user changes a parameter that
-   * governs the reference grid.  It tells listeners to respond to the
-   * new grid parameters by adjusting their data display.
-   * @event SnowProfileDrawGrid
-   * @memberof SnowProfile
-   * @type {string}
-   * @see SnowProfile.Grid
-   */
-
-  /**
-   * Tell listeners that a SnowProfile.Button has been clicked
-   *
-   * @event SnowProfileButtonClick
-   * @memberof SnowProfile
-   * @type {Object}
-   */
-
-  /**
-   * Produce a preview PNG in a new window
-   *
-   * @method
-   * @memberof SnowProfile
-   * @fires ShowProfileHideControls
-   * @fires ShowProfileShowControls
-   */
-  /*SnowProfile.preview = function() {
-
-    var saveWidth, saveHeight;
-
-    // Hide the controls so they won't show in the PNG
-    $.event.trigger("SnowProfileHideControls");
-
-    // Scale the drawing to desired image size.
-    var scaleFactor = SnowProfile.Cfg.IMAGE_WD / SnowProfile.drawing.width();
-    saveWidth = SnowProfile.drawing.width();
-    saveHeight = SnowProfile.drawing.height();
-    SnowProfile.mainGroup.scale(scaleFactor);
-    SnowProfile.drawing.size(SnowProfile.Cfg.DRAWING_WD * scaleFactor,
-      SnowProfile.drawing.height() * scaleFactor);
-    var svg = SnowProfile.diagram.firstChild;
-    svg.toDataURL("image/png", {
-      callback: function(data) {
-
-        // Open a new window and show the PNG in it
-        var newWin = window.open(data, "_blank");
-        if (newWin === null) {
-          alert("You must enable pop-ups for this site to use" +
-            " the Preview button");
+  SnowProfile.addTemperatureReading = function (temperatureIndex) {
+    //console.log("addTemperatureReading() called with temp number: " + temperatureIndex);
+    var temperature = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-temp-temp-]').val().trim();
+    var depth = $('input[id^=edit-field-temp-collection-und-' + temperatureIndex + '-field-depth-]').val().trim();
+    temperature = parseFloat(temperature);
+    depth = parseFloat(depth);
+    if (!(isNaN(temperature) || isNaN(depth))){
+      if (temperature <= SnowProfile.maxTemp && temperature >= SnowProfile.Cfg.ABSOLUTE_MIN_TEMP &&
+          depth <= SnowProfile.pitDepth && depth >= 0) {
+        if (SnowProfile.depthRef === 'g') {
+          depth = SnowProfile.pitDepth - depth;
         }
-
-        // Restore normal drawing scale.
-        SnowProfile.drawing.width(saveWidth);
-        SnowProfile.drawing.height(saveHeight);
-        SnowProfile.mainGroup.scale(1);
-        $.event.trigger("SnowProfileShowControls");
+        if (temperature < SnowProfile.minTemp) {
+          SnowProfile.minTemp = temperature;
+        }
+        SnowProfile.temperatureData[temperatureIndex] = {temperature: temperature, depth: depth};
       }
-    });
-
-    // Prevent bubbling of this event.
-    return false;
-  };*/
+    }
+  }; // function addTemperatureReading(temperatureIndex)
+  
+  /**
+   *  Sorts and displays the temperature readings on the live profile
+   *  
+   *  @method
+   *  @memberof SnowProfile 
+   */
+  SnowProfile.drawTemperatures = function () {
+    // console.log("drawTemperatures() called");
+    var sortedTemps = SnowProfile.temperatureData.slice().sort(function(a,b) {
+      return a.depth - b.depth;
+    }),
+      tempPoint, 
+      tempLine;
+      
+    SnowProfile.temperatureGroup.clear();
+    SnowProfile.drawTemperatureScale();
+      
+    for (var i = 0; i < sortedTemps.length; i++) {
+      if (sortedTemps[i]) {
+        // console.log(sortedTemps[i].temperature);
+        // console.log(sortedTemps[i].depth);
+        tempPoint = SnowProfile.drawing.circle(SnowProfile.Cfg.TEMPERATURE_SIZE)
+          .fill(SnowProfile.Cfg.TEMPERATURE_COLOR)
+          .cx(SnowProfile.temperature2x(sortedTemps[i].temperature))
+          .cy(SnowProfile.depth2y(sortedTemps[i].depth) + 
+            (SnowProfile.Cfg.TEMPERATURE_SIZE / 2));
+            
+        SnowProfile.temperatureGroup.add(tempPoint);
+            
+        if (i > 0) {    
+          tempLine = SnowProfile.drawing.line(
+            SnowProfile.temperature2x(sortedTemps[i-1].temperature),
+            SnowProfile.depth2y(sortedTemps[i-1].depth) + 
+              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2),
+            SnowProfile.temperature2x(sortedTemps[i].temperature),
+            SnowProfile.depth2y(sortedTemps[i].depth) +
+              (SnowProfile.Cfg.TEMPERATURE_SIZE / 2))
+            .stroke({
+              color: SnowProfile.Cfg.TEMPERATURE_COLOR,
+              width: 2
+            });
+            
+          SnowProfile.temperatureGroup.add(tempLine);
+        }
+      }
+    }
+    
+    // Ensure temperature group stays on front of graph
+    SnowProfile.temperatureGroup.front();
+  }; // function drawTemperatures()
 
   /**
    * Create a new snow layer with associated Features object
@@ -1130,40 +776,6 @@ var SnowProfile = {};
   };
 
   /**
-   * Export the snow profile data into the form.
-   *
-   * Called when the "Save" button is clicked.
-   * FIXME deal with other than 3 layers
-   */
-  /*SnowProfile.export = function() {
-    var i;
-    $("input[name='pit_depth']").val(SnowProfile.pitDepth);
-    $("input[name='total_depth']").val(SnowProfile.totalDepth);
-    $("input[name='depth_ref']").val(SnowProfile.depthRef);
-    $("input[name='num_layers']").val(3);
-    for (i = 0; i < 3; i++) {
-      $("input[name='layer[" + i +"][depth]']").val(SnowProfile.snowLayers[i].depth());
-      var describe = SnowProfile.snowLayers[i].features().describe();
-      $("input[name='layer[" + i +"][hardness]']")
-        .val(SnowProfile.snowLayers[i].features().hardness());
-      var describe = SnowProfile.snowLayers[i].features().describe();
-      $("input[name='layer[" + i +"][primaryGrainShape]']")
-        .val(describe.primaryGrainShape);
-      $("input[name='layer[" + i +"][primaryGrainSubShape]']")
-        .val(describe.primaryGrainSubShape);
-      $("input[name='layer[" + i +"][secondaryGrainShape]']")
-        .val(describe.secondaryGrainShape);
-      $("input[name='layer[" + i +"][secondaryGrainSubShape]']")
-        .val(describe.secondaryGrainSubShape);
-      $("input[name='layer[" + i +"][grainSizeMin]']")
-        .val(describe.grainSizeMin);
-      $("input[name='layer[" + i +"][grainSizeMax]']")
-        .val(describe.grainSizeMax);
-      $("input[name='layer[" + i +"][comment]']").val(describe.comment);
-    }
-  };*/
-
-  /**
    * Intercept an ENTER key and replace SUBMIT with a change event
    *
    * This is used to prevent the ENTER key in certain text input fields
@@ -1175,13 +787,13 @@ var SnowProfile = {};
    * @fires change
    * @param {object} event Event representing what was entered in the
    *   input field.
-   */
+   *
   SnowProfile.blockSubmit = function(event) {
     if (event.type === "keydown" && event.which === 13) {
       event.preventDefault();
       $(event.target).trigger("change");
     }
-  };
+  };*/
 
   /**
    * Initialize the SVG drawing and the grid group
@@ -1253,22 +865,6 @@ var SnowProfile = {};
     SnowProfile.ctrlsGroup.add(SnowProfile.editGroup);
 
     /**
-     * Pencil symbol used by the edit button.
-     * @memberof SnowProfile
-     */
-    /*SnowProfile.pencil = SnowProfile.drawing.defs()
-      .path("M 16.875,4.4 C 18.60063,4.4 20,5.7993755 20,7.525 20,8.2287506 19.7675,8.8774995 19.375,9.4 L 18.125,10.65 13.75,6.275 15,5.025 C 15.5225,4.6325 16.171251,4.4 16.875,4.4 z M 1.25,18.775 0,24.4 5.625,23.15 17.1875,11.587506 12.8125,7.2125 1.25,18.775 z m 12.726251,-7.273755 -8.750001,8.75 -1.0775,-1.07749 8.749999,-8.750001 1.077502,1.077491 z")
-      .addClass('snow_profile_ctrls_edit');*/
-
-    /**
-     * Plus symbol used by the insert button.
-     * @memberof SnowProfile
-     */
-    /*SnowProfile.plus = SnowProfile.drawing.defs()
-      .path("M 19.375,13.805085 H 12.5 v -6.875 c 0,-0.345 -0.28,-0.625 -0.625,-0.625 H 8.1249998 c -0.3449999,0 -0.6249999,0.28 -0.6249999,0.625 v 6.875 H 0.62499999 c -0.345,0 -0.62499999,0.28 -0.62499999,0.625 v 3.75 c 0,0.345 0.27999999,0.625 0.62499999,0.625 H 7.4999999 v 6.875 c 0,0.344999 0.28,0.625 0.6249999,0.625 H 11.875 c 0.345,0 0.625,-0.280001 0.625,-0.625 v -6.875 h 6.875 c 0.344999,0 0.625,-0.28 0.625,-0.625 v -3.75 c 0,-0.345 -0.280001,-0.625 -0.625,-0.625 z")
-      .addClass('snow_profile_ctrls_insert');*/
-
-    /**
      * SnowProfile drawing insert buttons group
      *
      * Insert buttons, ordered as the snow layers are.
@@ -1293,99 +889,21 @@ var SnowProfile = {};
     SnowProfile.gridGroup = SnowProfile.drawing.group()
       .addClass("snow_profile_grid");
     SnowProfile.mainGroup.add(SnowProfile.gridGroup);
-
+    
     /**
-     * Populate the selects from the CAAML tables
-     * @function
+     * SnowProfile temperature group
+     *
+     * @see  {@link http://http://documentup.com/wout/svg.js#parent-elements/groups Groups}
+     * @type {object}
+     * @memberof SnowProfile
      */
-
-    var code;
-
-    // Populate the grain shape <select>s in the layer description pop-up
-    /*for (code in SnowProfile.CAAML_SHAPE) {
-      if (SnowProfile.CAAML_SHAPE.hasOwnProperty(code)) {
-        $("#snow_profile_primary_grain_shape").append("<option value=\"" +
-          code + "\">" + SnowProfile.CAAML_SHAPE[code].text + "</option>");
-        $("#snow_profile_secondary_grain_select").append("<option value=\"" +
-          code + "\">" + SnowProfile.CAAML_SHAPE[code].text + "</option>");
-      }
-    }*/
-
-    // Create the <select>s for the grain subshape from the CAAML_SUBSHAPE
-    // table.
-    /*var primary_opts = "",
-      secondary_opts = "";
-    for (var shape in SnowProfile.CAAML_SUBSHAPE) {
-      if (SnowProfile.CAAML_SUBSHAPE.hasOwnProperty(shape)) {
-        primary_opts += "<select id=\"snow_profile_primary_grain_subshape_" +
-          shape + "\" style=\"display: none\"><option value=\"\"" +
-          " selected=\"selected\"></option>";
-        secondary_opts +=
-          "<select id=\"snow_profile_secondary_grain_subshape_" +
-          shape + "\" style=\"display: none\"><option value=\"\"" +
-          " selected=\"selected\"></option>";
-        for (var subShape in SnowProfile.CAAML_SUBSHAPE[shape]) {
-          if (SnowProfile.CAAML_SUBSHAPE[shape].hasOwnProperty(subShape)) {
-            primary_opts += "<option value=\"" + subShape + "\">" +
-              SnowProfile.CAAML_SUBSHAPE[shape][subShape].text + "</option>";
-            secondary_opts += "<option value=\"" + subShape + "\">" +
-              SnowProfile.CAAML_SUBSHAPE[shape][subShape].text + "</option>";
-          }
-        }
-        primary_opts += "</select>";
-        secondary_opts += "</select>";
-      }
-    }
-    $("#snow_profile_primary_grain_subshape").append(primary_opts);
-    $("#snow_profile_secondary_grain_subshape").append(secondary_opts);
-    */
+    SnowProfile.temperatureGroup = SnowProfile.drawing.group()
+      .addClass("snow_profile_temperature");
+    SnowProfile.mainGroup.add(SnowProfile.temperatureGroup);
     
     // Add the reference grid to the SVG drawing
     new SnowProfile.Grid();
-
-    /*$(document).ready(function() {
-
-      // When a character is entered into the snow profile total depth
-      // field, replace ENTER with a change event.
-      $("#snow_profile_total_depth")
-        .bind("keydown", function(event) {SnowProfile.blockSubmit(event)});
-
-      // When a character is entered into the snow profile pit depth
-      // field, replace ENTER with a change event.
-      $("#snow_profile_pit_depth")
-        .bind("keydown", function(event) {SnowProfile.blockSubmit(event)});
-
-      // When the "Preview" button is clicked, generate a preview.
-      $("#snow_profile_preview").click(function(event) {
-        SnowProfile.preview(event);
-
-        // Prevent this event from bubbling up the stack.
-        return false;
-      });
-
-      // When the "Save" button is clicked, call SnowProfile.export()
-      // to copy data to the form before submission.
-      $("#edit-submit").click(function() {
-        SnowProfile.export();
-      });
-      
-      $('input[name=field_layer_add_more]').mousedown(function() {
-        var maxIndex = SnowProfile.snowLayers.length - 1;
-        var spaceBelow = SnowProfile.pitDepth - SnowProfile.snowLayers[maxIndex].depth();
-        SnowProfile.newLayer(SnowProfile.snowLayers[maxIndex].depth() + (spaceBelow / 2));
-        //alert(SnowProfile.snowLayers[0].depth());
-      });
-      
-      // Testing event handlers for updating editor from text input 
-      $("#my_test_input").change(function () {
-          SnowProfile.snowLayers[1].depth($(this).val());
-          SnowProfile.snowLayers[1].draw();
-          //alert($(this).val());  
-      });
-
-    });*/
-
-
+    
   };  // function SnowProfile.init();
 })(jQuery);
 

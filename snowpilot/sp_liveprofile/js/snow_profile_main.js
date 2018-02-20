@@ -125,10 +125,36 @@
     for (var i = 0; i < numTests; i++) {
       SnowProfile.addStabilityTest(i);
     }
-    // Features
+    // Features (grain type, size, and stability tests) are drawn by the describe() method 
     for (var i = 0; i < layers; i++) {
       SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
     }
+    // Initialize Temperatures:
+    // Loop and check for existence of temperature readings and count them, break when finished
+    var numTemps = 0;
+    while (true) {
+      // special case for first temp, which exist even on new pits, so we check for a value
+      if (numTemps === 0){
+        if ($.trim($("input[id^=edit-field-temp-collection-und-" + numTemps + "-field-temp-temp]").val()).length) {
+          numTemps++;
+        } else {
+          break;
+        }
+      } else {
+        // otherwise we check for field existance
+        if ($("input[id^=edit-field-temp-collection-und-" + numTemps + "-field-temp-temp]").length) {
+          numTemps++;
+        } else {
+          break;
+        }
+      }
+    }
+    // Populate SnowProfile.temperatureData with existing temperature information
+    for (var i = 0; i < numTemps; i++) {
+      SnowProfile.addTemperatureReading(i);
+    }
+    // Draw temperature profile 
+    SnowProfile.drawTemperatures();
   }
   
   // Initialize the live editor one time on document ready 
@@ -195,18 +221,36 @@
         //console.log("Element Name: " + elementName);
         //console.log("Element Text: " + elementText);
         
-        // Remove stability tests
-        var re = /_remove_button/;
-        if (re.test(elementName)) {
-          // Find test number
-          var testString = elementName.split("_")[3];
-          var testNum = parseInt(testString, 10);
-          
-          // Remove that test from SnowProfile.stabilityTests
-          SnowProfile.stabilityTests.splice(testNum, 1);
-          
-          for (var i = 0; i < (SnowProfile.snowLayers.length - 1); i++) {
-            SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
+        // Remove stability tests and temperatures on live profile
+        var removeRegex = /_remove_button/;
+        var testRegex = /field_test/;
+        var tempRegex = /field_temp_collection/;
+        if (removeRegex.test(elementName)) {
+          // Stability Tests
+          if (testRegex.test(elementName)) {
+            // Find test number
+            var testString = elementName.split("_")[3];
+            var testNum = parseInt(testString, 10);
+            
+            // Remove that test from SnowProfile.stabilityTests
+            SnowProfile.stabilityTests.splice(testNum, 1);
+            
+            // Redraw features
+            for (var i = 0; i < (SnowProfile.snowLayers.length - 1); i++) {
+              SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
+            }
+          }
+          // Temperatures 
+          if (tempRegex.test(elementName)) {
+            // Find temp number 
+            var tempString = elementName.split("_")[4];
+            var tempNum = parseInt(tempString, 10);
+            
+            // Remove that temp from SnowProfile.temperatureData 
+            SnowProfile.temperatureData.splice(tempNum, 1);
+            
+            // Redraw temperatures 
+            SnowProfile.drawTemperatures();
           }
         }
         
@@ -387,10 +431,31 @@
             SnowProfile.snowLayers[i].features().describe(SnowProfile.getSnowPilotData(i));
           }
         });
-        // Layers input mouseover delegation for submit bug
+        // Stability test input mouseover delegation for submit bug
         $('#edit-field-test', context).delegate( 'input', 'mouseover', function (event) {
           if($(this).hasClass("field-add-more-submit")) {
-            // When user hovers over Add Layer button, quickly blur and refocus element to trigger listeners
+            // When user hovers over Add Test button, quickly blur and refocus element to trigger listeners
+            var elem = document.activeElement;
+            elem.blur();
+            elem.focus();
+          }
+          // Stop Event 
+          event.stopPropagation();
+        });
+        // Temperature profile input delegation
+        $('#edit-field-temp-collection', context).delegate( 'input', 'blur', function (event) {
+          // Get temperature number 
+          var tempString = $(this).parents("div[class*='temp_num_']")[0].className.split(" ")[1].split("_")[2];
+          var tempNum = parseInt(tempString, 10);
+          // Try to add a temperature object to the array
+          SnowProfile.addTemperatureReading(tempNum);
+          // Update live profile
+          SnowProfile.drawTemperatures();
+        });
+        // Temperatures input mouseover delegation for submit bug
+        $('#edit-field-temp-collection', context).delegate( 'input', 'mouseover', function (event) {
+          if($(this).hasClass("field-add-more-submit")) {
+            // When user hovers over Add Temperature button, quickly blur and refocus element to trigger listeners
             var elem = document.activeElement;
             elem.blur();
             elem.focus();
