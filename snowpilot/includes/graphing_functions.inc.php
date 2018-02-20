@@ -813,7 +813,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
 							imageline($img, 707, $test->y_position, 979, $test->y_position, $black);
 							$test_pos = imagettftext($img, 8, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
-						  imagettftext($img, 8, 0, $test_pos[2], $test->y_position - 5, $black, $value_font,$test->field_stability_comments['und'][0]['safe_value'] );
+							if ( isset ( $test->field_stability_comments['und'][0] )){
+						    imagettftext($img, 8, 0, $test_pos[2], $test->y_position - 5, $black, $value_font, '  '.$test->field_stability_comments['und'][0]['safe_value'] );
+						  }
 						}
 						if ( count($test->field_stability_comments) ){
 							if ( $comment_count < 5 ){
