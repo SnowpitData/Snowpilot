@@ -1627,7 +1627,7 @@ function _set_test_result_single($test_result){
 		case 'RB':	return $test_result->field_stability_test_score_rb['und'][0]['value'];
 		
 		break;
-		case 'PST':	return '';
+		case 'PST':	return $test_result->field_data_code_pst['und'][0]['value'];
 		
 		break;
 		case 'SB':	return $test_result->field_stability_test_score_sb['und'][0]['value'];
