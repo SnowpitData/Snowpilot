@@ -518,6 +518,12 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted'){
 				$ecScore = $snowpilot_xmldoc->createAttribute('ecScore');
 				$ecScore->value = isset($shear_test->field_ec_score['und'][0]['value']) ? $shear_test->field_ec_score['und'][0]['value'] : '';
 				$snowpilot_ShearTest->appendChild($ecScore);
+				
+				//
+				// ctScore
+				$ctScore = $snowpilot_xmldoc->createAttribute('ctScore');
+				$ctScore->value = isset($shear_test->field_ct_score['und'][0]['value']) ? $shear_test->field_ct_score['und'][0]['value'] : '';
+				$snowpilot_ShearTest->appendChild($ctScore);
 		
 				//
 				// quality

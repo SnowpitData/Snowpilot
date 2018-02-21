@@ -787,7 +787,6 @@ function snowpilot_field_attach_form($entity_type, $entity, &$form, &$form_state
 	      $instance['widget']['type'] == 'field_collection_embed' && 
 	      $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)
 	    {
-				dsm($field);
 
 	      //Check just in case the button is here, and add another #submit function
 	      if(isset($form[$field['field_name']]['und']['add_more']))
@@ -1291,7 +1290,7 @@ function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 	
 }
 
-function snowpilot_entity_presave($entity, $type){
+function snowpilot_entity_presave(&$entity, $type){
 
 	if ($type == 'field_collection_item' && $entity->field_name == 'field_test'){
 		//if $entity->
@@ -1616,7 +1615,7 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 }
 
 function _set_test_result_single($test_result){
-	if (isset($test_result->field_stability_test_type['und'][0])){
+	if (isset($test_result->field_stability_test_type['und'][0])){		
 	switch ($test_result->field_stability_test_type['und'][0]['value']){
 		case 'ECT':	return $test_result->field_stability_test_score_ect['und'][0]['value'];
 		break;
@@ -1627,7 +1626,7 @@ function _set_test_result_single($test_result){
 		case 'RB':	return $test_result->field_stability_test_score_rb['und'][0]['value'];
 		
 		break;
-		case 'PST':	return '';
+		case 'PST':	return $test_result->field_data_code_pst['und'][0]['value'];
 		
 		break;
 		case 'SB':	return $test_result->field_stability_test_score_sb['und'][0]['value'];

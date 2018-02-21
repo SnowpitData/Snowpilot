@@ -451,7 +451,7 @@ function _tid2snowsymbols($tid = NULL, $all = FALSE){
 		'93' => '&#xe025;',// clustered rounded grains
 		'94' => '&#xe026;', //rounded polycrystals
 		'95' => '&#xe027;', // Slush
-		'96' => '&#xe028;', //Melt-freeze crust
+		'96' => '&#xe028;&#xe007;', //Melt-freeze crust
 		
 		// Ice Formations
 		'97' => '&#xe029;',// Ice Layer
@@ -811,8 +811,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->y_position) ){
 						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
-							imageline($img, 707, $test->y_position, 941, $test->y_position, $black);
-							imagettftext($img, 9, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
+							imageline($img, 707, $test->y_position, 979, $test->y_position, $black);
+							$test_pos = imagettftext($img, 8, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
+							if ( isset ( $test->field_stability_comments['und'][0] )){
+						    imagettftext($img, 8, 0, $test_pos[2], $test->y_position - 5, $black, $value_font, '  '.$test->field_stability_comments['und'][0]['safe_value'] );
+						  }
 						}
 						if ( count($test->field_stability_comments) ){
 							if ( $comment_count < 5 ){
@@ -884,14 +887,23 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				  $grain_type_image ='';
 			  	if ( isset($layer->field_grain_type['und'])){
 			  		$grain_type_image = isset($layer->field_grain_type['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type['und'][0]['tid']);
-			  	}	
-			  	$secondary_grain_type = '';
+						$font_size = 12;
+						if  ( $grain_type_image == '&#xe028;&#xe007;' ) $font_size = 12;
+						$grain_image_pos = imagettftext($img, $font_size, 0, 520 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image);
+					  
+					}	
+					
 					if (isset($layer->field_grain_type_secondary['und'])){
 						$secondary_grain_type_image = isset($layer->field_grain_type_secondary['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type_secondary['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type_secondary['und'][0]['tid']);
-						$secondary_grain_type = '('. $secondary_grain_type_image . ')';
+						$font_size = 12;
+						if  ( $secondary_grain_type_image == '&#xe028;&#xe007;' ) $font_size = 12;
+						$x_pos1 =  isset($grain_image_pos[2]) ? $grain_image_pos[2] : 520;
+						$second_grain_image_pos = imagettftext($img, 13, 0, $x_pos1 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, '(' );
+						$third_grain_image_pos = imagettftext($img, $font_size, 0, $second_grain_image_pos[2] , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $secondary_grain_type_image);
+						imagettftext($img, 12, 0, $third_grain_image_pos[2] , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, ')');
 					}
 				//output grain symbols
-					imagettftext($img, 14, 0, 525 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image.$secondary_grain_type);
+					
 				
 				// calculate grain size string
 					$grain_size_string = isset($layer->field_grain_size['und']) ? $layer->field_grain_size['und'][0]['value'] : '' ;
@@ -1083,7 +1095,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	imagettftext($img, 10, 0 , 675,135, $black, $label_font , _density_unit_fix($snowpit_unit_prefs['field_density_units']) );
 	
 	// the rectabngle around stability and density columns
-  imagerectangle( $img , 667 ,140 , 941, 751, $black);
+  imagerectangle( $img , 667 ,140 , 979, 751, $black);
 	
 	// the rectangle around the layers hardness profile
 	imagerectangle($img, 14, 140, 447,751, $black );
