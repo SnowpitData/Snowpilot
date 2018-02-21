@@ -10,3 +10,7 @@ sites_default_files_profiles/*
 snowpilot/snowpilot-live.module
 
 snowpilot/snowpilot-testsite.module
+
+.eslintrc.js
+
+*.bak
