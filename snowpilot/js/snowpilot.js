@@ -11,127 +11,63 @@
       
       // Begin auto-scroll for SnowPilot form 
       $('#edit-field-layer', context).once('auto_scroll', function () {
-        // Ensure 'Add layer' button is visible on new layer 
+        // Buffer at bottom of form when it gets too big to see
+        var buffer = 10;
+        // Ensure 'Add layer' button is visible on new layer loading
         $(document).ajaxStop(function () {
-          if ($(window).scrollTop() > 150) {
-            // Layers Tab
-            if ($('#active-horizontal-tab').parents('.horizontal-tab-button-1').length > 0) {
-              var diff = $(window).height() - $('#edit-field-layer').height() - 7// for some reason ajaxStop triggers a bit too early, -7 makes this consistent with autoscroll code
-              if (diff < 0) {
-                $('#edit-field-layer').css({
-                  "position": "fixed",
-                  "top": diff
-                });
-              }
-            // Stability Tests Tab
-            } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-2').length > 0) {
-              var diff = $(window).height() - $('#edit-field-test').height() - 7;
-              if (diff < 0) {
-                $('#edit-field-test').css({
-                  "position": "fixed",
-                  "top": diff
-                });
-              }
-            // Temp Profile Tab
-            } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-3').length > 0) {
-              var diff = $(window).height() - $('#edit-field-temp-collection').height() - 7;
-              if (diff < 0) {
-                $('#edit-field-temp-collection').css({
-                  "position": "fixed",
-                  "top": diff
-                });
-              }
-            // Density Tab
-            } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-4').length > 0) {
-              var diff = $(window).height() - $('#edit-field-density-profile').height() - 7;
-              if (diff < 0) {
-                $('#edit-field-density-profile').css({
-                  "position": "fixed",
-                  "top": diff
-                });
-              }
+          var form;
+          if ($('#active-horizontal-tab').parents('.horizontal-tab-button-1').length > 0) {
+            form = $('#edit-field-layer'); // Layers
+          } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-2').length > 0) {
+            form = $('#edit-field-test'); // Stability Tests
+          } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-3').length > 0) {
+            form = $('#edit-field-temp-collection'); // Temperatures 
+          } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-4').length > 0) {
+            form = $('#edit-field-density-profile'); // Density 
+          }
+          if (form) {
+            if ($(window).scrollTop() > $('#snow_profile_diagram').offset().top) {
+              // Check if bottom of form would be unviewable at bottom of screen, wait a tic for loading
+              setTimeout(function () {
+                var diff = $(window).height() - form.height() - buffer;
+                if (diff < 0) {
+                  form.css({
+                    "position": "fixed",
+                    "top": diff
+                  });
+                }
+              }, 500);  // Wait 0.5 seconds for forms to load to get correct measurements
             }
           }
         });
         // Change CSS on SnowPilot form based on scroll position 
         $(window).scroll(function () {
-          // Layers Tab
+          var form;
           if ($('#active-horizontal-tab').parents('.horizontal-tab-button-1').length > 0) {
-            if ($(window).scrollTop() > 150 ) {
-              var diff = $(window).height() - $('#edit-field-layer').height();
-              if (diff < 0) {
-                $('#edit-field-layer').css({
-                  "position": "fixed",
-                  "top": diff
-                });
-              } else {
-                $('#edit-field-layer').css({
-                  "position": "fixed",
-                  "top": "5px"
-                });
-              }
-            } else {
-              $('#edit-field-layer').css({
-                "position": "static"
-              });
-            }
-          // Stability Tests Tab
+            form = $('#edit-field-layer'); // Layers
           } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-2').length > 0) {
-            if ($(window).scrollTop() > 150 ) {
-              var diff = $(window).height() - $('#edit-field-test').height();
-              if (diff < 0) {
-                $('#edit-field-test').css({
-                  "position": "fixed",
-                  "top": diff
-                });
-              } else {
-                $('#edit-field-test').css({
-                  "position": "fixed",
-                  "top": "5px"
-                });
-              }
-            } else {
-              $('#edit-field-test').css({
-                "position": "static"
-              });
-            }
-          // Temp Profile Tab
+            form = $('#edit-field-test'); // Stability Tests
           } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-3').length > 0) {
-            if ($(window).scrollTop() > 150 ) {
-              var diff = $(window).height() - $('#edit-field-temp-collection').height();
-              if (diff < 0) {
-                $('#edit-field-temp-collection').css({
-                  "position": "fixed",
-                  "top": diff
-                });
-              } else {
-                $('#edit-field-temp-collection').css({
-                  "position": "fixed",
-                  "top": "5px"
-                });
-              }
-            } else {
-              $('#edit-field-temp-collection').css({
-                "position": "static"
-              });
-            }
+            form = $('#edit-field-temp-collection'); // Temperatures 
           } else if ($('#active-horizontal-tab').parents('.horizontal-tab-button-4').length > 0) {
-          // Density Tab
-            if ($(window).scrollTop() > 150 ) {
-              var diff = $(window).height() - $('#edit-field-density-profile').height();
+            form = $('#edit-field-density-profile'); // Density 
+          }
+          if (form) {
+            if ($(window).scrollTop() > $('#snow_profile_diagram').offset().top) {
+              var diff = $(window).height() - form.height() - buffer;
               if (diff < 0) {
-                $('#edit-field-density-profile').css({
+                form.css({
                   "position": "fixed",
                   "top": diff
                 });
               } else {
-                $('#edit-field-density-profile').css({
+                form.css({
                   "position": "fixed",
                   "top": "5px"
                 });
               }
             } else {
-              $('#edit-field-density-profile').css({
+              form.css({
                 "position": "static"
               });
             }
@@ -158,10 +94,8 @@
             // Add error class to any bottom depth field without a value 
             if($(this).val() == '') {
               $(this).addClass('error');
-              console.log('error class added');
             } else {
               $(this).removeClass('error');
-              console.log('error class removed');
             }
             
             // When bottom depth is changed, update next layers top depth
