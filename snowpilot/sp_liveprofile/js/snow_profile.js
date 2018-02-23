@@ -6,7 +6,7 @@
  */
 
 (function($) {
-  "use strict";
+  'use strict';
   
   /**
    * Pit depth (cm)
@@ -49,7 +49,7 @@
    * @type {!string}
    * @see SnowProfile.Grid~depthScaleGrp
    */
-  SnowProfile.depthRef = "s";
+  SnowProfile.depthRef = 's';
   
   /**
    *  Temperature unit preference on SnowPilot, pulled from the form 
@@ -252,14 +252,14 @@
    */
   SnowProfile.temperature2x = function(temp) {
     var temp_scale = SnowProfile.maxTemp - SnowProfile.minTemp,
-        px_scale = SnowProfile.Cfg.GRAPH_WIDTH / temp_scale,
-        x = SnowProfile.tempUnit === 'F' ? 
-          SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
+      px_scale = SnowProfile.Cfg.GRAPH_WIDTH / temp_scale,
+      x = SnowProfile.tempUnit === 'F' ? 
+        SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
           ((temp - SnowProfile.maxTemp) * px_scale) :
-          SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
+        SnowProfile.Cfg.DEPTH_LABEL_WD + 1 + SnowProfile.Cfg.GRAPH_WIDTH + 
           (temp * px_scale);
     return x;
-  }
+  };
 
   /**
    * Position the feature description and connecting lines on the drawing.
@@ -273,13 +273,10 @@
       i,
       featureBottom,
       featureTop,
-      layerBottom,
-      layerTop;
+      layerBottom;
 
     // Iterate through snow layers from top down
     for (i = 0; i < SnowProfile.snowLayers.length; i++) {
-      // Y value of the top of this layer
-      layerTop = SnowProfile.depth2y(SnowProfile.snowLayers[i].depth());
 
       // Y value of the bottom of this layer
       if (i === (SnowProfile.snowLayers.length - 1)) {
@@ -351,23 +348,24 @@
    * @returns {object} data object for use with featObj.describe(data) method.
    */
   SnowProfile.getSnowPilotData = function (layerNum) {
-	var primaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-und"]').val());
+    // TODO:  change stability test to moisture readings, add density readings 
+    var primaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-und"]').val());
     var primaryShape = primaryShapes[0];
     var primarySubShape = primaryShapes[1];
     //var secondaryShape = translateShape($("div[class*=form-item-field-layer-und-" + layerNum + "-field-grain-type-secondary-] > div > select")[0].value);
     //var secondarySubShape = translateSubShape($("[id^=edit-field-layer-und-" + layerNum + "-field-grain-type-secondary-]").val());
-	var secondaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]').val());
+    var secondaryShapes = translateShape($('select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]').val());
 		
     var secondaryShape = secondaryShapes[0];
-	  var secondarySubShape = secondaryShapes[1];
+    var secondarySubShape = secondaryShapes[1];
 	
-	var sizeMin = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-]").val();
-    if (sizeMin === "_none") {
-      sizeMin = "";
+    var sizeMin = $('select[id^=edit-field-layer-und-' + layerNum + '-field-grain-size-]').val();
+    if (sizeMin === '_none') {
+      sizeMin = '';
     }
-    var sizeMax = $("select[id^=edit-field-layer-und-" + layerNum + "-field-grain-size-max-]").val();
-    if (sizeMax === "_none") {
-      sizeMax = "";
+    var sizeMax = $('select[id^=edit-field-layer-und-' + layerNum + '-field-grain-size-max-]').val();
+    if (sizeMax === '_none') {
+      sizeMax = '';
     }
     
     // Build array of stability test objects that fit into this layer 
@@ -376,7 +374,7 @@
       var layerTopDepth = SnowProfile.snowLayers[layerNum].depth();
       var layerBotDepth = SnowProfile.snowLayers[layerNum + 1].depth();
       var testDepth = SnowProfile.stabilityTests[i].depth;
-      if (SnowProfile.depthRef === "g") {
+      if (SnowProfile.depthRef === 'g') {
         testDepth = SnowProfile.pitDepth - testDepth;
       }
       
@@ -389,13 +387,13 @@
     }
     
     var tempData = {
-              primaryGrainShape: primaryShape,
-              primaryGrainSubShape: primarySubShape,
-              secondaryGrainShape: secondaryShape,
-              secondaryGrainSubShape: secondarySubShape,
-              grainSizeMin: sizeMin,
-              grainSizeMax: sizeMax,
-              comment: stabTests
+      primaryGrainShape: primaryShape,
+      primaryGrainSubShape: primarySubShape,
+      secondaryGrainShape: secondaryShape,
+      secondaryGrainSubShape: secondarySubShape,
+      grainSizeMin: sizeMin,
+      grainSizeMax: sizeMax,
+      comment: stabTests
     };
     
     return tempData;
@@ -403,147 +401,147 @@
   
   function translateShape(shapeCode) {
     switch (shapeCode) {
-      case "33":
-        return ["PP",""];
-        break;
-      case "34":
-        return ["DF",""];
-        break;
-      case "35":
-        return ["RG",""];
-        break;
-      case "36":
-        return ["FC",""];
-        break;
-      case "37":
-        return ["DH",""];
-        break;
-      case "38":
-        return ["SH",""];
-        break;
-      case "39":
-        return ["MF",""];
-        break;
-      case "40":
-        return ["IF",""];
-        break;
-      case "41":
-        return ["MM",""];
-        break;
-	  // Start subshapes
-	  case "42":
-        return ["PP","PPco"];
-        break;
-      case "43":
-        return ["PP","PPnd"];
-        break;
-      case "44":
-        return ["PP","PPpl"];
-        break;
-      case "45":
-        return ["PP","PPsd"];
-        break;
-      case "46":
-        return ["PP","PPir"];
-        break;
-      case "47":
-        return ["PP","PPgp"];
-        break;
-      case "48":
-        return ["PP","PPhl"];
-        break;
-      case "49":
-        return ["PP","PPip"];
-        break;
-      case "50":
-        return ["PP","PPrm"];
-        break;
-      case "78":
-        return ["DF","DFbk"];
-        break;
-      case "79":
-        return ["RG","RGsr"];
-        break;
-      case "80":
-        return ["RG","RGlr"];
-        break;
-      case "81":
-        return ["RG","RGwp"];
-        break;
-      case "82":
-        return ["RG","RGxf"];
-        break;
-      case "83":
-        return ["FC","FCsf"];
-        break;
-      case "84":
-        return ["FC","FCxr"];
-        break;
-      case "85":
-        return ["DH","DHcp"];
-        break;
-      case "86":
-        return ["DH","DHpr"];
-        break;
-      case "87":
-        return ["DH","DHch"];
-        break;
-      case "88":
-        return ["DH","DHla"];
-        break;
-      case "89":
-        return ["DH","DHxr"];
-        break;
-      case "90":
-        return ["", ""];
-        break;
-      case "91":
-        return ["SH","SHcv"];
-        break;
-      case "92":
-        return ["SH","SHxr"];
-        break;
-      case "93":
-        return ["MF","MFcl"];
-        break;
-      case "94":
-        return ["MF","MFpc"];
-        break;
-      case "95":
-        return ["MF","MFsl"];
-        break;
-      case "96":
-        return ["MF","MFcr"];
-        break;
-      case "97":
-        return ["IF","IFil"];
-        break;
-      case "98":
-        return ["IF","IFic"];
-        break;
-      case "99":
-        return ["IF","IFbi"];
-        break;
-      case "100":
-        return ["IF","IFrc"];
-        break;
-      case "101":
-        return ["IF","IFsc"];
-        break;
-      case "102":
-        return ["MM","MMrp"];
-        break;
-      case "103":
-        return ["MM","MMci"];
-        break;
-      case "104":
-        return ["DF","DFdc"];
-        break;
-      case "105":
-        return ["FC","FCso"];
-        break;
-      default:
-        return ["",""];
+    case '33':
+      return ['PP',''];
+      break;
+    case '34':
+      return ['DF',''];
+      break;
+    case '35':
+      return ['RG',''];
+      break;
+    case '36':
+      return ['FC',''];
+      break;
+    case '37':
+      return ['DH',''];
+      break;
+    case '38':
+      return ['SH',''];
+      break;
+    case '39':
+      return ['MF',''];
+      break;
+    case '40':
+      return ['IF',''];
+      break;
+    case '41':
+      return ['MM',''];
+      break;  
+    // Start subshapes
+    case '42':
+      return ['PP','PPco'];
+      break;
+    case '43':
+      return ['PP','PPnd'];
+      break;
+    case '44':
+      return ['PP','PPpl'];
+      break;
+    case '45':
+      return ['PP','PPsd'];
+      break;
+    case '46':
+      return ['PP','PPir'];
+      break;
+    case '47':
+      return ['PP','PPgp'];
+      break;
+    case '48':
+      return ['PP','PPhl'];
+      break;
+    case '49':
+      return ['PP','PPip'];
+      break;
+    case '50':
+      return ['PP','PPrm'];
+      break;
+    case '78':
+      return ['DF','DFbk'];
+      break;
+    case '79':
+      return ['RG','RGsr'];
+      break;
+    case '80':
+      return ['RG','RGlr'];
+      break;
+    case '81':
+      return ['RG','RGwp'];
+      break;
+    case '82':
+      return ['RG','RGxf'];
+      break;
+    case '83':
+      return ['FC','FCsf'];
+      break;
+    case '84':
+      return ['FC','FCxr'];
+      break;
+    case '85':
+      return ['DH','DHcp'];
+      break;
+    case '86':
+      return ['DH','DHpr'];
+      break;
+    case '87':
+      return ['DH','DHch'];
+      break;
+    case '88':
+      return ['DH','DHla'];
+      break;
+    case '89':
+      return ['DH','DHxr'];
+      break;
+    case '90':
+      return ['', ''];
+      break;
+    case '91':
+      return ['SH','SHcv'];
+      break;
+    case '92':
+      return ['SH','SHxr'];
+      break;
+    case '93':
+      return ['MF','MFcl'];
+      break;
+    case '94':
+      return ['MF','MFpc'];
+      break;
+    case '95':
+      return ['MF','MFsl'];
+      break;
+    case '96':
+      return ['MF','MFcr'];
+      break;
+    case '97':
+      return ['IF','IFil'];
+      break;
+    case '98':
+      return ['IF','IFic'];
+      break;
+    case '99':
+      return ['IF','IFbi'];
+      break;
+    case '100':
+      return ['IF','IFrc'];
+      break;
+    case '101':
+      return ['IF','IFsc'];
+      break;
+    case '102':
+      return ['MM','MMrp'];
+      break;
+    case '103':
+      return ['MM','MMci'];
+      break;
+    case '104':
+      return ['DF','DFdc'];
+      break;
+    case '105':
+      return ['FC','FCso'];
+      break;
+    default:
+      return ['',''];
     }
   }
   
@@ -557,121 +555,122 @@
    * @param {number} [testNum] The stability test number, starting at 0 for first test
    */
   SnowProfile.addStabilityTest = function (testNum) {
+    // TODO:  add stability test comments
     var scoreType, scoreValue, testString;
-    var testType = $("select[id^=edit-field-test-und-" + testNum + "-field-stability-test-type]").val();
+    var testType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-type]').val();
     var shearQuality = $('select[id^=edit-field-test-und-' + testNum + '-field-shear-quality]').val();
-    if (typeof shearQuality == "undefined") {
+    if (typeof shearQuality == 'undefined') {
       // must be fracture character instead of shear quality
       shearQuality = $('select[id^=edit-field-test-und-' + testNum + '-field-fracture-character]').val();
     }
-    if (shearQuality === "_none") {
-      shearQuality = "";
+    if (shearQuality === '_none') {
+      shearQuality = '';
     }
     var testDepthString = $('input[id^=edit-field-test-und-' + testNum + '-field-depth]').val();
     // Convert comma to decimal for EU style
-    testDepthString = testDepthString.replace(/,/g,".");
+    testDepthString = testDepthString.replace(/,/g,'.');
     var testDepth = Number(testDepthString);
     // Set anything with no depth yet input to the top
     if (!testDepthString.length) {
-      testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
-      testDepthString = "";
+      testDepth = ((SnowProfile.depthRef === 's') ? 0 : SnowProfile.pitDepth);
+      testDepthString = '';
     }
     
     switch(testType){
-      case "ECT":
-        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ect]').val();
-        scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ec-score]').val();
-        if (scoreType === "_none") {
-          testString = testType + " @ " + testDepthString;
-        } else if (scoreType === "ECTPV") {
-          testString = scoreType + " @ " + testDepthString;
-        } else if (scoreType === "ECTX") {
-          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
-          testString = scoreType;
-        } else {
-          testString = scoreType + scoreValue + " @ " + testDepthString;
-        }
-        break;
-      case "CT":
-        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ct]').val();
-        scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ct-score]').val();
-        if (scoreType === "_none") {
-          testString = testType + " @ " + testDepthString;
-        } else if (scoreType === "CTV") {
-          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
-        } else if (scoreType === "CTN") {
-          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
-          testString = scoreType;
-        } else {
-          testString = scoreType + scoreValue + ", " + shearQuality + " @ " + testDepthString;
-        }
-        break;
-      case "DT":
-        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-deep-tap-test-score]').val();
-        scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-dt-score]').val();
-        if (scoreType === "_none") {
-          testString = testType + " @ " + testDepthString;
-        } else if (scoreType === "DTV") {
-          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
-        } else if (scoreType === "DTN") {
-          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
-          testString = scoreType;
-        } else {
-          testString = scoreType + scoreValue + ", " + shearQuality + " @ " + testDepthString;
-        }
-        break;
-      case "RB":
-        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-rb]').val();
-        scoreValue = "";
-        if (scoreType === "_none") {
-          testString = testType + " @ " + testDepthString;
-        } else if (scoreType === "RB7") {
-          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
-          testString = scoreType;
-        } else {
-          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
-        }
-        break;
-      case "PST":
-        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-data-code-pst]').val();
-        var sawCutLength = $('input[id^=edit-field-test-und-' + testNum + '-field-length-of-saw-cut]').val();
-        if (sawCutLength.length === 0) {
-          sawCutLength = "_";
-        }
-        var columnLength = $('input[id^=edit-field-test-und-' + testNum + '-field-length-of-isolated-col]').val();
-        if (columnLength.length === 0) {
-          columnLength = "_";
-        }
-        if (scoreType === "_none") {
-          testString = "PST @ " + testDepthString;
-        } else {
-          testString = "PST " + sawCutLength + "/" + columnLength + "(" + scoreType + ") @ " + testDepthString; 
-        }
-        break;
-      case "SB":
-        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-sb]').val();
-        scoreValue = "";
-        if (scoreType === "_none") {
-          testString = testType + " @ " + testDepthString;
-        } else if (scoreType === "SBN") {
-          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
-          testString = scoreType;
-        } else {
-          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
-        }
-        break;
-      case "ST":
-        scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-st]').val();
-        scoreValue = "";
-        if (scoreType === "_none") {
-          testString = testType + " @ " + testDepthString;
-        } else if (scoreType === "STN") {
-          testDepth = ((SnowProfile.depthRef === "s") ? 0 : SnowProfile.pitDepth);
-          testString = scoreType;
-        } else {
-          testString = scoreType + ", " + shearQuality + " @ " + testDepthString;
-        }
-        break;
+    case 'ECT':
+      scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ect]').val();
+      scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ec-score]').val();
+      if (scoreType === '_none') {
+        testString = testType + ' @ ' + testDepthString;
+      } else if (scoreType === 'ECTPV') {
+        testString = scoreType + ' @ ' + testDepthString;
+      } else if (scoreType === 'ECTX') {
+        testDepth = ((SnowProfile.depthRef === 's') ? 0 : SnowProfile.pitDepth);
+        testString = scoreType;
+      } else {
+        testString = scoreType + scoreValue + ' @ ' + testDepthString;
+      }
+      break;
+    case 'CT':
+      scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-ct]').val();
+      scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-ct-score]').val();
+      if (scoreType === '_none') {
+        testString = testType + ' @ ' + testDepthString;
+      } else if (scoreType === 'CTV') {
+        testString = scoreType + ', ' + shearQuality + ' @ ' + testDepthString;
+      } else if (scoreType === 'CTN') {
+        testDepth = ((SnowProfile.depthRef === 's') ? 0 : SnowProfile.pitDepth);
+        testString = scoreType;
+      } else {
+        testString = scoreType + scoreValue + ', ' + shearQuality + ' @ ' + testDepthString;
+      }
+      break;
+    case 'DT':
+      scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-deep-tap-test-score]').val();
+      scoreValue = $('input[id^=edit-field-test-und-' + testNum + '-field-dt-score]').val();
+      if (scoreType === '_none') {
+        testString = testType + ' @ ' + testDepthString;
+      } else if (scoreType === 'DTV') {
+        testString = scoreType + ', ' + shearQuality + ' @ ' + testDepthString;
+      } else if (scoreType === 'DTN') {
+        testDepth = ((SnowProfile.depthRef === 's') ? 0 : SnowProfile.pitDepth);
+        testString = scoreType;
+      } else {
+        testString = scoreType + scoreValue + ', ' + shearQuality + ' @ ' + testDepthString;
+      }
+      break;
+    case 'RB':
+      scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-rb]').val();
+      scoreValue = '';
+      if (scoreType === '_none') {
+        testString = testType + ' @ ' + testDepthString;
+      } else if (scoreType === 'RB7') {
+        testDepth = ((SnowProfile.depthRef === 's') ? 0 : SnowProfile.pitDepth);
+        testString = scoreType;
+      } else {
+        testString = scoreType + ', ' + shearQuality + ' @ ' + testDepthString;
+      }
+      break;
+    case 'PST':
+      scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-data-code-pst]').val();
+      var sawCutLength = $('input[id^=edit-field-test-und-' + testNum + '-field-length-of-saw-cut]').val();
+      if (sawCutLength.length === 0) {
+        sawCutLength = '_';
+      }
+      var columnLength = $('input[id^=edit-field-test-und-' + testNum + '-field-length-of-isolated-col]').val();
+      if (columnLength.length === 0) {
+        columnLength = '_';
+      }
+      if (scoreType === '_none') {
+        testString = 'PST @ ' + testDepthString;
+      } else {
+        testString = 'PST ' + sawCutLength + '/' + columnLength + '(' + scoreType + ') @ ' + testDepthString; 
+      }
+      break;
+    case 'SB':
+      scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-sb]').val();
+      scoreValue = '';
+      if (scoreType === '_none') {
+        testString = testType + ' @ ' + testDepthString;
+      } else if (scoreType === 'SBN') {
+        testDepth = ((SnowProfile.depthRef === 's') ? 0 : SnowProfile.pitDepth);
+        testString = scoreType;
+      } else {
+        testString = scoreType + ', ' + shearQuality + ' @ ' + testDepthString;
+      }
+      break;
+    case 'ST':
+      scoreType = $('select[id^=edit-field-test-und-' + testNum + '-field-stability-test-score-st]').val();
+      scoreValue = '';
+      if (scoreType === '_none') {
+        testString = testType + ' @ ' + testDepthString;
+      } else if (scoreType === 'STN') {
+        testDepth = ((SnowProfile.depthRef === 's') ? 0 : SnowProfile.pitDepth);
+        testString = scoreType;
+      } else {
+        testString = scoreType + ', ' + shearQuality + ' @ ' + testDepthString;
+      }
+      break;
     }
     
     // Build the object to store in SnowProfile.stabilityTests
@@ -681,6 +680,18 @@
     SnowProfile.stabilityTests[testNum] = testObj;
     
   };  // function addStabilityTest(testNum)
+  
+  /**
+   *  Draws the stability tests to the stability test profile.  
+   *  Sorts stability tests and accounts for potential collisions by adjusting
+   *  Y position of tests.
+   *  
+   *  @method 
+   *  @memberof SnowProfile 
+   */
+  SnowProfile.drawStabilityTests = function () {
+    // TODO:  IMPLEMENT!
+  }; // SnowProfile.drawStabilityTests
   
   /**
    *  Checks the temperature form and attempts to add a new temperature reading 
@@ -720,8 +731,8 @@
   SnowProfile.drawTemperatures = function () {
     // console.log("drawTemperatures() called");
     var sortedTemps = SnowProfile.temperatureData.slice().sort(function(a,b) {
-      return a.depth - b.depth;
-    }),
+        return a.depth - b.depth;
+      }),
       tempPoint, 
       tempLine;
       
@@ -808,7 +819,7 @@
     /**
      * Default tooltip style
      */
-    Opentip.defaultStyle = "glass";
+    Opentip.defaultStyle = 'glass';
 
     /**
      * SVG drawing
@@ -818,7 +829,7 @@
      * @memberof SnowProfile
      */
     SnowProfile.diagram = $('#snow_profile_diagram').get(0);
-    SnowProfile.drawing = SVG("snow_profile_diagram");
+    SnowProfile.drawing = SVG('snow_profile_diagram');
     SnowProfile.diagram.setAttribute('width', SnowProfile.Cfg.DRAWING_WD + 10);
     SnowProfile.mainGroup = SnowProfile.drawing.group()
       .attr('id', 'snow_profile_main_g');
@@ -887,7 +898,7 @@
      * @memberof SnowProfile
      */
     SnowProfile.gridGroup = SnowProfile.drawing.group()
-      .addClass("snow_profile_grid");
+      .addClass('snow_profile_grid');
     SnowProfile.mainGroup.add(SnowProfile.gridGroup);
     
     /**
@@ -898,7 +909,7 @@
      * @memberof SnowProfile
      */
     SnowProfile.temperatureGroup = SnowProfile.drawing.group()
-      .addClass("snow_profile_temperature");
+      .addClass('snow_profile_temperature');
     SnowProfile.mainGroup.add(SnowProfile.temperatureGroup);
     
     // Add the reference grid to the SVG drawing
