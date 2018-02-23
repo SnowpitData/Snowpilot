@@ -111,7 +111,7 @@
         family: 'sans-serif',
         fill: '#000'
       })
-      .x(SnowProfile.Cfg.COMMENT_LEFT)
+      .x(SnowProfile.Cfg.MOISTURE_LEFT)
       .y(-5);
     featDescr.add(commentDescr);
 

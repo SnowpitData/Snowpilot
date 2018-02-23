@@ -357,9 +357,9 @@
           
       // Draw a vertical line separating grain size and moisture
       SnowProfile.gridGroup.add(SnowProfile.drawing.line(
-        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.COMMENT_LEFT - buffer,
+        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.MOISTURE_LEFT - buffer,
         SnowProfile.Cfg.HANDLE_MIN_Y + (SnowProfile.Cfg.HANDLE_SIZE / 2),
-        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.COMMENT_LEFT - buffer,
+        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.MOISTURE_LEFT - buffer,
         SnowProfile.depth2y(SnowProfile.pitDepth) +
           (SnowProfile.Cfg.HANDLE_SIZE / 2))
         .stroke({
@@ -376,11 +376,10 @@
           family: 'sans-serif',
           fill: SnowProfile.Cfg.LABEL_COLOR
         })
-        .move(SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.COMMENT_LEFT,
+        .move(SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.MOISTURE_LEFT,
           10);
       SnowProfile.gridGroup.add(moistureHeading);
       
-      /*
       // Draw a vertical line separating moisture and density
       SnowProfile.gridGroup.add(SnowProfile.drawing.line(
         SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.DENSITY_LEFT - buffer,
@@ -404,19 +403,19 @@
         })
         .move(SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.DENSITY_LEFT,
           10));
-          
+       
       // Draw a vertical line separating density and stability tests
       SnowProfile.gridGroup.add(SnowProfile.drawing.line(
-        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.TESTS_LEFT - buffer,
+        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.TEST_LEFT - buffer,
         SnowProfile.Cfg.HANDLE_MIN_Y + (SnowProfile.Cfg.HANDLE_SIZE / 2),
-        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.TESTS_LEFT - buffer,
+        SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.TEST_LEFT - buffer,
         SnowProfile.depth2y(SnowProfile.pitDepth) +
           (SnowProfile.Cfg.HANDLE_SIZE / 2))
         .stroke({
           color: SnowProfile.Cfg.OUTLINE_GRID_COLOR,
           width: 1
         }));
-        
+      
       // Add the label to the Stability Tests column
       SnowProfile.gridGroup.add(SnowProfile.drawing.text('Stability Tests')
         .font({
@@ -426,10 +425,8 @@
           family: 'sans-serif',
           fill: SnowProfile.Cfg.LABEL_COLOR
         })
-        .move(SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.TESTS_LEFT,
+        .move(SnowProfile.Cfg.FEAT_DESCR_LEFT + SnowProfile.Cfg.TEST_LEFT,
           10));
-          
-      */
 
       // // For debugging show the bounding box
       // var chBbox = moistureHeading.bbox();

@@ -5,14 +5,14 @@
  * Modified by Joe DeBruycker for snowpilot.org
  */
  
- /**
+/**
  * The svg.js library
  * @external SVG
  * @see {@link http://http://documentup.com/wout/svg.js svg.js}
  */
 /* global SVG */
  
- /**
+/**
  * Constants and common functions
  * @type {object}
  * @namespace
@@ -33,7 +33,7 @@ var SnowProfile = {};
  *       | Label       |
  */
 (function($) {
-  "use strict";
+  'use strict';
 
   SnowProfile.Cfg = {
 
@@ -126,12 +126,11 @@ var SnowProfile = {};
 
     /**
      * Width in pixels of the area used by buttons and
-     * connectors (diagonal lines).
+     * connectors - currently only diagonal lines
      * @memberof SnowProfile
      * @const {number}
      */
-     // prev value = 120
-    CTRLS_WD: 60,
+    CTRLS_WD: 30,
 
     /**
      * Width in pixels of the area used by snow grain shape
@@ -145,14 +144,14 @@ var SnowProfile = {};
      * @memberof SnowProfile
      * @const {number}
      */
-    GRAIN_SPACE_WD: 15,
+    GRAIN_SPACE_WD: 5,
 
     /**
      * Width in pixels of the area used by snow grain size
      * @memberof SnowProfile
      * @const {number}
      */
-    GRAIN_SIZE_WD: 70,
+    GRAIN_SIZE_WD: 60,
 
     /**
      * Font size for feature description text
@@ -160,19 +159,46 @@ var SnowProfile = {};
     FEAT_DESCR_FONT_SIZE: 14,
 
     /**
-     * Width in pixels of the space between grain size and comment
+     * Width in pixels of the space between grain size and moisture
      * @memberof SnowProfile
      * @const {number}
      */
-    COMMENT_SPACE_WD: 5,
+    MOISTURE_SPACE_WD: 5,
 
     /**
-      Width in pixels of the area used by snow layer comment
+     * Width in pixels of the area used by moisture
      * @memberof SnowProfile
-      @const {number}
+     * @const {number}
      */
-     // prev value = 240
-    COMMENT_WD: 300,
+    MOISTURE_WD: 60,
+    
+    /**
+     * Width in pixels of the space between grain size and moisture
+     * @memberof SnowProfile
+     * @const {number}
+     */
+    DENSITY_SPACE_WD: 5,
+
+    /**
+     * Width in pixels of the area used by moisture
+     * @memberof SnowProfile
+     * @const {number}
+     */
+    DENSITY_WD: 60,
+    
+    /**
+     * Width in pixels of the space between grain size and moisture
+     * @memberof SnowProfile
+     * @const {number}
+     */
+    TEST_SPACE_WD: 5,
+
+    /**
+     * Width in pixels of the area used by moisture
+     * @memberof SnowProfile
+     * @const {number}
+     */
+    TEST_WD: 220,
 
     /**
      * Vertical height in pixels of the temperature (top horizontal) axis label.
@@ -263,21 +289,21 @@ var SnowProfile = {};
      * @memberof SnowProfile
      * @const {string}
      */
-    BUTTON_BLUR_COLOR: "#AAA",
+    BUTTON_BLUR_COLOR: '#AAA',
 
     /**
      * Color of a button that is under the mouse
      * @memberof SnowProfile
      * @const {string}
      */
-    BUTTON_FOCUS_COLOR: "#000",
+    BUTTON_FOCUS_COLOR: '#000',
     
     /**
      *  Color of temperature plot 
      *  @memeber of SnowProfile.Cfg 
      *  @const {string}
      */
-    TEMPERATURE_COLOR: "#b22423",
+    TEMPERATURE_COLOR: '#b22423',
 
     /**
       Depth scale in pixels per cm
@@ -312,14 +338,7 @@ var SnowProfile = {};
      * Depth interval in cm of layers initially shown on a
      * fresh copy of the page.
      */
-    INT_INIT_LAYERS: 20,
-
-    /**
-     * Width in pixels of the image to be generated
-     * @memberof SnowProfile
-     * @const {number}
-     */
-    IMAGE_WD: 800
+    INT_INIT_LAYERS: 20
   }; // SnowProfile.Cfg = {
 
   /**
@@ -382,11 +401,13 @@ var SnowProfile = {};
    * @const {number}
    * @memberof SnowProfile
    */
-   SnowProfile.Cfg.DRAWING_WD = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
+  SnowProfile.Cfg.DRAWING_WD = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
      SnowProfile.Cfg.GRAPH_WIDTH + 1 + SnowProfile.Cfg.CTRLS_WD + 1 +
      SnowProfile.Cfg.GRAIN_SHAPE_WD + SnowProfile.Cfg.GRAIN_SPACE_WD +
-     SnowProfile.Cfg.GRAIN_SIZE_WD + SnowProfile.Cfg.COMMENT_SPACE_WD +
-     SnowProfile.Cfg.COMMENT_WD;
+     SnowProfile.Cfg.GRAIN_SIZE_WD + SnowProfile.Cfg.MOISTURE_SPACE_WD +
+     SnowProfile.Cfg.MOISTURE_WD + SnowProfile.Cfg.DENSITY_SPACE_WD +
+     SnowProfile.Cfg.DENSITY_WD + SnowProfile.Cfg.TEST_SPACE_WD + 
+     SnowProfile.Cfg.TEST_WD;
 
   /**
    * Initial X position of the layer handle
@@ -416,10 +437,16 @@ var SnowProfile = {};
    */
   SnowProfile.Cfg.FEAT_DESCR_LEFT = SnowProfile.Cfg.DEPTH_LABEL_WD + 1 +
     SnowProfile.Cfg.GRAPH_WIDTH + 1 + SnowProfile.Cfg.CTRLS_WD;
-
+    
+  /**
+   *  Width in pixels of the feature description area, which includes
+   *  grain shape (crystal type), grain size, moisture content, and 
+   *  density
+   */
   SnowProfile.Cfg.FEAT_DESCR_WD = SnowProfile.Cfg.GRAIN_SHAPE_WD +
     SnowProfile.Cfg.GRAIN_SPACE_WD + SnowProfile.Cfg.GRAIN_SIZE_WD +
-    SnowProfile.Cfg.COMMENT_SPACE_WD + SnowProfile.Cfg.COMMENT_WD;
+    SnowProfile.Cfg.MOISTURE_SPACE_WD + SnowProfile.Cfg.MOISTURE_WD +
+    SnowProfile.Cfg.DENSITY_SPACE_WD + SnowProfile.Cfg.DENSITY_WD;
 
   /**
    * X position of the left edge of the Grain icons area
@@ -441,11 +468,30 @@ var SnowProfile = {};
     SnowProfile.Cfg.GRAIN_SHAPE_WD + SnowProfile.Cfg.GRAIN_SPACE_WD;
 
   /**
-   * X position of the left edge of the Comment text area
+   * X position of the left edge of the Moisture text area
+   * within the layer description group
    * @const {number}
    * @memberof SnowProfile
    */
-  SnowProfile.Cfg.COMMENT_LEFT = SnowProfile.Cfg.GRAIN_SIZE_LEFT +
-    SnowProfile.Cfg.GRAIN_SIZE_WD + SnowProfile.Cfg.COMMENT_SPACE_WD;
+  SnowProfile.Cfg.MOISTURE_LEFT = SnowProfile.Cfg.GRAIN_SIZE_LEFT +
+    SnowProfile.Cfg.GRAIN_SIZE_WD + SnowProfile.Cfg.MOISTURE_SPACE_WD;
+    
+  /**
+   * X position of the left edge of the Density text area
+   * within the layer description group
+   * @const {number}
+   * @memberof SnowProfile
+   */
+  SnowProfile.Cfg.DENSITY_LEFT = SnowProfile.Cfg.MOISTURE_LEFT +
+    SnowProfile.Cfg.MOISTURE_WD + SnowProfile.Cfg.DENSITY_SPACE_WD;
+    
+  /**
+   * X position of the left edge of the Stability Tests profile
+   * within the layer description group
+   * @const {number}
+   * @memberof SnowProfile
+   */
+  SnowProfile.Cfg.TEST_LEFT = SnowProfile.Cfg.DENSITY_LEFT +
+    SnowProfile.Cfg.DENSITY_WD + SnowProfile.Cfg.TEST_SPACE_WD;
     
 })(jQuery);
