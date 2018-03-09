@@ -48,6 +48,8 @@
      * @see SnowProfile.temperatureGroup
      */
     SnowProfile.drawTemperatureScale = function () {
+      SnowProfile.temperatureGroup.clear();
+      
       SnowProfile.tempUnit = $('div[id^=field-temp-collection-und-0-field-temp-temp-add-more-wrapper] span')
         .html().indexOf('F') > 0 ? 'F' : 'C';
       SnowProfile.maxTemp = SnowProfile.tempUnit === 'F' ? 
