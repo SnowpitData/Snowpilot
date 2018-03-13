@@ -34,7 +34,7 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 	$result = mysqli_query($link, $query)  or die("Error in the consult.." . mysqli_error($link));
 
 	//d
-		$pit_attributes = array('skiAreaPit', 'aviPit', 'bcPit', 'aviLoc', 'skiBoot','heightOfSnowpack', 'calculatedHoS', 'crownObs' ,'measureFrom', 'surfacePen', 'pitNotes','prof', 'iLayerNumber','windspeed', 'sky', 'precip', 'iDepth' );
+		$pit_attributes = array('skiAreaPit', 'aviPit', 'bcPit', 'aviLoc', 'skiBoot','heightOfSnowpack', 'calculatedHoS', 'crownObs' ,'measureFrom', 'surfacePen', 'pitNotes','prof', 'iLayerNumber','windspeed', 'sky', 'precip', 'iDepth' , 'node_id' );
 
 
 	while($row = mysqli_fetch_array($result)) {
@@ -86,7 +86,13 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 						  	}else{ // calculated HOS is not knowable
 								// we won't actually even add this to the update query 
 						  	}
-					
+					  }elseif($attr == 'node_id'){
+							$local_serial = $pit_info->getAttribute('LOCAL_SERIAL');
+							//dsm($local_serial);
+							preg_match('/drupal-nid-(\d+)-/', $local_serial ,$match );
+							dsm($match);
+	            $values_list[] = "node_id = ".$match[1];
+							
 						}else{ // all other fields are t/f
 						  	$tf_val = $pit_info->getAttribute($attr) == 'true' ? '1' : '0' ;
 							

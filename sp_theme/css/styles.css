@@ -1572,12 +1572,17 @@ body.node-type-snowpit-profile{
 		padding-left: 35px;
 }
 
-.view-snowpit-list table div.views-field-title,
-.view-snowpit-list table div.views-graph-image,
-.view-snowpit-list table div.views-field-field-date-time,
-.view-new-test-search table div.views-field-title,
-.view-new-test-search table div.views-graph-image,
-.view-new-test-search table div.views-field-field-date-time{
+.view-snowpit-list table td>div,
+.view-new-test-search table td>div{
+	max-width: 260px;
+}
+
+.view-snowpit-list table td>div.views-field-title,
+.view-snowpit-list table td>div.views-graph-image,
+.view-snowpit-list table td>div.views-field-field-date-time,
+.view-new-test-search table td>div.views-field-title,
+.view-new-test-search table td>div.views-graph-image,
+.view-new-test-search table td>div.views-field-field-date-time{
   border-left: 7px solid #fff;
   border-right: 7px solid #fff;
 	padding-top: 5px;

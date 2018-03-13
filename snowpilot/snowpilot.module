@@ -381,7 +381,7 @@ function snowpilot_org_admin_access($item){
 function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 	if ( node_access('update', $node) && user_access('lock snowpit')){
 		// if node is not locked for editing, and there is NOT a snowpit in the avscience db which would include the same serial #, then we cna save and lock it!
-		if ( !$node->sticky && !snowpilot_avscience_pit_exists($node) ){
+		if ( !$node->sticky /*&& !snowpilot_avscience_pit_exists($node)*/ ){
 			// then we reset the the pit to sticky == true ( i.e. LOCKED )
 			$node_wrapper = entity_metadata_wrapper('node', $node);
 			$node_wrapper->sticky->set(true);
@@ -390,6 +390,8 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			// and save it to the avscience db
 			if ( snowpilot_avscience_pit_write($node)) {
 				watchdog('snowpilot', "Snowpit $node->nid sucessfully saved to avscience db.");
+			}else{
+				watchdog('snowpilot', "Snowpit $node->nid NOT  saved to avscience db.");
 			}
 		//
 		}
@@ -473,7 +475,10 @@ function snowpilot_avscience_pit_write($node){
 	);
 	$context  = stream_context_create($options);
 	$result = file_get_contents($url, false, $context);
-	if ($result === FALSE) { /* Handle error */ }
+	if ($result === FALSE) { 
+		watchdog( 'snowpilot' , 'failed result: '.$result); 
+		watchdog( 'snowpilot' , 'failed data: '.$data);
+	}
 
 	watchdog( 'snowpilot' ,$result);
 	return true;
@@ -1291,7 +1296,7 @@ function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 	
 }
 
-function snowpilot_entity_presave(&$entity, $type){
+function snowpilot_entity_presave($entity, $type){
 
 	if ($type == 'field_collection_item' && $entity->field_name == 'field_test'){
 		//if $entity->
@@ -1538,22 +1543,24 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 		}
 	}
 	// Loop through density collection items for server-side error checking
-	foreach($form_state['values']['field_density_profile']['und'] as $key=>$density_item){
-  	if (strpos(  $density_item['field_depth']['und'][0]['value'], ',' ) ){
-      $density_item['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_depth']['und'][0]['value'] );
-  	}
-		if ( strpos( $density_item['field_density_top']['und'][0]['value'] , ',')){
-		  $density_item['field_density_top']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_density_top']['und'][0]['value'] ); 
-		}		
+	if ( isset($form_state['values']['field_density_profile']['und']) ){
+		foreach($form_state['values']['field_density_profile']['und'] as $key=>$density_item){
+	  	if (strpos(  $density_item['field_depth']['und'][0]['value'], ',' ) ){
+	      $density_item['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_depth']['und'][0]['value'] );
+	  	}
+			if ( strpos( $density_item['field_density_top']['und'][0]['value'] , ',')){
+			  $density_item['field_density_top']['und'][0]['value'] = str_replace( ',' , '.' , $density_item['field_density_top']['und'][0]['value'] ); 
+			}		
 		
-		if ( is_numeric($key )  && isset( $density_item['field_density_top']['und'][0]['value'] ) && is_numeric( $density_item['field_density_top']['und'][0]['value'] ) && $density_item['field_density_top']['und'][0]['value'] > 1000 ){ 
-			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_density_top", t('Density values should be 1000 kg/m-3 or less.'));
-		}
-		// This checks for Depth item integrity with the HoS or Layers that have been entered
-		if ( is_numeric($key )  && isset ($density_item['field_depth']['und'][0]['value']) && is_numeric($density_item['field_depth']['und'][0]['value'] ) &&  $density_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
-//			dsm( $temp_item);
-			form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Density Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
-		}
+			if ( is_numeric($key )  && isset( $density_item['field_density_top']['und'][0]['value'] ) && is_numeric( $density_item['field_density_top']['und'][0]['value'] ) && $density_item['field_density_top']['und'][0]['value'] > 1000 ){ 
+				form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_density_top", t('Density values should be 1000 kg/m-3 or less.'));
+			}
+			// This checks for Depth item integrity with the HoS or Layers that have been entered
+			if ( is_numeric($key )  && isset ($density_item['field_depth']['und'][0]['value']) && is_numeric($density_item['field_depth']['und'][0]['value'] ) &&  $density_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
+	//			dsm( $temp_item);
+				form_set_error("field_density_profile][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Density Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
+			}
+	  }
 	}
 	//
 	// Serveside tests for Core Info tab information:
@@ -1611,6 +1618,12 @@ function snowpilot_snowpit_profile_node_form_submit($form,&$form_state){
 		  }
 		}
 	}		
+	foreach($form_state['values']['field_temp_collection']['und'] as $key => $temp_item){
+		// If this is a degenerative temp, (i.e. no temp or depth set ) then we just delete it
+		if ( is_numeric($key) && ( $temp_item['field_temp_temp']['und'][0]['value'] == '' ||  ($temp_item['field_depth'] == '')  ) ){
+		  unset($form_state['values']['field_temp_collection']['und'][$key]);  // chop off this temp item
+		}
+	}
 
 	return $form_state;
 }

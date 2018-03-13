@@ -3,12 +3,12 @@
 /*
 //  This function creates a pitxml based on the node information passed to it. should be compliant with the snowpilot datamodel.
 //  $format can be 'full' or 'restricted' - full will return the User element as well, shouldn't be saved.
-//
+//  $regenerate_pit will rebuild the xml pit from drupal data even if it already exists
 */
-function snowpilot_node_write_pitxml($node, $format = 'restricted'){
+function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_pit = FALSE ){
 	$xml_filename = '/sites/default/files/snowpit-xml/node-'.$node->nid.'.xml';
-	if ( !file_exists(DRUPAL_ROOT. $xml_filename)){
-		watchdog('snowpilot', "Snowpit $node->nid xml does not exist.");
+	if ( !file_exists(DRUPAL_ROOT. $xml_filename) || $regenerate_pit ){
+		watchdog('snowpilot', "Snowpit $node->nid xml does not exist or will be regenerated.");
 		$snowpilot_xmldoc = new DOMDocument('1.0', 'UTF-8');
 		$snowpilot_PitCore = $snowpilot_xmldoc->createElement("Pit_Observation"); $snowpilot_xmldoc->appendChild($snowpilot_PitCore);
 		$snowpilot_User = $snowpilot_xmldoc->createElement("User"); 
