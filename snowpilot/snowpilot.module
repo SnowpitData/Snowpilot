@@ -1396,7 +1396,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 					case 'DT':
 			      if ( !isset( $test['field_deep_tap_test_score']['und'][0]['value']  ) || ($test['field_deep_tap_test_score']['und'][0]['value'] == '' ) ){
 						   	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_deep_tap_test_score", "Please enter a Deep Tap test score result.");
-						}elseif( (!isset($test['field_depth']['und'][0]['value']) || $test['field_depth']['und'][0]['value'] == '') &&  $test['field_deep_tap_test_score']['und'][0]['value'] <> 'DTN' ){ 
+						}elseif( (!isset($test['field_depth']['und'][0]['value']) || $test['field_depth']['und'][0]['value'] == '') ){ 
 							form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , "Please enter a value for depth.");
 						}
 					break;
