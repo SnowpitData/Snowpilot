@@ -887,20 +887,18 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				  $grain_type_image ='';
 			  	if ( isset($layer->field_grain_type['und'])){
 			  		$grain_type_image = isset($layer->field_grain_type['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type['und'][0]['tid']);
-						$font_size = 12;
-						if  ( $grain_type_image == '&#xe028;&#xe007;' ) $font_size = 12;
+						$font_size = ( $grain_type_image == '&#xe028;&#xe007;' ) ? 9 : 12;
 						$grain_image_pos = imagettftext($img, $font_size, 0, 520 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image);
 					  
 					}	
 					
 					if (isset($layer->field_grain_type_secondary['und'])){
 						$secondary_grain_type_image = isset($layer->field_grain_type_secondary['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type_secondary['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type_secondary['und'][0]['tid']);
-						$font_size = 12;
-						if  ( $secondary_grain_type_image == '&#xe028;&#xe007;' ) $font_size = 12;
-						$x_pos1 =  isset($grain_image_pos[2]) ? $grain_image_pos[2] : 520;
-						$second_grain_image_pos = imagettftext($img, 13, 0, $x_pos1 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, '(' );
-						$third_grain_image_pos = imagettftext($img, $font_size, 0, $second_grain_image_pos[2] , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $secondary_grain_type_image);
-						imagettftext($img, 12, 0, $third_grain_image_pos[2] , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, ')');
+						$font_size = ( $secondary_grain_type_image == '&#xe028;&#xe007;' ) ? 9 : 12;
+						$x_pos1 =  isset($grain_image_pos[2]) ? $grain_image_pos[2]+3 : 520;
+						$second_grain_image_pos = imagettftext($img, $font_size, 0, $x_pos1 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5,
+						   $black, $snowsymbols_font, '('.$secondary_grain_type_image.')' );
+						
 					}
 				//output grain symbols
 					

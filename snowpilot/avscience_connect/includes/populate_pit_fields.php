@@ -34,7 +34,7 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 	$result = mysqli_query($link, $query)  or die("Error in the consult.." . mysqli_error($link));
 
 	//d
-		$pit_attributes = array('skiAreaPit', 'aviPit', 'bcPit', 'aviLoc', 'skiBoot','heightOfSnowpack', 'calculatedHoS', 'crownObs' ,'measureFrom', 'surfacePen', 'pitNotes','prof', 'iLayerNumber','windspeed', 'sky', 'precip', 'iDepth' , 'node_id' );
+		$pit_attributes = array('skiAreaPit', 'aviPit', 'bcPit', 'aviLoc', 'skiBoot','heightOfSnowpack', 'calculatedHoS', 'crownObs' ,'measureFrom', 'surfacePen', 'pitNotes','prof', 'iLayerNumber','windspeed', 'sky', 'precip', 'iDepth' , 'nid' );
 
 
 	while($row = mysqli_fetch_array($result)) {
@@ -57,7 +57,6 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 					$values_list = array();
 					foreach ($pit_attributes as $attr){	// looping through to add values for each of the standard attributes
 						$attr_val = $pit_info->getAttribute($attr);
-						
 						if ( ($pit_info->getAttribute($attr) != '' ) && ( $pit_info->getAttribute($attr) != ' ') ){
 							if ( in_array($attr, array('heightOfSnowpack', 'measureFrom', 'aviLoc', 'skiBoot',  'pitNotes', 'surfacePen', 'iLayerNumber' ,'iDepth') ) ){
 						    $values_list[] =  $attr ." = '" . str_replace( "'" , "''", $attr_val). "' ";	
@@ -69,7 +68,11 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 							  $values_list[] =  "SKY_COVER = '" . str_replace($sky_cover_labels, $sky_cover_codes, $pit_info->getAttribute($attr) ). "' ";
 								
 
-							}elseif($attr == 'calculatedHoS'){
+							}elseif($attr == 'nid'){
+
+		            $values_list[] = "node_id = ".$pit_info->getAttribute($attr)." ";
+							
+						  }elseif($attr == 'calculatedHoS'){
 							  $HOS = $pit_info->getAttribute('heightOfSnowpack');
 						  	if ( $HOS <> '' ){ /// HOS is explicitly given, use that
 							  	//echo "HOS: ".$HOS;
@@ -86,18 +89,12 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 						  	}else{ // calculated HOS is not knowable
 								// we won't actually even add this to the update query 
 						  	}
-					  }elseif($attr == 'node_id'){
-							$local_serial = $pit_info->getAttribute('LOCAL_SERIAL');
-							//dsm($local_serial);
-							preg_match('/drupal-nid-(\d+)-/', $local_serial ,$match );
-							dsm($match);
-	            $values_list[] = "node_id = ".$match[1];
-							
-						}else{ // all other fields are t/f
+					    }else{ // all other fields are t/f
 						  	$tf_val = $pit_info->getAttribute($attr) == 'true' ? '1' : '0' ;
 							
 								$values_list[] =  $attr ." = '" . $tf_val. "' ";	
 						  } // the attribute is the calculated HOS , so better calc it up now!
+							
 						}
 					
 					}
