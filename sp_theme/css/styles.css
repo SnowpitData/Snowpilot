@@ -1687,3 +1687,11 @@ td.views-field-field-last-name .org.admin {
     color: white;
     padding: 3px;
 }
+
+#edit-field-display-full-profile{
+	width: 150px;
+	display: inline-block;
+}
+#edit-field-display-full-profile + a.advanced-help-topic{
+	display: inline-block;
+}

@@ -1,6 +1,6 @@
 <?php
 
-function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
+function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs, $global_max = 751){
 	usort($all_layers, 'layer_depth_val');
 	//if this is a measure-from-top pit, flip the order of layers, and the top and bottom of each layer
 	if ( $snowpit_unit_prefs['field_depth_0_from'] == 'top') {
@@ -13,7 +13,7 @@ function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
 		}
 	}
 	
-	$global_min = $all_layers[0]->y_val_top; $all_layers[max(array_keys($all_layers))]->y_val ;  $global_max = 751; // this max and min are pixel depths
+	$global_min = $all_layers[0]->y_val_top; 
 	
 	//dsm($all_layers);
 	foreach($all_layers as $x => $layer){
@@ -45,14 +45,11 @@ function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs){
 				//
 				$prev_test = $x-1;
 				while ( ( $prev_test >= 0 ) && snowpilot_collision_check_cg_up($cg, $all_layers[$prev_test]) ){
-				//	dsm('new cycle');
 					$cg = array ( $prev_test => array( 'y_val' => $all_layers[$prev_test]->y_val, 'y_val_top' => $all_layers[$prev_test]->y_val_top )) + $cg;	 
 					$all_layers[$prev_test]->collision_flag = TRUE;
-				//	dsm($cg);
-					//dsm($all_layers[$prev_test-1]);
 					$prev_test = $prev_test - 1;
 				}
-				if ( count ($cg)){ snowpilot_write_xlations($cg, $all_layers);}
+				if ( count ($cg)){ snowpilot_write_xlations($cg, $all_layers, $global_max);}
 				$cg = array();
 				
 			}else{ // no conflict with the layer below ( or no layer )
@@ -114,7 +111,6 @@ function cg_max($cg){
 
 
 function st_collision_check_down($test_x, $test_y, &$cg = array(), $measure_from = 'bottom'){
-//	dsm (cg_max($cg));
 	if (  isset ( $test_x->collision_flag) && $test_x->collision_flag == TRUE && $test_y->y_position <= cg_max($cg) ){
 		$test_y->collision_flag = TRUE;
 		$cg[] = $test_x;
@@ -155,9 +151,8 @@ function _strip_dupe_tests(&$test_results, $pit_depth, $measure_from ){
 }
 
 
-function snowpilot_write_xlations($cg, &$all_layers){
-	// these work fine in testing but getting a little unneeded now
-	//$cg = array_reverse($cg, TRUE);
+function snowpilot_write_xlations($cg, &$all_layers, $global_max = 751){
+
 	$counter = 0;
 	foreach($cg as $x => $cg_layer){
 		$all_layers[$x]->y_val_top_xlate =  _cg_stats($cg, 'cg_top') + 20* $counter;  //dsm ($all_layers[$x-1]);
@@ -165,17 +160,16 @@ function snowpilot_write_xlations($cg, &$all_layers){
 		if ( $x > 0 ) { $all_layers[$x-1]->y_val_xlate = _cg_stats($cg, 'cg_top') + 20 * $counter; }
 		// make sure the bottom line of the last layer is in the right spot
 		if ( $x == count($all_layers) - 1 ){ 	// this is the last layer ...
-			if ( _cg_stats($cg, 'cg_bottom') < 751) {
+			if ( _cg_stats($cg, 'cg_bottom') < $global_max) {
 				//since this is the last layer in the whole group, we can rely upon it being also the last layer in the collision group ( $cg )
 			  $all_layers[$x]->y_val_xlate	= _cg_stats($cg, 'cg_bottom');
       }	else{
-      	// this collision group bumps into the bottom of the snowpit, below 751 pixels
+      	// this collision group bumps into the bottom of the snowpit, below $global_max pixels
 				// basically, a lot of thin layers near the ground on a bottom_up snowpit
-				// TODO bump this collision group upwards, into, hopefully, empty space above DONE
 				// TODO : there is the possibility that this cg bumps into one that is above it in the stack;
 				//        we need to check for this case
-				// move the entire CG upwards by $span above 751 and then re-ripple down from there at 20 intervals
-				$new_span_top = 751 - _cg_stats($cg,'span');
+				// move the entire CG upwards by $span above $global_max and then re-ripple down from there at 20 intervals
+				$new_span_top = $global_max - _cg_stats($cg,'span');
 				$countery = 0; 
 				foreach ( $cg as $y => $cgy_layer){
 					// time to reset everything according to the bottom of the cg based at 751
@@ -184,8 +178,8 @@ function snowpilot_write_xlations($cg, &$all_layers){
 					
 					$countery++;
 				}
-				// we can rely on the bottom of the4 last layer of the collision group being pasted to the bottom of the graph. 
-				$all_layers[$y]->y_val_xlate = 751;
+				// we can rely on the bottom of the last layer of the collision group being pasted to the bottom of the graph. 
+				$all_layers[$y]->y_val_xlate = $global_max;
       }
 		}
 		//dsm($all_layers);		
@@ -227,9 +221,7 @@ function _cg_stats($cg, $stat = NULL, $global_min = 157 , $global_max = 751){
 
 	$first_item = array_slice($cg, 0, 1);
 	$last_item = end ($cg);
-	//dsm($first_item);
 	$length = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2;
-	//dsm($length); //dsm($span);
 	$cg_top = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2 + $first_item[0]['y_val_top']  - $span/2 ;
 	$cg_bottom = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2 + $first_item[0]['y_val_top'] + $span/2 ;
 	
@@ -474,17 +466,16 @@ function _tid2snowsymbols($tid = NULL, $all = FALSE){
 }
 
 
-function snowpit_graph_pixel_depth($depth, $pit_depth, $meas_from = 'bottom'){
-	$pixels_per_cm = (int) 594 / $pit_depth ;
+function snowpit_graph_pixel_depth($depth, $pit_depth, $meas_from = 'bottom', $global_max = 751, $pit_min = 0){
+	$pixels_per_cm = ((int) $global_max - 157) / ($pit_depth - $pit_min );
 	
-	$h = ($meas_from == 'top') ? (157 + $depth * $pixels_per_cm) : (751 - $depth * $pixels_per_cm );
+	$h = ($meas_from == 'top') ? (157 + $depth * $pixels_per_cm) : ($global_max - ($depth - $pit_min)* $pixels_per_cm );
 	return $h; 
 }
 
 
-function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_from = 'bottom'){
+function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_from = 'bottom', $global_max = 751, $pit_min = 0 ){
 
-	//dsm($test_results);
 	foreach ($test_results as $x => $test){
 		//
 		// We need to see if there are multiple test scores that are identical and indicate as "2x", etc. 
@@ -492,7 +483,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 		//
 		$test->multiple = 1;
 		$depth_true = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
-		$test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from);
+		$test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from, $global_max, $pit_min);
 		foreach ( $test_results as $test_compare){
 			if ( ($test->item_id != $test_compare->item_id) &&
 				( $test->field_stability_test_type == $test_compare->field_stability_test_type  ) &&
@@ -540,7 +531,6 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 	// now we begin to set the y_position
 	$st_cg = array();
   $simple_test_results = _strip_dupe_tests($test_results, $pit_depth, $measure_from );
-
 	// loop through it again to set the y_position to correct height
 	foreach ( $simple_test_results as $x => $test){
   	if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
@@ -549,21 +539,19 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 
     }else{
   	 if ( count ($st_cg)){
-			 //dsm($st_cg);
   		 //st_write_xlate_group( $st_cg, $test_results);
 	  	 $st_cg = array();
 		
   	 }else{ // this is a singluar item, write straight across
 			 if ( ! ( isset ($test->field_depth['und'][0]['value']))){  // in case of CTN or other test results with no depth value, set y_position
-			 	$test->y_position =  $measure_from == 'bottom' ? snowpit_graph_pixel_depth( 0, $pit_depth, $measure_from) :  snowpit_graph_pixel_depth( $pit_depth, $pit_depth, $measure_from) ;		
+			 	$test->y_position =  $measure_from == 'bottom' ? snowpit_graph_pixel_depth( 0, $pit_depth, $measure_from, $global_max,$pit_min) :  snowpit_graph_pixel_depth( $pit_depth, $pit_depth, $measure_from, $global_max, $pit_min) ;		
 			 }else{
-  	  	 $test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from );
+  	  	 $test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min );
 		   }
 	   }
 	  }
 	 } // end of second looping through
 	 // stability test write xlate group
-	 //dsm($test_results);
 	 $test_results = $simple_test_results;
 	return $simple_test_results;
 }
@@ -624,6 +612,20 @@ function snowpilot_snowpit_graph_header_write($node, $format='jpg'){
 	$user_account = user_load($node->uid);
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');
 	$pit_depth = _snowpilot_find_pit_depth($node);
+	
+	$pit_min = _snowpilot_find_pit_min($node);
+	if ( ( isset ( $node->field_total_height_of_snowpack['und'][0]['value'] )  
+		&& ($node->field_total_height_of_snowpack['und'][0]['value'] <> $pit_depth  ) 
+	  && ($node->field_display_full_profile['und'][0]['value'] <> 1 ) ) 
+	|| ( ($node->field_display_full_profile['und'][0]['value'] <> 1 ) && $pit_min <> 0 )){
+			$shrunken_pit = TRUE;
+			$global_max =  701 ;
+		}else{
+			$shrunken_pit = FALSE;
+			$global_max =  751 ;
+			$pit_min = 0; // we reset pit_min to sero so it comes out the correct height
+		}
+		
 // Image Variables
 $width = 994;
 $height = 840;
@@ -683,7 +685,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			imagettftext($img, 11, 0, 193 , 17, $black,  $value_font, $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value']);
 			imagettftext($img, 11, 0, 193, 35, $black, $value_font, date('D M j H:i Y', 
 			strtotime($node->field_date_time['und'][0]['value']))); //Date / Time of observation
-			//dsm($node->field_date_time);
 			$text_pos = imagettftext($img, 11, 0, 193, 53, $black, $label_font, "Co-ord: ");
 			if ($snowpit_unit_prefs['field_coordinate_type'] == 'lat_long'){
 				if (isset($node->field_latitude['und']) && isset($node->field_longitude['und'])){
@@ -728,7 +729,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			$text_pos = imagettftext($img, 11, 0, 444, 17, $black, $label_font, "Stability: ");
 			if(isset($node->field_stability_on_similar_slope['und'])){
 				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
-				//dsm($similar_stability);
 				//snowpilot_tester_fields_update($similar_stability);
 				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, snowpilot_tester_fields_update($similar_stability) );
 			}
@@ -804,7 +804,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				if ( $snowpit_unit_prefs['field_depth_0_from'] == 'top'){
 				  $test_results = array_reverse($test_results);
 				}
-				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
+			
+				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
 
 				imagettftext( $img, 11, 0 , 625, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
 				
@@ -843,8 +844,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					$density = field_collection_item_load($density_item['value']);
 
 					// this use of imageline will need to be updated to include some kind of cluster management
-					imageline($img, 667, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']), 707, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']),$black);
-					imagettftext($img, 8, 0, 671, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])+12,$black, $label_font, $density->field_density_top['und'][0]['value']);
+					imageline($img, 667, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'],$global_max, $pit_min ), 707, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min ),$black);
+					imagettftext($img, 8, 0, 671, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min )+12,$black, $label_font, $density->field_density_top['und'][0]['value']);
 				}
 			}
 			//
@@ -860,17 +861,17 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				
 				foreach($all_layers as $x => $layer){
 					if($snowpit_unit_prefs['field_depth_0_from'] == 'top'){
-						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2); 
-						$layer->y_val = $y_val = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2 ); 
+						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'],$global_max,$pit_min ),2); 
+						$layer->y_val = $y_val = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] , $global_max ),2 ); 
 					}else{
-						$layer->y_val =		$y_val = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2 ); 
-						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ),2 ); 
+						$layer->y_val =		$y_val = round(snowpit_graph_pixel_depth($layer->field_bottom_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] , $global_max, $pit_min ),2 ); 
+						$layer->y_val_top =		$y_val_top = round(snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min ),2 ); 
 					}
 				}
 				
 				$keyed_all_layers = $all_layers;
 									
-				snowpilot_layers_density_xlate($keyed_all_layers, $snowpit_unit_prefs);
+				snowpilot_layers_density_xlate($keyed_all_layers, $snowpit_unit_prefs, $global_max);
 				// this solo line goes across the top of the top layer. Could be programmed later if we decide to include the 'headspace' above the top of the pit
 				imageline($img, 483, $keyed_all_layers[0]->y_val_top, 667, $keyed_all_layers[0]->y_val_top, $black);
 				///
@@ -935,8 +936,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					}
 					// write density measurements that are from the 'Layers' tab into the rho column ( in addition to Densities )
 					if ( isset ( $layer->field_density_top['und'][0]['value'] )){
-						imageline($img, 667, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']), 707, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from']),$black);
-						imagettftext($img, 8, 0, 670, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'])+13,$black, $label_font, $layer->field_density_top['und'][0]['value']);
+						imageline($img, 667, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min), 707, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min),$black);
+						imagettftext($img, 8, 0, 670, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min)+13,$black, $label_font, $layer->field_density_top['und'][0]['value']);
 						
 					}
 					
@@ -1035,46 +1036,65 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				foreach($all_temps as $x=> $temp){
 					$cx =  ($snowpit_unit_prefs['field_temp_units'] == 'C') ?  447 + $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value']) :
 					447 - $pixels_per_degree * (32 - $temp->field_temp_temp['und'][0]['value']);
-					//dsm($cx);
 					if( $cx >= 14 && $cx <= 447 ){
 						// draw point
-						imagefilledellipse($img, $cx, snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ), 6, 6, $red_layer );
+						imagefilledellipse($img, $cx, snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] , $global_max, $pit_min), 6, 6, $red_layer );
 					// draw line
 						if (($prev_x <=447 && $prev_x >=14 ) && $prev_y){ 
-							imageline($img, $cx, snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] ) , $prev_x, $prev_y, $red_layer); 
+							imageline($img, $cx, snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] , $global_max, $pit_min) , $prev_x, $prev_y, $red_layer); 
 						}
 					}
 					// save this point location to use to draw the next line
-					$prev_x = $cx ; $prev_y = snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] );
+					$prev_x = $cx ; $prev_y = snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] , $global_max, $pit_min);
 				
 				}
 				
 			} // end of drawing the temperature profile
 						
 			// cycle through and make depth tick marks
-			$x = 0;
+			$x = round($pit_min) - round($pit_min)%10;
+			
 			while ( $x <= $pit_depth){
-				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']));
+				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
 				imageline($img, 660 , $y_val, 667, $y_val,$black);
 				imageline($img, 511 , $y_val, 518, $y_val,$black);
 				imageline($img, 14 , $y_val, 22, $y_val, $black);
 				imageline($img, 440, $y_val, 447, $y_val, $black);
 				
-				if ( abs($y_val - round(snowpit_graph_pixel_depth($pit_depth, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']))) > 10 ) { 
+				if ( abs($y_val - round(snowpit_graph_pixel_depth( $pit_depth , $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min))) > 10 
+				     &&   abs($y_val - round(snowpit_graph_pixel_depth( $pit_min , $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min))) > 10      ) { 
 					imagettftext($img, 10, 0, 456, $y_val+5, $black, $label_font, $x );
 				}
 				$x+=10;
 			}
-			$y_val = round(snowpit_graph_pixel_depth($pit_depth, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']));
+			$y_val_final = round(snowpit_graph_pixel_depth($pit_depth, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
 			// final HoS at top or bottom
-			  imageline($img, 440, $y_val, 447, $y_val, $black);
-			  imagettftext($img, 10, 0, 456,  $y_val+5, $black, $label_font, $pit_depth );
+			if ( $shrunken_pit && $snowpit_unit_prefs['field_depth_0_from'] == 'top'){
+			  imagettftext($img, 10, 0, 456,  756 , $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
+			  imageline($img, 440, 751, 447, 751, $black);
+				imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_depth, 1) );
+			  imagettftext($img, 10, 0, 456,  162 , $black, $label_font, '0' );
+			}elseif ( $shrunken_pit ){
+			  imagettftext($img, 10, 0, 456,  $y_val_final+5 , $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
+			  imageline($img, 440, $y_val_final , 447, $y_val_final, $black);
+				imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_min, 1) );
+				// Also need a '0' at the bottom of the pit since we never looped all the way down there
+			  imagettftext($img, 10, 0, 456,  751+5 , $black, $label_font, '0' );
+			  imageline($img, 440, 751, 447, 751, $black);
+				
+			}else{
+			  imagettftext($img, 10, 0, 456, $y_val_final+5, $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
+			  imageline($img, 440, $y_val_final, 447, $y_val_final, $black);
+				$zero_pixel_val = $snowpit_unit_prefs['field_depth_0_from'] == 'top' ? 162 : 756 ;
+			  imagettftext($img, 10, 0, 456, $zero_pixel_val, $black, $label_font, '0' );
+				
+ 			}
 			
 		
 			// Now we make the 5cm tick marks
-			$x = 5;
+			$x = round($pit_min) - round($pit_min)%5;
 			while ( $x <= $pit_depth){
-				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from']));
+				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
 				
 				imageline($img, 664 , $y_val, 667, $y_val,$black);
 				imageline($img, 511 , $y_val, 515, $y_val,$black);
@@ -1122,6 +1142,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	imageline($img, 575,135, 575, 751, $black  ); //beginning of crystal size column
 	imageline($img, 617,140, 617, 751, $black  ); //beginning of crystal moisture column
 	
+	if ( $shrunken_pit ){ 
+		imagefilledrectangle($img, 446, 736, 710, 741, $white  );
+	  imagettftext($img, 10, 0 , 447, 738, $black, $snowsymbols_font, 'YYYYY');
+	  imagettftext($img, 10, 0 , 447, 743, $black, $snowsymbols_font, 'YYYYY');
+		imagefilledrectangle($img, 708, 729, 719, 745, $white  );
+	}
 	
 	imagettftext($img, 10, 0 , 554, 122, $black ,$label_font, t("Crystal"));
 	imagettftext($img, 10, 0 , 516,137, $black, $label_font , t("Form"));

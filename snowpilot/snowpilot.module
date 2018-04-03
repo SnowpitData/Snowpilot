@@ -627,7 +627,11 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['field_layer']['#prefix'] = '<div>';
 			$form['field_layer']['#suffix'] = '</div>';
 			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => '<none>' );
-			
+			$form['field_display_full_profile']['#suffix'] = theme('advanced_help_topic', array(
+			  'module' => 'snowpilot',
+			  'topic' => 'display-full-pit',
+			));
+						
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
 			
@@ -2089,27 +2093,74 @@ function snowpilot_cardinal_wind_dir($degrees){
 
 function _snowpilot_find_pit_depth($node){
 	$max = 0;
-	if (isset($node->field_total_height_of_snowpack['und'][0]['value'])){
+	if (isset($node->field_total_height_of_snowpack['und'][0]['value']) && $node->field_display_full_profile['und'][0]['value']){
 		$max =  $node->field_total_height_of_snowpack['und'][0]['value'];
-	}elseif ( isset($node->field_layer['und'])){
-		$ids = array();
-		foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
-		$all_layers = field_collection_item_load_multiple($ids);
-		foreach ($all_layers as $layer){
-			if ($layer->field_height['und'][0]['value'] > $max ) $max = $layer->field_height['und'][0]['value'] ;
-			if ($layer->field_bottom_depth['und'][0]['value'] > $max ) $max = $layer->field_bottom_depth['und'][0]['value'] ;	
+	}else{
+		if ( isset($node->field_layer['und'])){
+			$ids = array();
+			foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
+			$all_layers = field_collection_item_load_multiple($ids);
+			foreach ($all_layers as $layer){
+				if ($layer->field_height['und'][0]['value'] > $max ) $max = $layer->field_height['und'][0]['value'] ;
+				if ($layer->field_bottom_depth['und'][0]['value'] > $max ) $max = $layer->field_bottom_depth['und'][0]['value'] ;	
+			}
+	  }
+	//  lets look for stability tests  
+		if ( isset($node->field_test['und'])){
+			$ids = array();
+			foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
+			$all_tests = field_collection_item_load_multiple($ids);
+			foreach ($all_tests as $test){
+				if ($test->field_depth['und'][0]['value'] > $max ) $max = $test->field_depth['und'][0]['value'] ;
+			}
 		}
-	}
-	if ( $max == 0 ){// then lets look for stability tests  
-		$ids = array();
-		foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
-		$all_tests = field_collection_item_load_multiple($ids);
-		foreach ($all_tests as $test){
-			if ($test->field_depth['und'][0]['value'] > $max ) $max = $test->field_depth['und'][0]['value'] ;
-		}
+		//  lets look for temp measurements  
+			if ( isset($node->field_temp_collection['und'])){
+				$ids = array();
+				foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
+				$all_temps = field_collection_item_load_multiple($ids);
+				foreach ($all_temps as $temp){
+					if ($temp->field_depth['und'][0]['value'] > $max ) $max = $temp->field_depth['und'][0]['value'] ;
+				}
+			}
 	}
 	return $max;
 }
+
+function _snowpilot_find_pit_min($node){
+	$min = _snowpilot_find_pit_depth($node);
+
+		if ( isset($node->field_layer['und'])){
+			$ids = array();
+			foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
+			$all_layers = field_collection_item_load_multiple($ids);
+			foreach ($all_layers as $layer){
+				if ($layer->field_height['und'][0]['value'] < $min ) $min = $layer->field_height['und'][0]['value'] ;
+				if ($layer->field_bottom_depth['und'][0]['value'] < $min ) $min = $layer->field_bottom_depth['und'][0]['value'] ;	
+			}
+	  }
+	//  lets look for stability tests  
+		if ( isset($node->field_test['und'])){
+			$ids = array();
+			foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
+			$all_tests = field_collection_item_load_multiple($ids);
+			foreach ($all_tests as $test){
+				if ($test->field_depth['und'][0]['value'] < $min ) $min = $test->field_depth['und'][0]['value'] ;
+			}
+		}
+		//  lets look for temp measurements  
+			if ( isset($node->field_temp_collection['und'])){
+				$ids = array();
+				foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
+				$all_temps = field_collection_item_load_multiple($ids);
+				foreach ($all_temps as $temp){
+					if ($temp->field_depth['und'][0]['value'] < $min ) $min = $temp->field_depth['und'][0]['value'] ;
+				}
+			}
+	return $min;
+}
+
+
 //
 //  This function returns the maximum depth of a snowpit ( if known ) for $form  ( = form_state )
 //    if the snowpit depth cannot be determined, either because no layers are given, or no total height of snowpack is given
