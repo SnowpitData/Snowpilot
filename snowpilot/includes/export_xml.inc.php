@@ -668,8 +668,8 @@ function snowpilot_node_write_caaml($node){
 	  'http://caaml.org/Schemas/V5.0/Profiles/SnowProfileIACS http://caaml.org/Schemas/V5.0/Profiles/SnowprofileIACS/CAAMLv5_SnowProfileIACS.xsd');
 	
 	
-	//$snowpilot_SnowProfile->setAttributeNS('http://www.snowpilot.org', 'app:NodeID' , $node->nid);
-	//$snowpilot_SnowProfile->setAttributeNS('http://www.opengis.net/gml', 'gml:id' ,'test');
+	$snowpilot_SnowProfile->setAttributeNS('http://www.snowpilot.org', 'app:NodeID' , $node->nid);
+	$snowpilot_SnowProfile->setAttributeNS('http://www.opengis.net/gml', 'gml:id' ,'test');
 	$snowpilot_metaDataProperty = $snowpilot_caaml->createElement('metaDataProperty'); $snowpilot_SnowProfile->appendChild($snowpilot_metaDataProperty);
 	$snowpilot_validTime = $snowpilot_caaml->createElement('validTime'); $snowpilot_SnowProfile->appendChild($snowpilot_validTime);
 	$snowpilot_snowProfileResultsOf = $snowpilot_caaml->createElement('snowProfileResultsOf'); $snowpilot_SnowProfile->appendChild($snowpilot_snowProfileResultsOf);
@@ -841,43 +841,46 @@ function snowpilot_node_write_caaml($node){
 		//
 		// Termperature profile
 		
-		$ids = array();
-		foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
-		$all_temps = field_collection_item_load_multiple($ids);
-		$tempProfile = $snowpilot_caaml->createElement('tempProfile');
-		$tempProfile->setAttribute('uomDepth' , $unit_prefs['field_depth_units'] );
-		$tempProfile->setAttribute('uomTemp', 'deg'.$unit_prefs['field_temp_units']);
-		foreach ($all_temps as $temp ){
-			if ( isset ( $temp->field_depth['und'])){
-				$Obs = $snowpilot_caaml->createElement('Obs');
-				$Obs->appendChild($snowpilot_caaml->createElement('depth', $temp->field_depth['und'][0]['value'] ));
-				$Obs->appendChild($snowpilot_caaml->createElement('snowTemp', $temp->field_temp_temp['und'][0]['value'] ));
+		if ( isset ( $node->field_temp_collection['und'] )){
+			$ids = array();
+			foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
+			$all_temps = field_collection_item_load_multiple($ids);
+			$tempProfile = $snowpilot_caaml->createElement('tempProfile');
+			$tempProfile->setAttribute('uomDepth' , $unit_prefs['field_depth_units'] );
+			$tempProfile->setAttribute('uomTemp', 'deg'.$unit_prefs['field_temp_units']);
+			foreach ($all_temps as $temp ){
+				if ( isset ( $temp->field_depth['und'])){
+					$Obs = $snowpilot_caaml->createElement('Obs');
+					$Obs->appendChild($snowpilot_caaml->createElement('depth', $temp->field_depth['und'][0]['value'] ));
+					$Obs->appendChild($snowpilot_caaml->createElement('snowTemp', $temp->field_temp_temp['und'][0]['value'] ));
+				}
+				$tempProfile->appendChild($Obs);
 			}
-			$tempProfile->appendChild($Obs);
+			$SnowProfileMeasurements->appendChild($tempProfile);
 		}
-		$SnowProfileMeasurements->appendChild($tempProfile);
-		
 		//
 		//  Denstiy Profile
 		//
-		$ids = array();
-		foreach ($node->field_density_profile['und'] as $dens ){ $ids[] = $dens['value']; }
-		$all_densities = field_collection_item_load_multiple($ids);
+		if ( isset ( $node->field_density_profile['und'] )){
+			$ids = array();
+			foreach ($node->field_density_profile['und'] as $dens ){ $ids[] = $dens['value']; }
+			$all_densities = field_collection_item_load_multiple($ids);
 		
-		$densityProfile = $snowpilot_caaml->createElement('densityProfile');
-		$densityProfile->setAttribute('uomDepthTop' , $unit_prefs['field_depth_units']);
-		$densityProfile->setAttribute('uomThickness' , $unit_prefs['field_depth_units']);
-		$densityProfile->setAttribute('uomDensity' , $unit_prefs['field_density_units']);
+			$densityProfile = $snowpilot_caaml->createElement('densityProfile');
+			$densityProfile->setAttribute('uomDepthTop' , $unit_prefs['field_depth_units']);
+			$densityProfile->setAttribute('uomThickness' , $unit_prefs['field_depth_units']);
+			$densityProfile->setAttribute('uomDensity' , $unit_prefs['field_density_units']);
 		
-		foreach( $all_densities as $density){
-			$Layer = $snowpilot_caaml->createElement('Layer');
-			$Layer->appendChild($snowpilot_caaml->createElement('depthTop', $density->field_depth['und'][0]['value']));
-			$Layer->appendChild($snowpilot_caaml->createElement('thickness', ''));
-			$Layer->appendChild($snowpilot_caaml->createElement('density', $density->field_density_top['und'][0]['value']));
+			foreach( $all_densities as $density){
+				$Layer = $snowpilot_caaml->createElement('Layer');
+				$Layer->appendChild($snowpilot_caaml->createElement('depthTop', $density->field_depth['und'][0]['value']));
+				$Layer->appendChild($snowpilot_caaml->createElement('thickness', ''));
+				$Layer->appendChild($snowpilot_caaml->createElement('density', $density->field_density_top['und'][0]['value']));
 			
-			$densityProfile->appendChild($Layer);
+				$densityProfile->appendChild($Layer);
+			}
+			$SnowProfileMeasurements->appendChild($densityProfile);
 		}
-		$SnowProfileMeasurements->appendChild($densityProfile);
 		//
 		//  stability Tests
 		//

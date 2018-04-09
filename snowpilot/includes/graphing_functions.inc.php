@@ -612,18 +612,18 @@ function snowpilot_snowpit_graph_header_write($node, $format='jpg'){
 	$user_account = user_load($node->uid);
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');
 	$pit_depth = _snowpilot_find_pit_depth($node);
-	
 	$pit_min = _snowpilot_find_pit_min($node);
 	if ( ( isset ( $node->field_total_height_of_snowpack['und'][0]['value'] )  
-		&& ($node->field_total_height_of_snowpack['und'][0]['value'] <> $pit_depth  ) 
-	  && ($node->field_display_full_profile['und'][0]['value'] <> 1 ) ) 
-	|| ( ($node->field_display_full_profile['und'][0]['value'] <> 1 ) && $pit_min <> 0 )){
+		&& (  abs($node->field_total_height_of_snowpack['und'][0]['value'] - $pit_depth)>15  ) 
+	  && (($node->field_display_full_profile['und'][0]['value'] <> 1 ) || !isset($node->field_display_full_profile['und'][0]['value']) )) 
+			
+	|| ( ( !isset( $node->field_display_full_profile['und'][0]['value'] ) || ($node->field_display_full_profile['und'][0]['value'] <> 1 ) ) && $pit_min >14 )){
 			$shrunken_pit = TRUE;
 			$global_max =  701 ;
 		}else{
 			$shrunken_pit = FALSE;
 			$global_max =  751 ;
-			$pit_min = 0; // we reset pit_min to sero so it comes out the correct height
+			$pit_min = 0; // we reset pit_min to zero so it comes out the correct height scaling on the final graph
 		}
 		
 // Image Variables
@@ -671,7 +671,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
  	 		}
       $text_pos = imagettftext($img, 11, 0, 14, 89, $black, $label_font, 'Aspect: ');
 			if (isset($node->field_aspect['und'])){
-				if ( $node->field_direction_format['und'][0]['value'] == 'cardinal' /* cardnial type aspect */ ){
+				if ( isset ( $node->field_direction_format['und'] ) && ($node->field_direction_format['und'][0]['value'] == 'cardinal') /* cardnial type aspect */ ){
 					$aspect = field_view_field('node', $node, 'field_aspect_cardinal');
 				}else{ // the default, azimuth degrees
 				  $aspect = field_view_field('node', $node, 'field_aspect');
@@ -777,7 +777,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					$comment_count = 1;
 			}elseif(isset( $node->field_surface_penetration['und'] )  && isset($node->field_ski_penetration['und'][0]['value']) &&( $node->field_surface_penetration['und'][0]['value'] == 'ski' ) &&  (  $node->field_ski_penetration['und'][0]['value'] != '' ) ){
 				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 625 ;
-					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'SP'.$node->field_ski_penetration['und'][0]['value']  );
+					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PS'.$node->field_ski_penetration['und'][0]['value']  );
 					$comment_count = 1;
 			}
 			
@@ -1052,7 +1052,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			} // end of drawing the temperature profile
 						
 			// cycle through and make depth tick marks
-			$x = round($pit_min) - round($pit_min)%10;
+			$x = round($pit_min) - round($pit_min)%10 + 10;
 			
 			while ( $x <= $pit_depth){
 				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
@@ -1092,7 +1092,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			
 		
 			// Now we make the 5cm tick marks
-			$x = round($pit_min) - round($pit_min)%5;
+			$x = round($pit_min) - round($pit_min)%5 + 5;
 			while ( $x <= $pit_depth){
 				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
 				
@@ -1102,7 +1102,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				imageline($img, 443, $y_val, 447,$y_val, $black);
 				
 				//imagettftext($img, 10, 0, 638, round(snowpit_graph_pixel_depth($x, $node, 'bottom'))+5, $black, $label_font, $x );
-				$x+=10;
+				$x+=5;
 			}
 			
 			//
@@ -1142,11 +1142,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	imageline($img, 575,135, 575, 751, $black  ); //beginning of crystal size column
 	imageline($img, 617,140, 617, 751, $black  ); //beginning of crystal moisture column
 	
-	if ( $shrunken_pit ){ 
+	if ( $shrunken_pit ){ // this inserts the zigazag line at the bottom of a shrunken pit
 		imagefilledrectangle($img, 446, 736, 710, 741, $white  );
 	  imagettftext($img, 10, 0 , 447, 738, $black, $snowsymbols_font, 'YYYYY');
 	  imagettftext($img, 10, 0 , 447, 743, $black, $snowsymbols_font, 'YYYYY');
 		imagefilledrectangle($img, 708, 729, 719, 745, $white  );
+		imageline($img, 447, 739, 447, 741,$black);
 	}
 	
 	imagettftext($img, 10, 0 , 554, 122, $black ,$label_font, t("Crystal"));

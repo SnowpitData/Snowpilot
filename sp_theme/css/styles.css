@@ -381,6 +381,10 @@ div.ctools-modal-content .form-item label {
 	display: inline-block;
 }
 
+#edit-field-snowpit-visibility{
+	padding-left: 15px;
+}
+
 #snowpit-profile-node-form #edit-field-org-ownership label,
 #snowpit-profile-node-form #edit-field-snowpit-visibility label{
 	display: block;
@@ -740,6 +744,9 @@ fieldset.group-weather legend span{
 	padding-right: 27px;
 	padding-left: 27px;
 	background-color: #fff;
+}
+fieldset.group-stability legend span{
+	background-color: #c87931;
 }
 
 form.node-snowpit_profile-form .fieldset-wrapper{
@@ -1579,6 +1586,7 @@ body.node-type-snowpit-profile{
 
 .view-snowpit-list table td>div.views-field-title,
 .view-snowpit-list table td>div.views-graph-image,
+.view-snowpit-list table td>div.views-field-nid,
 .view-snowpit-list table td>div.views-field-field-date-time,
 .view-new-test-search table td>div.views-field-title,
 .view-new-test-search table td>div.views-graph-image,

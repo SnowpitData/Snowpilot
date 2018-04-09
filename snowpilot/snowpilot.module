@@ -309,7 +309,7 @@ SnowPilot Admin Team';
 A new user '. $user_wrapper->name->value(). ' has been added to your group '.$org_admin_user->field_professional_affiliation->label().'.
 
 You may review this user at your organization administration page:
-http://snowpilot.org/organization2
+http://snowpilot.org/organizations
 
 Thanks,
 
@@ -332,10 +332,10 @@ function snowpilot_user_org(&$argument){
 		$org_admin_groups = $user_wrapper->field_org_admin_groups->value();
 		if ( !in_array($default_org , $org_admin_groups  )){  // If this organization is not one they can manage, reset their default org to something standard.
 			if ( ! isset( $org_admin_groups[0]) ) {
-				$result .= 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.';
+				dsm( 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.');
 			  return $result;
 			}else{
-			  //$user_wrapper->field_org_ownership->set( $org_admin_groups[0]->tid );
+			  $user_wrapper->field_org_ownership->set( $org_admin_groups[0]->tid );
 			  //$user_wrapper->save();
 			  //$default_org = $user_wrapper->field_org_ownership->value(); // we need to refill this variable since it changed
 		  }
@@ -343,7 +343,6 @@ function snowpilot_user_org(&$argument){
 		
 		
 	}
-	//dsm($default_org->tid->value());
 	//dsm('hello');
 	return $default_org->tid->value();
 }
@@ -1101,6 +1100,7 @@ function get_optgroup_by_taxonomy($taxonomy_name) {
 
 function snowpit_list_view_after_build($form, &$form_state){
 	if ( $form['field_org_ownership_tid']['#value'] == '' ) $form['field_org_ownership_tid']['#value'] = '_none';
+	if ( $form['field_loaction_tid']['#value'] == '' ) $form['field_loaction_tid']['#value'] = '_none';
 	return $form;
 }
 
@@ -1258,30 +1258,31 @@ function snowpilot_snowpit_set_frac_cat(&$form, $snowpit_unit_prefs){
 
 function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 	unset($form['field_snowpit_visibility']['und']['#options']['_none']);
-
-  if ( (! is_array($snowpit_unit_prefs['field_professional_affiliation']) || count ($snowpit_unit_prefs['field_professional_affiliation'] ) < 2 ) && !user_access('administer nodes')  ){
-
-  	$form['field_org_ownership']['#access'] = FALSE ; 
-		if (!isset($snowpit_unit_prefs['field_professional_affiliation']) || $snowpit_unit_prefs['field_professional_affiliation'] == '57'){
-			unset ($form['field_snowpit_visibility']['und']['#options']['group']);
-		}else{			$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
-		
-		  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
-			//dsm($form['field_snowpit_visibility']['und']['#options']);
-		}
-  }else{ // we have an array of more than one organizations
-	  foreach ( $form['field_org_ownership']['und']['#options'] as $tid => $option ){
-			// hide invalid
-		  if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  && !user_access('administer nodes')  ) {
-				unset ( $form['field_org_ownership']['und']['#options'][$tid] );
+ 
+  if ( !user_access('administer nodes')  ){
+		if ( (! is_array($snowpit_unit_prefs['field_professional_affiliation']) || count ($snowpit_unit_prefs['field_professional_affiliation'] ) < 2 ) ){
+	  	$form['field_org_ownership']['#access'] = FALSE ; 
+			if (!isset($snowpit_unit_prefs['field_professional_affiliation']) || $snowpit_unit_prefs['field_professional_affiliation'] == '57'){
+				unset ($form['field_snowpit_visibility']['und']['#options']['group']);
+			}else{			$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
+			  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
+				//dsm($form['field_snowpit_visibility']['und']['#options']);
 			}
-		}
-		// if the default value is not already in there, add it back in
-		if ( isset($form['field_org_ownership']['und']['#default_value'][0]) && 
-		! in_array ( $form['field_org_ownership']['und']['#default_value'][0]  , array_keys($form['field_org_ownership']['und']['#options']) )){ 
-			$form['field_org_ownership']['und']['#options'][$form['field_org_ownership']['und']['#default_value'][0]] = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name ;
-		}	
-  }	
+    }else{ // we have an array of more than one organizations
+		  foreach ( $form['field_org_ownership']['und']['#options'] as $tid => $option ){
+				// hide invalid
+			  if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )   ) {
+					unset ( $form['field_org_ownership']['und']['#options'][$tid] );
+				}
+			}
+			// if the default value is not already in there, add it back in
+			// this could happen, say ,if someone created a pit under one org, then removed themselves from the org. the old snowpit still needs to stay associated with the old org
+			if ( isset($form['field_org_ownership']['und']['#default_value'][0]) && 
+			  !in_array ( $form['field_org_ownership']['und']['#default_value'][0]  , array_keys($form['field_org_ownership']['und']['#options']) )){ 
+				$form['field_org_ownership']['und']['#options'][$form['field_org_ownership']['und']['#default_value'][0]] = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name ;
+			}	
+	  }
+	}	
 }
 
 function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
@@ -2093,8 +2094,10 @@ function snowpilot_cardinal_wind_dir($degrees){
 
 function _snowpilot_find_pit_depth($node){
 	$max = 0;
-	if (isset($node->field_total_height_of_snowpack['und'][0]['value']) && $node->field_display_full_profile['und'][0]['value']){
-		$max =  $node->field_total_height_of_snowpack['und'][0]['value'];
+	if ( isset($node->field_total_height_of_snowpack['und'][0]['value'])  && ( (isset($node->field_display_full_profile['und']) && ($node->field_display_full_profile['und'][0]['value'] == 1) )
+	  || $node->field_depth_0_from['und'][0]['value'] == 'bottom')){	
+		
+		  $max = $node->field_total_height_of_snowpack['und'][0]['value'];
 	}else{
 		if ( isset($node->field_layer['und'])){
 			$ids = array();
@@ -2111,25 +2114,35 @@ function _snowpilot_find_pit_depth($node){
 			foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
 			$all_tests = field_collection_item_load_multiple($ids);
 			foreach ($all_tests as $test){
-				if ($test->field_depth['und'][0]['value'] > $max ) $max = $test->field_depth['und'][0]['value'] ;
+				if ( isset( $test->field_depth['und'] ) && ($test->field_depth['und'][0]['value'] > $max )) $max = $test->field_depth['und'][0]['value'] ;
 			}
 		}
 		//  lets look for temp measurements  
-			if ( isset($node->field_temp_collection['und'])){
-				$ids = array();
-				foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
-				$all_temps = field_collection_item_load_multiple($ids);
-				foreach ($all_temps as $temp){
-					if ($temp->field_depth['und'][0]['value'] > $max ) $max = $temp->field_depth['und'][0]['value'] ;
-				}
+		if ( isset($node->field_temp_collection['und'])){
+			$ids = array();
+			foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
+			$all_temps = field_collection_item_load_multiple($ids);
+			foreach ($all_temps as $temp){
+				if ($temp->field_depth['und'][0]['value'] > $max ) $max = $temp->field_depth['und'][0]['value'] ;
 			}
+		}
+		// Now look for densities
+		if ( isset($node->field_density_profile['und'])){
+			$ids = array();
+			foreach ($node->field_density_profile['und'] as $density ){ $ids[] = $density['value']; }
+			$all_densities = field_collection_item_load_multiple($ids);
+			foreach ($all_densities as $density){
+				if ($density->field_depth['und'][0]['value'] > $max ) $max = $density->field_depth['und'][0]['value'] ;
+			}
+		}
 	}
 	return $max;
 }
 
 function _snowpilot_find_pit_min($node){
 	$min = _snowpilot_find_pit_depth($node);
-
+	
+	if ( $node->field_depth_0_from['und'][0]['value'] == 'top' ) $min = 0;
 		if ( isset($node->field_layer['und'])){
 			$ids = array();
 			foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
@@ -2145,18 +2158,27 @@ function _snowpilot_find_pit_min($node){
 			foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
 			$all_tests = field_collection_item_load_multiple($ids);
 			foreach ($all_tests as $test){
-				if ($test->field_depth['und'][0]['value'] < $min ) $min = $test->field_depth['und'][0]['value'] ;
+				if ( isset( $test->field_depth['und'][0]['value']  ) && ($test->field_depth['und'][0]['value'] <> 0)  && ($test->field_depth['und'][0]['value'] < $min )  ) $min = $test->field_depth['und'][0]['value'] ;
 			}
 		}
 		//  lets look for temp measurements  
-			if ( isset($node->field_temp_collection['und'])){
-				$ids = array();
-				foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
-				$all_temps = field_collection_item_load_multiple($ids);
-				foreach ($all_temps as $temp){
-					if ($temp->field_depth['und'][0]['value'] < $min ) $min = $temp->field_depth['und'][0]['value'] ;
-				}
+		if ( isset($node->field_temp_collection['und'])){
+			$ids = array();
+			foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
+			$all_temps = field_collection_item_load_multiple($ids);
+			foreach ($all_temps as $temp){
+				if ($temp->field_depth['und'][0]['value'] < $min ) $min = $temp->field_depth['und'][0]['value'] ;
 			}
+		}
+		if ( isset($node->field_density_profile['und'])){
+			$ids = array();
+			foreach ($node->field_density_profile['und'] as $density ){ $ids[] = $density['value']; }
+			$all_densities = field_collection_item_load_multiple($ids);
+			foreach ($all_densities as $density){
+				if ($density->field_depth['und'][0]['value'] < $min ) $min = $density->field_depth['und'][0]['value'] ;
+			}
+		}
+				
 	return $min;
 }
 

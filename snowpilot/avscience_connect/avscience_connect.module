@@ -1071,18 +1071,9 @@ $output .=
 	</form>
 	</div>';
 
-	$per_page = 10;
-
-
-	if ( in_array('administrator' , $user->roles )){
-		$where_clause .= '';
-/*	}elseif( in_array('authenticated user' , $user->roles)){
-		$where_clause .= " AND ( SHARE = '1' OR (SHARE = '0' AND USERNAME = :user) ) ";
-	  $query_args[':user'] = $user->name;
-*/	}else{ 
+	  $per_page = 10;
 		$where_clause .= " AND SHARE = '1' ";
-	
-	}
+
 		//
 		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
 		$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL, LOCAL_SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
@@ -1367,13 +1358,8 @@ $output .='</select></div>
 	</form>
 	</div>';
 
-	if ( in_array('administrator' , $user->roles )){
-	
-	}else{
 	  $query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');
-	}
 	//
-
 
     $query_count = $query;
 
@@ -1654,15 +1640,8 @@ function avscience_query_xml(){
 	$per_page = (isset($_GET['per_page']) && $_GET['per_page'] > 0) ? $_GET['per_page'] : 10 ;
 	if ( $per_page > 100 ) $per_page = 100; // limiting to select 100 items
 
-	if ( in_array('administrator' , $user->roles )){
-		$where_clause .= '';
-	}elseif( in_array('authenticated user' , $user->roles)){
-		$where_clause .= " AND ( SHARE = '1' OR (SHARE = '0' AND USERNAME = :user) ) ";
-	  $query_args[':user'] = $user->name;
-	}else{
 		$where_clause .= " AND SHARE = '1' ";
-	
-	}
+
 		//
 		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
 		$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;

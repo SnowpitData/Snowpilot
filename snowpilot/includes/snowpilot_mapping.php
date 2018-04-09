@@ -58,7 +58,7 @@ function initialize() {
       zoom: <?php echo isset( $zoom ) ? $zoom : '9' ; ?> ,
       mapTypeId: 'terrain'
    };
-
+elevator = new google.maps.ElevationService();
    map = new google.maps.Map(document.getElementById('google-map'), mapOptions);
 
    // This event detects a click on the map.
@@ -139,6 +139,16 @@ function getCoords(lat, lng) {
 
    // Update longitude text box.
    coords_lng.value = lng;
+	 
+	 var elevation = document.getElementById('edit-field-elevation-und-0-value');
+	 
+	 var latlng = new google.maps.LatLng (parseFloat(lat),parseFloat(lng));
+	 	var obj=new Object();
+	 	obj.latLng=latlng;
+	 	getElevation(latlng);
+		
+		
+		
 	 //
 	 //
 	 // start calculating utm and mgrs field values
@@ -259,6 +269,44 @@ function updatePositionMgrs(){
 		updatePosition();
 	
 	}
+}
+
+function getElevation(clickedLocation) 
+{
+	var locations = [];
+		
+	locations.push(clickedLocation);
+	
+	// Create a LocationElevationRequest object using the array's one value
+	var positionalRequest = {'locations': locations};
+	console.log("IN get elevation "+clickedLocation);
+	console.log(positionalRequest);
+	
+	// Initiate the location request
+	elevator.getElevationForLocations(positionalRequest, function(results, status) 
+	{
+		
+		if (status == google.maps.ElevationStatus.OK) 
+		{
+			// Retrieve the first result
+			if (results[0]) 
+			{
+				// Open an info window indicating the elevation at the clicked position
+			console.log( "elevation: " + results[0].elevation.toFixed(3) );
+				
+				//add the marker
+	
+				
+				output_lat.push(clickedLocation.lat());
+				output_lng.push(clickedLocation.lng());
+				output_f.push((results[0].elevation*3.2808399).toFixed(3));
+				output_m.push(results[0].elevation.toFixed(3));
+				
+			} 
+			
+	  	} 
+	  	
+	});
 }
 
 // Add listeners to SnowPilot form for latitude and longitude inputs
