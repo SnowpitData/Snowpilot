@@ -325,8 +325,23 @@ function snowpilot_user_org(&$argument){
 	global $user;
 	$user_wrapper = entity_metadata_wrapper( 'user' , $user);
 	$user_info = $user_wrapper->field_org_ownership->value();
+	$user_info2 = $user_wrapper->field_professional_affiliation->value();
+	
 	$argument->validated_title = $user_wrapper->field_org_ownership->label();
-	$default_org = $user_wrapper->field_org_ownership;
+		
+	
+	if ( isset($user_info->tid) ){
+		$return_value = $user_info->tid;
+		
+		
+	}elseif ( isset( $user_info2[0]->tid )){
+		$return_value = $user_info2[0]->tid;
+	}else{
+		$reeturn_value = '';
+		
+	}
+	//$default_tid = $default_org->tid->value();
+	$return_value = ( $default_tid ) ? $default_tid : $user_info2[0]->tid;
 	if ( in_array(6,  $user_wrapper->roles->value()) ){
 		//dsm('this far: in org admin role');
 		$org_admin_groups = $user_wrapper->field_org_admin_groups->value();
@@ -343,8 +358,7 @@ function snowpilot_user_org(&$argument){
 		
 		
 	}
-	//dsm('hello');
-	return $default_org->tid->value();
+	return $return_value;
 }
 
 function snowpilot_org_admin_access($item){
@@ -380,7 +394,7 @@ function snowpilot_org_admin_access($item){
 function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 	if ( node_access('update', $node) && user_access('lock snowpit')){
 		// if node is not locked for editing, and there is NOT a snowpit in the avscience db which would include the same serial #, then we cna save and lock it!
-		if ( !$node->sticky /*&& !snowpilot_avscience_pit_exists($node)*/ ){
+		if ( !$node->sticky && !snowpilot_avscience_pit_exists($node) ){
 			// then we reset the the pit to sticky == true ( i.e. LOCKED )
 			$node_wrapper = entity_metadata_wrapper('node', $node);
 			$node_wrapper->sticky->set(true);
