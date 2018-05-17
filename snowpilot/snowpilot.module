@@ -1,8 +1,11 @@
 <?php
-
+include_once('includes/populate_layers_table.php');
+include_once('includes/populate_shear_tests_table.php');
 include_once('includes/unit_prefs.inc.php');
 include_once('includes/graphing_functions.inc.php');
 include_once('includes/export_xml.inc.php');
+include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
+
 //include_once('includes/snowpilot_mapping.php');
 //include_once('includes/snowpilot_mapping_view.php');
 
@@ -324,28 +327,25 @@ function snowpilot_user_org(&$argument){
 	
 	global $user;
 	$user_wrapper = entity_metadata_wrapper( 'user' , $user);
-	$user_info = $user_wrapper->field_org_ownership->value();
-	$user_info2 = $user_wrapper->field_professional_affiliation->value();
+	$user_info = $user_wrapper->field_org_ownership->value();  // this is ther users DEFAULT org, if they have more than one group, and it's set.
+	$user_info2 = $user_wrapper->field_professional_affiliation->value(); /// this is the array of all orgs that they are members of
 	
 	$argument->validated_title = $user_wrapper->field_org_ownership->label();
 		
 	
 	if ( isset($user_info->tid) ){
-		$return_value = $user_info->tid;
-		
-		
+		$default_tid = $user_info->tid;
 	}elseif ( isset( $user_info2[0]->tid )){
-		$return_value = $user_info2[0]->tid;
+		$default_tid = $user_info2[0]->tid;
 	}else{
-		$reeturn_value = '';
-		
+		$default_tid = '';
 	}
-	//$default_tid = $default_org->tid->value();
-	$return_value = ( $default_tid ) ? $default_tid : $user_info2[0]->tid;
 	if ( in_array(6,  $user_wrapper->roles->value()) ){
 		//dsm('this far: in org admin role');
 		$org_admin_groups = $user_wrapper->field_org_admin_groups->value();
-		if ( !in_array($default_org , $org_admin_groups  )){  // If this organization is not one they can manage, reset their default org to something standard.
+		$admin_org_tids= array();
+		foreach ( $org_admin_groups as $group ) { $admin_org_tids[] = $group->tid; 		}
+		if ( !in_array($default_tid , $org_admin_tids  )){  // If this organization is not one they can manage, reset their default org to something standard.
 			if ( ! isset( $org_admin_groups[0]) ) {
 				dsm( 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.');
 			  return $result;
@@ -358,7 +358,7 @@ function snowpilot_user_org(&$argument){
 		
 		
 	}
-	return $return_value;
+	return $default_tid;
 }
 
 function snowpilot_org_admin_access($item){
@@ -401,7 +401,11 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			$node_wrapper->save();
 			watchdog('snowpilot', "Snowpit $node->nid set to LOCKED.");
 			// and save it to the avscience db
-			if ( snowpilot_avscience_pit_write($node)) {
+			if ( $serial = snowpilot_node_avscience_save_pit($node)) {
+				dsm($serial);
+				$image_result_code = populate_snowpit_image($serial);
+				$layers_result_code = populate_layers_table($serial);
+				$tests_result_code = populate_shear_tests_table($serial);		
 				watchdog('snowpilot', "Snowpit $node->nid sucessfully saved to avscience db.");
 			}else{
 				watchdog('snowpilot', "Snowpit $node->nid NOT  saved to avscience db.");
@@ -442,9 +446,53 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
   }
 }
 
+function populate_snowpit_image($SERIAL){
+	$critical = FALSE; 
+
+	$message = 'default image message';
+	
+	$img_url = '/sites/default/files/avscience-profiles/graph-serial-'.$SERIAL. '.jpg';
+	if( !file_exists( DRUPAL_ROOT. $img_url )){	
+    $node_id = avscience_is_drupal_pit( $SERIAL ) ;
+	  if ( $node_id > 0 ){  // it is a drupal-genrated snowpit, copy over the existing image
+			$orig_img_url = '/sites/default/files/snowpit-profiles/graph-'.$node_id. '.jpg';
+			//$node = node_load( $match[1] );
+			$_image = fopen( DRUPAL_ROOT.$orig_img_url , 'rb');
+	  	$img_src = fread( $_image, filesize(DRUPAL_ROOT.$orig_img_url));
+			fclose($_image);
+			
+	  }else{  // not a drupal snowpit, get the image from kc server
+			$kc_serial = avscience_connect_fetch_kc_serial($SERIAL);
+			
+			// temporarily commenting this out so that we don't ping the kc server for images too much
+			//$img_src = file_get_contents( "http://www.kahrlconsulting.com:8084/avscience/PitServlet?TYPE=PITIMAGE&SERIAL=".$kc_serial );
+			$img_src = '';
+		}
+		
+		$local_image = fopen( DRUPAL_ROOT.$img_url , 'w');
+		if ( $local_image ){ 
+			fwrite($local_image, $img_src);
+		  sleep(1);
+			
+		  fclose($local_image);
+		}else{
+			$critical = TRUE; 
+			$message = 'Could not open connection to kahlrconsulting server for SERIAL: '.$SERIAL;
+		}
+		if ( !$critical ){
+			$pre_img = imagecreatefromjpeg( DRUPAL_ROOT.$img_url);
+			$new_img = imagecreatetruecolor(466,613);
+			$result = imagecopy($new_img, $pre_img, 0,0, 14,140,466,613 );
+			$success = imagejpeg( $new_img , DRUPAL_ROOT. '/sites/default/files/avscience-profiles/layers/layers-serial-'.$SERIAL. '.jpg');
+			if ( $success ) $message = 'All images created successfully for '.$SERIAL;
+		}
+		
+	}
+	return array( 'continue' => !($critical) , 'message' => $message );
+}
 
 function snowpilot_avscience_pit_exists($node){
-	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+	include_once(DRUPAL_ROOT.'/sites/default/db_settings.php' );
 
 	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
   $account = user_load($node->uid);	
@@ -661,7 +709,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			
 			snowpilot_set_visibility_field_options($form, $snowpit_unit_prefs);
 			
-			snowpilot_snowpit_set_tester_fields($form);
+			snowpilot_snowpit_set_tester_fields($form, $account);
 			
 
 			//
@@ -1300,8 +1348,7 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 }
 
 function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
-
-
+	
 	if ( !(user_has_role( 8, $account ))){ /// role 8 is False Stability Test 2017
     $form['field_a_priori_eval']['#access'] = FALSE ;
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_unstable']);
@@ -2413,6 +2460,286 @@ function snowpilot_graph_field_trunc(&$img,$string,$x_limit){
 	
 }
 
+/*
+//  This function submits to the avscience database  based on the node information passed to it. should be compliant with the snowpilot datamodel.
+//
+//
+*/
+function snowpilot_node_avscience_save_pit($node){
+	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
+	
+	
+	//if ( !file_exists(DRUPAL_ROOT. $xml_filename)){
+		watchdog('snowpilot', "Snowpit values list is being prepared");
+		$values_list = array();
+		
+		//PitCore Attributes: activities, aviLoc,iLayerNumber, bld, stability,avipit,incline,winDir,skiAreaPit ,bcPit, testPit,windspeed,aspect,skiBoot,measureFrom,sky,sufacePen, windloading,heightOfSnowpack,precip , serial, version,pitNotes,crownObs,timestamp,iDepth
+			
+	  $values_list[] =  " ACTIVITIES = '" . _generate_specifics_string($node). "' ";
+
+		// iLayerNumber
+		// this implementation assumes that the layers are in numerical order from top down; item_id is a unique id in field collections, can't use it.
+		$ids = array();
+		foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
+		$all_layers = field_collection_item_load_multiple($ids);
+		$iLayerNumber_value = 1;	
+		foreach($all_layers as $x => $layer){
+			if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1') { 
+			  $iDepth = ($layer->field_concern['und'][0]['value'] == 'top') ? $layer->field_height['und'][0]['value'] : $layer->field_bottom_depth['und'][0]['value'];
+				$values_list[] =  " iDepth = '" . $iDepth . "' " ;
+			  $values_list[] =  " iLayerNumber = '" . $iLayerNumber_value. "' ";
+				break; 
+			}else{
+				$iLayerNumber_value++;
+			}
+		}
+		if ( $iLayerNumber_value > 1 )  $values_list[] = ' HASLAYERS = 1 ';
+
+		//
+		// stability
+		if (isset($node->field_stability_on_similar_slope['und'][0]['value'])){
+		  $similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope');
+		$values_list[] =  " STABILITY = '" . $similar_stability[0]['#markup'] . "' ";
+		}
+		
+		//
+		// aviPit
+		//
+		if (isset($node->field_adjacent_to_avy['und'][0]['value'] ) && $node->field_adjacent_to_avy['und'][0]['value'] == 1  ) {
+		  $values_list[] =  " aviPit = '1' ";
+		  $values_list[] =  " crownObs = '1' ";
+		  $values_list[] =  " CROWN_OBS = '1' ";
+			//aviLoc - or 'Pit is near avalanche at what point?' Enum 'crown', flank, 'other'
+			if ( isset($node->field_near_avalanche['und'][0]['value']) ){
+				$values_list[] = " aviLoc = '". $node->field_near_avalanche['und'][0]['value'] ."' " ;
+			}
+			
+		
+		}
+	
+		// incline
+		if ( isset($node->field_slope_angle['und'][0]['value']) ){
+		  $values_list[] =  " INCLINE = '" . $node->field_slope_angle['und'][0]['value'] . "' ";
+		}
+		//
+		// winDir
+		if ( isset($node->field_wind_direction['und'][0]['value']) ){
+		  $values_list[] =  " WIND_DIR = '" . $node->field_wind_direction['und'][0]['value']. "' ";
+		}
+		//
+		//skiAreaPit
+		if (isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) && $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == '1' ) {
+			$values_list[] =  " skiAreaPit = '1' ";
+			if ( isset($node->field_pit_is_representative_of_b['und'][0]['value'])  && $node->field_pit_is_representative_of_b['und'][0]['value'] == '1' ){
+				$values_list[] = " bcPit = '1' ";
+			}
+		}
+		//
+		// testpit
+		//
+		if(	isset($node->field_practice_pit['und'][0]['value']) && $node->field_practice_pit['und'][0]['value'] == 1  ) {
+		  $values_list[] =  " TEST_PIT = 1 ";
+	  }
+		//
+		// Air Temp
+		if(	isset($node->field_air_temp['und'][0]['value'])  ) {
+		  $values_list[] =  " AIR_TEMP = '".  $node->field_air_temp['und'][0]['value'] . "' ";
+	  }
+
+		//
+		//windspeed
+		$wind_speed_labels = array('calm'=> 'C', 'moderate'=>'M' , 'light' => 'L', 'strong' => 'S', 'gale' => 'X');
+		if ( isset($node->field_wind_speed['und'][0]['value']) ){
+		  $values_list[] = " WIND_SPEED = '".  $wind_speed_labels[ $node->field_wind_speed['und'][0]['value'] ] . "' " ;
+	  }
+		//
+		// aspect
+		if ( isset($node->field_aspect['und'][0]['value'])  ){
+		  $values_list[] = " ASPECT = '" . $node->field_aspect['und'][0]['value'] . "' ";
+	  }
+		//
+		// skiBoot   - Surface Penetration  
+		// set whether dki or boot penetration is used; and identify the value of each
+
+		if ( !isset($node->field_surface_penetration['und'][0]['value']) ){
+			
+		}elseif($node->field_surface_penetration['und'][0]['value'] == 'boot' ){
+			$values_list[] = " skiBoot = 'foot' ";
+			if ( isset($node->field_boot_penetration_depth['und'][0]['value']  ) ){
+			  $values_list[] = " surfacePen = ". $node->field_boot_penetration_depth['und'][0]['value'] ." ";
+			}
+		}elseif($node->field_surface_penetration['und'][0]['value'] == 'ski' ){
+			$values_list[] = " skiBoot = 'ski' ";
+			
+			if (isset($node->field_ski_penetration['und'][0]['value']  ) ){
+				$values_list[] =  " surfacePen = " . $node->field_ski_penetration['und'][0]['value']." "  ;
+			}
+		}
+		
+
+		//
+		//  measureFrom
+				if (isset($node->field_depth_0_from['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top' ) {
+			$values_list[] = " measureFrom = 'top' ";
+		}else{
+			$values_list[] = " measureFrom = 'bottom' ";
+			
+		}
+		
+		//
+		// Sky coverage
+		//
+		if (isset($node->field_sky_cover['und'][0]['value'])){
+			$values_list[] = " SKY_COVER = '". $node->field_sky_cover['und'][0]['value'] ."' ";
+		}
+		//
+		//  Wind Loading
+		//
+		if (isset ( $node->field_wind_loading['und'][0]['value'])){
+		  $values_list[] = " WINDLOAD = '".  $node->field_wind_loading['und'][0]['value'] ."' ";
+		}
+		//
+		//  heightof Snowpack
+		//
+		if (isset ( $node->field_total_height_of_snowpack['und'][0]['value'])){
+			$values_list[] =  " heightOfSnowpack = '" . $node->field_total_height_of_snowpack['und'][0]['value'] . "' ";
+		}
+		//
+		//  Precipitation
+		//
+		if ( isset ( $node->field_precipitation['und'][0]['value']) ){
+			$values_list[] = " PRECIP = '" . $node->field_precipitation['und'][0]['value']. "' ";
+		}
+
+		//
+		//  Serial number - must be unique to this pit
+		//  To maintain continuity with the desktop app, it should be username + timestamp ( unix, w/ milliseconds) of posting the item
+		//  php microtime won't work here; we jsut use a millisecond timestamp padded with 0
+		//
+		$account = user_load($node->uid);
+		$values_list[] = " LOCAL_SERIAL = 'drupal-nid-".$node->nid ."-". $node->created . "000' ";
+		//
+		//  version - this will include drupal bld number ( starting at 7.5x ) and then also include the snowpilot.module version, and the browser type and version (similar to desktop app)
+		//  I don't think browser type is directly supported within drupal, need browsecap module (?)
+		//
+		$snowpilot_version = '0.1'; // this will need to be read from the module version eventually
+		$values_list[] = " PLATFORM = '" .VERSION.'-'.$snowpilot_version."' " ; 
+		
+		//
+		// Pit Notes- a potentially long text field, with wierd foregin characters and illegal characters
+		//
+		if ( isset( $node->body['und'][0]['safe_value'])){
+			$values_list[] =  " pitNotes = '" . $node->body['und'][0]['safe_value'] . "' ";
+		}
+		// Snowpilot name: User; drupal object: account
+		//
+		$values_list[] = " USERNAME = '" . str_replace( "'" , "/'", $account->name ) . "' ";
+		//
+		//  date of node submission becomes node created date.
+		//
+		$values_list[] = " OBS_DATE = '" . substr(date( 'c', $node->created), 0, 10) ."' ";
+		//
+	
+		$values_list[] = " OBS_DATETIME = '".  	$node->field_date_time['und'][0]['value'] . "'  ";
+		
+		//
+		// TIMESTAMP is node changed date and time, to comply with historical behavior
+		$values_list[] =  " TIMESTAMP = '" . substr(date( 'c', $node->changed), 0 , 19). "' ";
+		
+		$unit_prefs = snowpilot_unit_prefs_get($node, 'node');
+		//
+		//  share
+		//   this needs to become trinary, not just boolean
+		$share = ($node->field_snowpit_visibility['und'][0]['value'] == 'public') ? '1' : $node->field_snowpit_visibility['und'][0]['value'];
+		$values_list[] = " SHARE = '". $share . "' " ;
+
+		//
+		// prof - professional checkbox
+		//
+		if ( isset( $account->field_professional['und'][0]['value'] ) ){
+		  $values_list[] = " prof = '" . $account->field_professional['und'][0]['value'] . "' ";
+	  }
+		//
+		// affil - Affilliation
+		//
+		if (isset ($account->field_professional_affiliation['und'][0]['tid'])){
+		  $values_list[] = " Organization = '" . taxonomy_term_load($unit_prefs['field_org_ownership'])->name . "' " ;
+		}
+
+		//  Location
+
+		// whether Lat long is measure N or S of equator; E or W of 0 degrees
+		$values_list[] = " NORTH = " . ($unit_prefs['latType'] == 'N' ? '1' : '0');
+		$values_list[] = " WEST = " . ($unit_prefs['longType'] == 'W' ? '1' : '0');
+		
+
+		//
+		// Latitude
+		if ( isset( $node->field_latitude['und'][0]['value'] )){
+		  $values_list[] =  " LAT = " . $node->field_latitude['und'][0]['value']." ";
+		}
+		//
+		// Longitude
+		if ( isset( $node->field_longitude['und'][0]['value'] )){
+			$values_list[] = " LONGITUDE = '" . $node->field_longitude['und'][0]['value'] . "' ";
+		
+			
+		}
+		//
+		// Elevation
+		if (isset($node->field_elevation['und'][0]['value'])){
+			$values_list[] = " ELEVATION =  '".$node->field_elevation['und'][0]['value'] . "' ";
+		}
+		//
+		// State
+		if ( isset( $unit_prefs['state'] )){			
+			$values_list[] = " STATE = '". $unit_prefs['state'] . "' ";
+		}
+			
+			
+		//
+		// Range
+		if ( isset( $unit_prefs['range'] )){			
+			$values_list[] = " MTN_RANGE = '". $unit_prefs['range'] . "' ";
+		}
+		//
+		// Name
+		$values_list[] = " PIT_NAME = '" . str_replace( "'" , "\'", $node->title) . "' ";
+	
+		//	
+    //		Node _ID
+		$values_list[] = " node_id = '". $node->nid ."' ";
+		//
+		//  Additional fields
+		//
+		
+		$values_list[] = " PIT_XML = '". str_replace("'", "\'", snowpilot_node_write_pitxml($node, 'full' )) ."' ";
+ 
+		
+		if ( isset( $node->field_wind_loading['und'][0]['value']) && $node->field_wind_loading['und'][0]['value'] == 'yes'){
+			$values_list[] = " WINDLOADING = 1 ";
+		}		
+	
+		$values_list[] = " elvUnits = '". $unit_prefs['elvUnits'] ."' ";
+		$values_list[] = " tempUnits = '". $unit_prefs['tempUnits'] ."' ";
+		$values_list[] = " depthUnits = '". $unit_prefs['depthUnits'] ."' ";
+		
+	
+		
+		$insert_query = "INSERT INTO PIT_TABLE SET ".implode(',', $values_list);
+	  db_set_active('avscience_db');
+		$insert_results = db_query($insert_query);
+		dsm($insert_results);
+		$extract_serial_query = "SELECT SERIAL FROM PIT_TABLE WHERE LOCAL_SERIAL = 'drupal-nid-".$node->nid ."-". $node->created . "000' ";
+		$serial_results = db_query($extract_serial_query)->fetchField();
+		db_set_active('default');
+	//	watchdog('snowpilot', "Snowpit insert results: ". var_export($insert_results, TRUE ));
+
+		return $serial_results;
+
+}
+
 //
 // borrowed from http://php.net/manual/en/function.floatval.php
 // $num is a string
@@ -2504,4 +2831,5 @@ function ToLL($north, $east, $utmZone)
   // Returns a PC_LatLon object
   return $PC_LatLon;
 }
+
 

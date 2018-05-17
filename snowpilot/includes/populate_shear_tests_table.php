@@ -2,39 +2,41 @@
 include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
 use \ForceUTF8\Encoding;
 function populate_shear_tests_table($SERIAL){
-
+	global $user;
+	$account = user_load($user->uid);
+	if ( !(user_has_role( 3, $account ))  ){ 
+		return MENU_ACCESS_DENIED;
+	}
+	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
+	
 	$result_code = array('continue'=> TRUE, 'message' => 'default message tests');
 	if ( is_null( $SERIAL) ) {
     $result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' No serial given.');
 	}else{
-		$link = mysqli_connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_avscience") ;
 
 		//var_dump($link);
 		//consultation:
+	  db_set_active('avscience_db');
+				$query = "SELECT SERIAL,PIT_XML
+					        FROM `PIT_TABLE`   
+				          WHERE SERIAL = ".$SERIAL or die("Error in the consult.." . mysqli_error($link));
 
-		$query = "SELECT SERIAL,PIT_XML
-			FROM `PIT_TABLE` WHERE SERIAL = " . $SERIAL ;
-
-		//execute the query.
-
-		$result = mysqli_query($link, $query);
-
+				$result = db_query( $query);
+			  db_set_active();
+			
 		//display information:
 		$shear_test_attributes = array('code', 'dateString','comments', 'sdepth', 
 		'depthUnits',  'quality', 'ecScore', 'numberOfTaps', 'ctScore', 'score', 's','releaseType',
 		'lengthOfColumn', 'fractureCat'  , 'lengthOfCut');
 
 	
-		while($row = mysqli_fetch_array($result)) {
+		while($row = $result->fetch() ) {
 
 			$doc = new DOMDocument();
 		
-			$corrected_encoding = Encoding::toUTF8($row['PIT_XML']);
-			
-			$corrected_encoding = str_replace('grainSuffix="<"' ,'grainSuffix="\<"' , $corrected_encoding);
-			$corrected_encoding = str_replace('grainSuffix=">"' ,'grainSuffix="\>"' , $corrected_encoding);
-			$corrected_encoding = str_replace('sky < 2/8 covered' ,'SCT' , $corrected_encoding);
-			$corrected_encoding = str_replace('Snow < 0.5 cm/hr' ,'S-1' , $corrected_encoding);
+			$corrected_encoding = Encoding::toUTF8($row->PIT_XML);
+
 			if ($corrected_encoding == '' ) { /*var_dump($row['PIT_XML'] );*/ continue;}
 			if ($doc->loadXML($corrected_encoding)) {
 				$shear_tests = $doc->getElementsByTagName('Shear_Test_Result');
@@ -42,7 +44,7 @@ function populate_shear_tests_table($SERIAL){
 				foreach($shear_tests as $shear_test){	
 					
 					$values_list = array();		
-					$values_list[] = " pid = ".$row['SERIAL'];
+					$values_list[] = " pid = ".$row->SERIAL;
 					foreach ($shear_test_attributes as $attr){
 						//
 						//  This block funnells both ecScore and number of Taps fields into the ecScore field.
@@ -66,21 +68,17 @@ function populate_shear_tests_table($SERIAL){
 							$values_list[] =  $attr. " = '". $shear_test->getAttribute($attr)."' " ; 				
 						}
 					}
+				  db_set_active('avscience_db');
 				
-					$query2 = "SELECT id FROM shear_tests where `pid` = " .$SERIAL ;
-				
-					$result2 = mysqli_query($link, $query2);
-					$id_results = 0; while ( mysqli_fetch_assoc($result2) ) { $id_results++; }
-				
-					if (  $id_results < $shear_tests->length ){
-						$query3 = "INSERT INTO shear_tests SET ". implode(', ', $values_list );
-						$result3 = mysqli_query($link, $query3);		
-						if($result3){
-					    $result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' Successfully added shear test.');	
-						}	else { $result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' Problem with the SQL insert statement');	}
-					} else {
-						$result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.': shear tests exist for this snowpit.' );
-					}
+					$query3 = "INSERT INTO shear_tests SET ". implode(', ', $values_list );
+          $result3 = db_query($query3);
+					if($result3){
+				      $result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' Successfully added shear test.');	
+					}	else { 
+						$result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' Problem with the SQL insert statement');	
+				  }
+				  db_set_active('default');
+					
 				}
 			} 	
 		}

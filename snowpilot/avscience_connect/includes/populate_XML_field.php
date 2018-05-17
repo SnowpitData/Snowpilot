@@ -50,7 +50,7 @@ function avscience_connect_fetch_kc_serial($SERIAL){
 	$destination_link = mysqli_connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_avscience") ;
 	$query0 = 'SELECT LOCAL_SERIAL FROM PIT_TABLE WHERE SERIAL = '. $SERIAL ;
 	if( $result0 = mysqli_query($destination_link, $query0) ){
-		if ( $row0['LOCAL_SERIAL'] = '' ){
+		if ( $row0['LOCAL_SERIAL'] == '' ){
 			watchdog('avscience_connect', 'local_serial value is not set for this snowpit: '.$SERIAL );
 			dsm( 'local_serial value is not set for this snowpit: '.$SERIAL. ' , using original SERIAL value w/o lookup.');
 			return $SERIAL;

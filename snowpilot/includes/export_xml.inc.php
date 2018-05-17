@@ -49,7 +49,7 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 			if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1') { 
 			
 				$iLayerNumber->value = $iLayerNumber_value ; 
-				$iDepth->value = 	($layer->field_concern['und'][0]['value'] == 'top') ? $layer->field_height['und'][0]['value'] : $node->field_bottom_depth['und'][0]['value'] ;
+				$iDepth->value = 	($layer->field_concern['und'][0]['value'] == 'top') ? $layer->field_height['und'][0]['value'] : $layer->field_bottom_depth['und'][0]['value'] ;
 				break; 
 			}else{
 				$iLayerNumber_value++;

@@ -1,11 +1,9 @@
 <?php
 
-
-include_once('includes/populate_layers_table.php');
-include_once('includes/populate_shear_tests_table.php');
 include_once('includes/populate_XML_field.php');
 include_once('includes/populate_pit_fields.php');
 include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
+
 use \ForceUTF8\Encoding;
 
 error_reporting(E_ALL);
@@ -60,6 +58,12 @@ function avscience_query_title(){
 }
 
 function snowpilot_query_page(){
+	global $user;
+	$account = user_load($user->uid);
+	
+	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
+		return MENU_ACCESS_DENIED;
+	}
 	drupal_set_title('Online Snowpits query page');
 	$output = 'This page is intended for snow scientists to query the snowpits that have been added to the online database. 
 		This page does not query for snowpits entered via the installed application, for that go to the <a href ="/avscience-query">AvScience Query page</a> '.
@@ -68,7 +72,12 @@ function snowpilot_query_page(){
 }
 
 function avscience_query_page(){
+	global $user;
+	$account = user_load($user->uid);
 	
+	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
+		return MENU_ACCESS_DENIED;
+	}
 	$output = avscience_query_output();
 	return t($output);
 }
@@ -79,6 +88,10 @@ function avscience_query_page(){
 
 
 function snowpilot_connect_page (){
+	global $user;
+	$account = user_load($user->uid);
+	
+	if ( !(user_has_role( 3, $account ))){ return MENU_ACCESS_DENIED ;}
 	$output = 'Introductory text';
 	$new_pits_list = array();
 	$new_pits_list = snowpilot_avscience_fetch_new_pits();
@@ -235,52 +248,6 @@ function avscience_is_drupal_pit($SERIAL){
 	}
 }
 
-
-function populate_snowpit_image($SERIAL){
-	$critical = FALSE; 
-
-	$message = 'default image message';
-	
-	$img_url = '/sites/default/files/avscience-profiles/graph-serial-'.$SERIAL. '.jpg';
-	if( !file_exists( DRUPAL_ROOT. $img_url )){	
-    $node_id = avscience_is_drupal_pit( $SERIAL ) ;
-	  if ( $node_id > 0 ){  // it is a drupal-genrated snowpit, copy over the existing image
-			$orig_img_url = '/sites/default/files/snowpit-profiles/graph-'.$node_id. '.jpg';
-			//$node = node_load( $match[1] );
-			$_image = fopen( DRUPAL_ROOT.$orig_img_url , 'rb');
-	  	$img_src = fread( $_image, filesize(DRUPAL_ROOT.$orig_img_url));
-			fclose($_image);
-			
-	  }else{  // not a drupal snowpit, get the image from kc server
-			$kc_serial = avscience_connect_fetch_kc_serial($SERIAL);
-			
-			// temporarily commenting this out so that we don't ping the kc server for images too much
-			//$img_src = file_get_contents( "http://www.kahrlconsulting.com:8084/avscience/PitServlet?TYPE=PITIMAGE&SERIAL=".$kc_serial );
-			$img_src = '';
-		}
-		
-		$local_image = fopen( DRUPAL_ROOT.$img_url , 'w');
-		if ( $local_image ){ 
-			fwrite($local_image, $img_src);
-		  sleep(1);
-			
-		  fclose($local_image);
-		}else{
-			$critical = TRUE; 
-			$message = 'Could not open connection to kahlrconsulting server for SERIAL: '.$SERIAL;
-		}
-		if ( !$critical ){
-			$pre_img = imagecreatefromjpeg( DRUPAL_ROOT.$img_url);
-			$new_img = imagecreatetruecolor(466,613);
-			$result = imagecopy($new_img, $pre_img, 0,0, 14,140,466,613 );
-			$success = imagejpeg( $new_img , DRUPAL_ROOT. '/sites/default/files/avscience-profiles/layers/layers-serial-'.$SERIAL. '.jpg');
-			if ( $success ) $message = 'All images created successfully for '.$SERIAL;
-		}
-		
-	}
-	return array( 'continue' => !($critical) , 'message' => $message );
-}
-
 function snowpilot_avscience_fetch_new_pits(){
   $older_snowpits_link = new mysqli();
 	$current_snowpits_link = new mysqli();
@@ -326,617 +293,21 @@ function snowpilot_avscience_fetch_new_pits(){
 	return array( 'all_pits' => $all_pits_list, 'dupe_pits' => $dupe_pits, 'new_pits' => $new_pits);
 }
 
-/*
-//  This function submits to the avscience database  based on the node information passed to it. should be compliant with the snowpilot datamodel.
-//
-//
-*/
-function snowpilot_node_avscience_save_pit($node){
-	$xml_filename = '/sites/default/files/snowpit-xml/node-'.$node->nid.'.xml';
-	
-	if ( !file_exists(DRUPAL_ROOT. $xml_filename)){
-		watchdog('snowpilot', "Snowpit values list is being prepared");
-		$values_list = array();
-		
-		//  $values_list[] =  ." = '" . str_replace( "'" , "''", $attr_val). "' ";
-		$snowpilot_xmldoc = new DOMDocument('1.0', 'UTF-8');
-		$snowpilot_PitCore = $snowpilot_xmldoc->createElement("Pit_Observation"); $snowpilot_xmldoc->appendChild($snowpilot_PitCore);
-		$snowpilot_User = $snowpilot_xmldoc->createElement("User"); $snowpilot_PitCore->appendChild($snowpilot_User);
-		$snowpilot_Location = $snowpilot_xmldoc->createElement("Location"); $snowpilot_PitCore->appendChild($snowpilot_Location);
-		// ...but we have multiple layers
-	  // Likewise, multiple shear test results
-		$snowpilot_Density = $snowpilot_xmldoc->createElement("Density_Profile");
-		$snowpilot_Temp = $snowpilot_xmldoc->createElement("Temperature_Profile");
-	
-		//PitCore Attributes: activities, aviLoc,iLayerNumber, bld, stability,avipit,incline,winDir,skiAreaPit ,bcPit, testPit,windspeed,aspect,skiBoot,measureFrom,sky,sufacePen, windloading,heightOfSnowpack,precip , serial, version,pitNotes,crownObs,timestamp,iDepth
-			
-	  $values_list[] =  " ACTIVITIES = '" . _generate_specifics_string($node). "' ";
-		//aviLoc - or 'Pit is near avalanche at what point?'
-		$values_list[] = " aviLoc = ". isset($node->field_near_avalanche['und'][0]['value']) ? "'".$node->field_near_avalanche['und'][0]['value']."'" : "''" ;
-		
-		// iLayerNumber
-		// this implementation assumes that the layers are in numerical order from top down; item_id is a unique id in field collections, can't use it.
-		$ids = array();
-		foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
-		$all_layers = field_collection_item_load_multiple($ids);
-		$iLayerNumber_value = 1;	
-		foreach($all_layers as $x => $layer){
-			if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1') { 
-			
-				$values_list[] =  " iDepth = '" . ($layer->field_concern['und'][0]['value'] == 'top') ? $layer->field_height['und'][0]['value'] : $node->field_bottom_depth['und'][0]['value'] . "' " ;
-			  $values_list[] =  " iLayerNumber = '" . $iLayerNumber_value. "' ";
-				break; 
-			}else{
-				$iLayerNumber_value++;
-			}
-		}
 
-		//
-		//PLATFORM is the database term for build number from the snowpilot desktop app. for this case, we will use drupal version 7.x
-		
-		$values_list[] =  " PLATFORM = '" . VERSION. "' ";
-		//
-		// stability
-
-		$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope');
-		$values_list[] =  " STABILITY = '" . isset($node->field_stability_on_similar_slope['und'][0]['value']) ? $similar_stability[0]['#markup'] : "" . "' ";
-
-		//
-		// aviPit
-		//
-		$AviPit_value = (isset($node->field_adjacent_to_avy['und'][0]['value'] ) && $node->field_adjacent_to_avy['und'][0]['value'] == 1  ) ? '1' : '0';
-		$values_list[] =  " aviPit = '" . $AviPit_value. "' ";
-		//$values_list[] =  " crownObs = '" . $AviPit_value. "' ";
-		$values_list[] =  " CROWN_OBS = '" . $AviPit_value. "' ";
-		
-
-	  // CrownObs is a synonym for aviPit in the avscience_db
-		//
-		//
-		//  aviLoc - location of pit relative to the Avalanche: crown, flank, none ( unlike desktop app, this will only be populated in the case of aviPit == true )
-		//
-		if (isset($node->field_adjacent_to_avy['und'][0]['value']) && ($node->field_adjacent_to_avy['und'][0]['value'] == 1) && isset($node->field_near_avalanche['und'][0]['value'] ) ){
-			$values_list[] =  " aviLoc = '" . $node->field_near_avalanche['und'][0]['value']. "' ";
-		}
-	
-		// incline
-		if ( isset($node->field_slope_angle['und'][0]['value']) ){
-		  $values_list[] =  " INCLINE = '" . $node->field_slope_angle['und'][0]['value'] . "' ";
-		}
-		//
-		// winDir
-		if ( isset($node->field_wind_direction['und'][0]['value']) ){
-		  $values_list[] =  " WIND_DIR = '" . $node->field_wind_direction['und'][0]['value']. "' ";
-		}
-		//
-		//skiAreaPit
-		if (isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) && $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == 1 ) {
-			$values_list[] =  " skiAreaPit = '" . $node->field_pit_dug_in_a_ski_area['und'][0]['value']. "' ";
-			
-		}
-		//
-		//
-		// bcPit        Trinary: true , false ,or '' unset
-		// we leavre unset if the 'skiAreaPit' variable is unset, or false
-	
-		if ( !isset($node->field_pit_is_representative_of_b['und'][0]['value']) || !isset($node->field_pit_dug_in_a_ski_area['und'][0]['value']) || $node->field_pit_dug_in_a_ski_area['und'][0]['value'] == 0){
-			
-		}elseif($node->field_pit_is_representative_of_b['und'][0]['value'] == '1' ){
-			$values_list[] = " bcPit = '1' ";
-		}else{
-			$values_list[] = " bcPit = '0' ";
-		}
-		//
-		// testpit
-		//
-		$values_list[] =  " TEST_PIT = '" . (	isset($node->field_practice_pit['und'][0]['value']) && $node->field_practice_pit['und'][0]['value'] == 1  ) ? '1' : '0' . "' ";
-		//
-		//windspeed
-		$wind_speed = field_view_field('node', $node, 'field_wind_speed');
-		$values_list[] = " WIND_SPEED = '". isset($node->field_wind_speed['und'][0]['value'])  ? $wind_speed[0]['#markup'] : ''. "'" ;
-		//
-		// aspect
-/*		$aspect = $snowpilot_xmldoc->createAttribute("aspect");
-		$aspect->value = isset($node->field_aspect['und'][0]['value']) ?  $node->field_aspect['und'][0]['value'] : '' ;
-		$snowpilot_PitCore->appendChild($aspect);
-		//
-		// skiBoot   - Surface Penetration  
-		// set whether dki or boot penetration is used; and identify the value of each
-		$skiBoot = $snowpilot_xmldoc->createAttribute("skiBoot");
-		$surfacePen = $snowpilot_xmldoc->createAttribute("surfacePen");
-		if ( !isset($node->field_surface_penetration['und'][0]['value']) ){
-			$skiBoot->value = '';
-		}elseif($node->field_surface_penetration['und'][0]['value'] == 'boot' ){
-			$skiBoot->value = 'boot';
-			$surfacePen->value = isset($node->field_boot_penetration_depth['und'][0]['value']  ) ?
-				$node->field_boot_penetration_depth['und'][0]['value'] : '' ;
-		}else{
-			$skiBoot->value = 'ski';
-			$surfacePen->value = isset($node->field_ski_penetration['und'][0]['value']  ) ?
-				$node->field_ski_penetration['und'][0]['value'] : '' ;
-		}
-		$snowpilot_PitCore->appendChild($skiBoot);
-		$snowpilot_PitCore->appendChild($surfacePen);
-		//
-		//  measureFrom
-		$measureFrom = $snowpilot_xmldoc->createAttribute("measureFrom");
-		$measureFrom->value = (isset($node->field_depth_0_from['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top' ) ? 'top' : 'bottom' ; 
-		$snowpilot_PitCore->appendChild($measureFrom);
-		//
-		// Sky coverage
-		//
-		$skyCoverage = $snowpilot_xmldoc->createAttribute('sky');
-		if (isset($node->field_sky_cover['und'])){
-			$sky_cover = field_view_field('node', $node, 'field_sky_cover'); 
-			$skyCoverage->value = $sky_cover[0]['#markup'];
-		}
-		$snowpilot_PitCore->appendChild($skyCoverage);
-		//
-		//  Wind Loading
-		//
-		$windLoading = $snowpilot_xmldoc->createAttribute('windLoading');
-		if (isset ( $node->field_wind_loading['und'][0]['value'])){
-			$windLoading->value = $node->field_wind_loading['und'][0]['value'];
-		}
-		$snowpilot_PitCore->appendChild($windLoading);
-		//
-		//  heightof Snowpack
-		//
-		$HoSnowpack = $snowpilot_xmldoc->createAttribute('heightOfSnowpack');
-		if (isset ( $node->field_total_height_of_snowpack['und'][0]['value'])){
-			$HoSnowpack->value = $node->field_total_height_of_snowpack['und'][0]['value'];
-		}
-		$snowpilot_PitCore->appendChild($HoSnowpack);
-		//
-		//  Precipitation
-		//
-		$precipitation = $snowpilot_xmldoc->createAttribute('precip');
-		if ( isset ( $node->field_precipitation['und'][0]['value']) ){
-			$precipitation->value = $node->field_precipitation['und'][0]['value'];
-		}
-		$snowpilot_PitCore->appendChild($precipitation);
-
-		//
-		//  Serial number - must be unique to this pit
-		//  To maintain continuity with the desktop app, it should be username + timestamp ( unix, w/ milliseconds) of posting the item
-		//  php microtime won't work here; we jsut use a millisecond timestamp padded with 0
-		//
-		$serial_num = $snowpilot_xmldoc->createAttribute('serial');
-		$account = user_load($node->uid);
-		$serial_num->value = 'drupal'.$account->name . $node->created . '000';
-		$snowpilot_PitCore->appendChild($serial_num);
-		//
-		//  version - this will include drupal bld number ( starting at 7.5x ) and then also include the snowpilot.module version, and the browser type and version (similar to desktop app)
-		//  I don't think browser type is directly supported within drupal, need browsecap module (?)
-		//
-		$web_version = $snowpilot_xmldoc->createAttribute('version');
-		$snowpilot_version = '0.1'; // this will need to be read from the module version eventually
-		$web_version->value = VERSION.'-'.$snowpilot_version ; // and then we'll need to append the browser and OS if we can.
-		$snowpilot_PitCore->appendChild($web_version);
-		//
-		// Pit Notes- a potentially long text field, with wierd foregin characters and illegal characters
-		//
-		$pit_notes = $snowpilot_xmldoc->createAttribute('pitNotes');
-		if ( isset( $node->body['und'])){
-			$pit_notes->value = $node->body['und'][0]['safe_value'];
-		}
-		$snowpilot_PitCore->appendChild($pit_notes);
-		//
-		//  timestamp
-		//
-		$timestamp=$snowpilot_xmldoc->createAttribute('timestamp');
-		$timestamp->value = $node->created . '000';
-		$snowpilot_PitCore->appendChild($timestamp);
-		//
-		// Snowpilot name: User; drupal object: account
-		//
-		$username = $snowpilot_xmldoc->createAttribute('username'); // this doesn't actually exist in the snowpilot data model, but seems good to include
-		$username->value = $account->name;
-		$snowpilot_User->appendChild($username);
-	
-		$unit_prefs = snowpilot_unit_prefs_get($node, 'node');
-	
-		$preferences = array();
-		foreach ( $unit_prefs as $key => $pref){
-			if (substr( $key, 0 ,6 ) != 'field_'){	 
-			 
-		  	$preferences[$key] = $snowpilot_xmldoc->createAttribute( $key );
-		  	$preferences[$key]->value = $pref;
-		  	$snowpilot_User->appendChild($preferences[$key]);
-		  }
-		}
-		//$snowpilot_User->removeChild('range');
-
-		//
-		//  useSymbols (?)
-		//
-		$useSymbols = $snowpilot_xmldoc->createAttribute( 'useSymbols');
-		$useSymbols->value = 'true';
-		$snowpilot_User->appendChild($useSymbols);
-	
-		//
-		// full name
-		//
-		$fullName = $snowpilot_xmldoc->createAttribute('name');
-		$firstName = $snowpilot_xmldoc->createAttribute('first');
-		$lastName = $snowpilot_xmldoc->createAttribute('last');
-		$firstName->value = isset($account->field_first_name['und']) ? $account->field_first_name['und'][0]['safe_value'] : '' ;
-		$lastName->value = isset( $account->field_last_name['und'] ) ? $account->field_last_name['und'][0]['safe_value'] : '' ;
-		$space = ($firstName->value <> '' && $lastName->value <> '') ? ' ' : '';
-		$fullName->value = $firstName->value . $space . $account->field_last_name['und'][0]['safe_value'];
-	
-	
-		$snowpilot_User->appendChild($firstName);
-		$snowpilot_User->appendChild($lastName);
-		$snowpilot_User->appendChild($fullName);
-	
-	
-		//
-		//  share
-		//   this needs to become trinary, not just boolean
-		$pitShare = $snowpilot_xmldoc->createAttribute('share');
-		$pitShare->value = ($node->field_snowpit_visibility['und'][0]['value'] == 'public') ? 'true' : $node->field_snowpit_visibility['und'][0]['value'];
-		$snowpilot_User->appendChild($pitShare);
-		//
-		//  phone of submitter
-		//
-		$userPhone = $snowpilot_xmldoc->createAttribute('phone');
-		$userPhone->value = $account->field_phone['und'][0]['value'];
-		$snowpilot_User->appendChild($userPhone);
-	
-		//
-		// prof - professional checkbox
-		//
-		$userProf = $snowpilot_xmldoc->createAttribute('prof');
-		$userProf->value = (isset( $account->field_professional['und'][0]['value'] ) && $account->field_professional['und'][0]['value'] == '1') ? 'true' : 'false';
-		$snowpilot_User->appendChild($userProf);
-	
-		//
-		// email
-		//
-		$userEmail = $snowpilot_xmldoc->createAttribute('email');
-		$userEmail->value = $account->mail;
-		$snowpilot_User->appendChild($userEmail);
-	
-		//
-		// affil - Affilliation
-		//
-		$profAffil = $snowpilot_xmldoc->createAttribute('affil');
-		$profAffil->value = isset ($account->field_professional_affiliation['und'][0]['tid']) ? taxonomy_term_load($account->field_professional_affiliation['und'][0]['tid'])->name : '';
-		$snowpilot_User->appendChild($profAffil);
-		//
-		//  Location Element
-		//
-	
-		// ID is required, even if blank
-		//
-		$id = $snowpilot_xmldoc->createAttribute('id');
-		$snowpilot_Location->appendChild($id);
-		// Coordinate type: UTM or Lat / Long
-		//
-	
-		$coordType = $snowpilot_xmldoc->createAttribute('type');
-		$coordType->value = ($unit_prefs['coordType'] == 'UTM' ) ? 'UTM' : 'LATLONG';
-		$snowpilot_Location->appendChild($coordType);
-	
-	
-		//zone
-		$UTMzone = $snowpilot_xmldoc->createAttribute('zone');
-		$UTMzone->value = $unit_prefs['zone'];
-		$snowpilot_Location->appendChild($UTMzone);
-	
-		//
-		// whether Lat long is measure N or S of equator; E or W of 0 degrees
-		$nstype = $snowpilot_xmldoc->createAttribute('ns');
-		$nstype->value = $unit_prefs['latType'];
-		$snowpilot_Location->appendChild($nstype);
-	
-		$ewtype = $snowpilot_xmldoc->createAttribute('ew');
-		$ewtype->value = $unit_prefs['longType'];
-		$snowpilot_Location->appendChild($ewtype);
-	
-		//
-		//  East and North values for utm coordtype
-		//
-		$location_east = $snowpilot_xmldoc->createAttribute('east');
-		$location_east->value = $unit_prefs['field_east'];
-		$snowpilot_Location->appendChild($location_east);
-	
-		$location_north = $snowpilot_xmldoc->createAttribute('north');
-		$location_north->value = $unit_prefs['field_north'];
-		$snowpilot_Location->appendChild($location_north);
-	
-	
-	
-		//
-		// Latitude
-		$latitude = $snowpilot_xmldoc->createAttribute('lat');
-		$latitude->value = $unit_prefs['field_latitude'];
-		$snowpilot_Location->appendChild($latitude);
-		//
-		// Longitude
-		$longitude = $snowpilot_xmldoc->createAttribute('longitude');
-		$longitude->value =  $unit_prefs['field_longitude'];
-		$snowpilot_Location->appendChild($longitude);
-		//
-		// Elevation
-		$elevation = $snowpilot_xmldoc->createAttribute('elv');
-		$elevation->value = isset($node->field_elevation['und'][0]['value']) ? $node->field_elevation['und'][0]['value'] : '';
-		$snowpilot_Location->appendChild($elevation);
-		//
-		// State
-	  $location_state = $snowpilot_xmldoc->createAttribute('state');
-		$location_state->value = $unit_prefs['state'];
-		$snowpilot_Location->appendChild($location_state);
-		//
-		// Range
-		$location_range = $snowpilot_xmldoc->createAttribute('range');
-		$location_range->value = $unit_prefs['range'];
-		$snowpilot_Location->appendChild($location_range);
-		//
-		// Name
-		$location_name = $snowpilot_xmldoc->createAttribute('name');
-		$location_name->value = $node->title;
-		$snowpilot_Location->appendChild($location_name);
-	
-		//	
-		$counter = 1;
-	  foreach($all_layers as $x => $layer){
-			$snowpilot_Layer = $snowpilot_xmldoc->createElement("Layer"); 
-		
-			// grain size units
-		  $gsu1 = $snowpilot_xmldoc->createAttribute('grainSizeUnits1');
-		  $gsu2 = $snowpilot_xmldoc->createAttribute('grainSizeUnits2');
-		
-			$gsu2->value = $gsu1->value = 'mm';
-			$snowpilot_Layer->appendChild($gsu1);
-			$snowpilot_Layer->appendChild($gsu2);
-			//
-			//  grain size
-			$gs1 = $snowpilot_xmldoc->createAttribute('grainSize');
-			$gs2 = $snowpilot_xmldoc->createAttribute('grainSize1');	
-			$gs1->value = isset($layer->field_grain_size['und'][0]['value']) ? $layer->field_grain_size['und'][0]['value'] : '';
-			$gs2->value = isset($layer->field_grain_size_max['und'][0]['value']) ? $layer->field_grain_size_max['und'][0]['value'] : '';
-			$snowpilot_Layer->appendChild($gs1);
-			$snowpilot_Layer->appendChild($gs2);	
-			//
-			// grain type
-			$gt1 = $snowpilot_xmldoc->createAttribute('grainType');
-			$gt2 =  $snowpilot_xmldoc->createAttribute('grainType1');
-			$gt1->value = isset($layer->field_grain_type['und'][0]['tid']) ? htmlentities(taxonomy_term_load($layer->field_grain_type['und'][0]['tid'])->name ): '';
-			$gt2->value = isset($layer->field_grain_type_secondary['und'][0]['tid']) ? htmlentities(taxonomy_term_load($layer->field_grain_type_secondary['und'][0]['tid'])->name) : '';
-			$snowpilot_Layer->appendChild($gt1);
-			$snowpilot_Layer->appendChild($gt2);
-			//
-			// hardness
-			$hness1 = $snowpilot_xmldoc->createAttribute('hardness1');
-			$hness2 = $snowpilot_xmldoc->createAttribute('hardness2');
-			$hness1->value = isset($layer->field_hardness['und'][0]['value']) ? $layer->field_hardness['und'][0]['value'] : '';
-			$hness2->value = isset($layer->field_hardness2['und'][0]['value']) ? $layer->field_hardness2['und'][0]['value'] : '';
-		
-			$snowpilot_Layer->appendChild($hness1);
-			$snowpilot_Layer->appendChild($hness2);
-			//
-			// LayerNumber
-			$layer_num = $snowpilot_xmldoc->createAttribute('layerNumber');
-			$layer_num->value = $counter;
-		
-			$snowpilot_Layer->appendChild($layer_num);
-			//
-			// water content
-			$waterContent = $snowpilot_xmldoc->createAttribute('waterContent');
-			$waterContent->value = isset($layer->field_water_content['und'][0]['value']) ? $layer->field_water_content['und'][0]['value'] : '';
-			$snowpilot_Layer->appendChild($waterContent);
-		
-			//
-			//startDepth
-			$startDepth = $snowpilot_xmldoc->createAttribute('startDepth');
-			$startDepth->value = isset($layer->field_height['und'][0]['value']) ? $layer->field_height['und'][0]['value'] : '';
-			$snowpilot_Layer->appendChild($startDepth);
-			//
-			//endDepth
-			$endDepth = $snowpilot_xmldoc->createAttribute('endDepth');
-			$endDepth->value = isset($layer->field_bottom_depth['und'][0]['value']) ? $layer->field_bottom_depth['und'][0]['value'] : '';
-			$snowpilot_Layer->appendChild($endDepth);
-			//
-			// multiples ...
-			// We make a little array and loop through it so this is easier.
-			$multiples = array ('multipleHardness' => 'field_use_multiple_hardnesses' ,
-			  'multipleGrainType' => 'field_use_multiple_grain_type',
-			  'multipleGrainSize' => 'field_use_multiple_grain_size');
-			foreach ( $multiples as $key => $multiple ){
-				$multi_val[$multiple] = $snowpilot_xmldoc->createAttribute($key);
-				$layer_multiple = $layer->$multiple;
-				//dsm($layer_multiple['und']);
-				$multi_val[$multiple]->value =  ( isset( $layer_multiple['und'][0]['value'] ) && $layer_multiple['und'][0]['value'] == 1 ) ? 'true' : 'false';
-				$snowpilot_Layer->appendChild($multi_val[$multiple]);
-			}
-		
-		
-			$snowpilot_PitCore->appendChild($snowpilot_Layer);
-			//
-			$counter++;
-		}
-		$ids = array();
-		if ( isset( $node->field_test['und'] ) ){
-		  foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
-		  $shear_tests = field_collection_item_load_multiple($ids);
-	  }
-		if ( count($shear_tests) ){
-			foreach ( $shear_tests as $shear_test ){
-				$snowpilot_ShearTest = $snowpilot_xmldoc->createElement("Shear_Test_Result");
-				//
-				// code
-				$test_code = $snowpilot_xmldoc->createAttribute('code');
-				$test_code->value = $shear_test->field_stability_test_type['und'][0]['value'];
-				$snowpilot_ShearTest->appendChild($test_code);
-				//
-				// sdepth
-				$sdepth = $snowpilot_xmldoc->createAttribute('sdepth');
-				$sdepth->value = isset($shear_test->field_depth['und'][0]['value']) ? $shear_test->field_depth['und'][0]['value'] : '';
-				$snowpilot_ShearTest->appendChild($sdepth);
-				//
-				//
-				//depthUnits
-				$depthUnits = $snowpilot_xmldoc->createAttribute('depthUnits');
-				$depthUnits->value = $unit_prefs['depthUnits'];
-				$snowpilot_ShearTest->appendChild($depthUnits);
-				//
-				// score
-				$test_score = $snowpilot_xmldoc->createAttribute('score');
-				$test_score->value = isset($shear_test->field_stability_test_score['und'][0]['value']) ? $shear_test->field_stability_test_score['und'][0]['value'] : '';
-				$snowpilot_ShearTest->appendChild($test_score);
-		
-				//
-				// ecScore
-				$ecScore = $snowpilot_xmldoc->createAttribute('ecScore');
-				$ecScore->value = isset($shear_test->field_ec_score['und'][0]['value']) ? $shear_test->field_ec_score['und'][0]['value'] : '';
-				$snowpilot_ShearTest->appendChild($ecScore);
-		
-				//
-				// quality
-				$shear_quality = $snowpilot_xmldoc->createAttribute('quality');
-				$shear_quality->value  = isset($shear_test->field_shear_quality['und'][0]['value']) ? $shear_test->field_shear_quality['und'][0]['value'] : '';
-				$snowpilot_ShearTest->appendChild($shear_quality);
-		
-				//
-				// dateSTring
-				$dateString = $snowpilot_xmldoc->createAttribute('dateString');
-				$dateString->value = 	isset($node->field_date_time['und'][0]['value']) ? date( 'm/d/Y' , strtotime($node->field_date_time['und'][0]['value'])) : '';
-				$snowpilot_ShearTest->appendChild($dateString);
-		
-				//
-				// numberOfTaps
-				$numTaps = $snowpilot_xmldoc->createAttribute('numberOfTaps');
-		
-				if ( ($shear_test->field_stability_test_type['und'][0]['value'] == 'ECT')){
-				  $numTaps->value = $ecScore->value ;
-			  }elseif ($shear_test->field_stability_test_type['und'][0]['value'] == 'CT' ){
-					$numTaps->value = isset($shear_test->field_ct_score['und'][0]['value'] ) ? $shear_test->field_ct_score['und'][0]['value']  : '';
-				}else{ $numTaps->value = ''; }
-				$snowpilot_ShearTest->appendChild($numTaps);
-		
-		
-				// fractureCat
-				$fractureCat = $snowpilot_xmldoc->createAttribute('fractureCat');
-				$fractureCat->value = $unit_prefs['fractureCat'];
-				$snowpilot_ShearTest->appendChild($fractureCat);
-		
-				//
-				// fractureCharacter
-				$test_character = $snowpilot_xmldoc->createAttribute('character');
-				$test_character->value =  ($unit_prefs['fractureCat'] == 'fracture_character') && isset($shear_test->field_fracture_character['und'][0]['value']) ? $shear_test->field_fracture_character['und'][0]['value'] : '' ;
-				$snowpilot_ShearTest->appendChild($test_character);
-				//
-				// comments
-				$comments = $snowpilot_xmldoc->createAttribute('comments');
-				$comments->value = isset($shear_test->field_stability_comments['und'][0]['value']) ? $shear_test->field_stability_comments['und'][0]['value'] : '';
-		
-				// s="ECTP Q1 5 11/30/2014.15:39:6"
-				//
-				//s
-				$date_part = date( 'm/d/Y.H:i:s:0' , strtotime($node->field_date_time['und'][0]['value']));
-				$test_s = $snowpilot_xmldoc->createAttribute('s');
-				$test_s->value =  $test_score->value.' '.$shear_quality->value.$test_character->value.' '. $sdepth->value. ' ' . $date_part;
-				$snowpilot_ShearTest->appendChild($test_s);
-				//
-				// lengthOfCut
-				$lengthOfCut = $snowpilot_xmldoc->createAttribute('lengthOfCut');
-				$lengthOfCut->value = isset($shear_test->field_length_of_saw_cut['und'][0]['value']) ? $shear_test->field_length_of_saw_cut['und'][0]['value'] : '' ;
-				$snowpilot_ShearTest->appendChild($lengthOfCut);
-				//
-				// lengthOfColumn
-				$lengthOfColumn = $snowpilot_xmldoc->createAttribute('lengthOfColumn');
-				$lengthOfColumn->value = isset($shear_test->field_length_of_isolated_col_pst['und'][0]['value']) ? $shear_test->field_length_of_isolated_col_pst['und'][0]['value'] : '' ;
-				$snowpilot_ShearTest->appendChild($lengthOfColumn);		
-		
-				//
-				// releaseType
-				$releaseType = $snowpilot_xmldoc->createAttribute('releaseType');
-				$releaseType->value =  ($shear_test->field_stability_test_type['und'][0]['value'] == 'RB') && isset($shear_test->field_release_type['und'][0]['value']) ? $shear_test->field_release_type['und'][0]['value'] : '' ;
-				$snowpilot_ShearTest->appendChild($releaseType);		
-		
-				//
-				// dataCode
-				// this is not actually anywhere in the snowpilot data model specs, but needs to be.
-				$dataCode = $snowpilot_xmldoc->createAttribute('dataCode');
-				$dataCode->value = ($shear_test->field_stability_test_type['und'][0]['value'] == 'PST') && isset($shear_test->field_data_code_pst['und'][0]['value']) ? $shear_test->field_data_code_pst['und'][0]['value'] : '' ;
-				$snowpilot_ShearTest->appendChild($dataCode);				
-		
-				$snowpilot_PitCore->appendChild($snowpilot_ShearTest);
-		
-			}
-		}
-		$ids = array();
-		$profile = array();
-	
-		//dsm($node->field_density_profile);
-		if ( isset($node->field_density_profile['und']) && (count( $node->field_density_profile['und']) > 0)){
-	  	foreach ($node->field_density_profile['und'] as $density ){ $ids[] = $density['value']; }
-	  	$densitys = field_collection_item_load_multiple($ids);
-
-		  foreach ( $densitys as $density ){
-		    $profile[] = $density->field_depth['und'][0]['value'] . '_' . $density->field_density_top['und'][0]['value'];
-	    }
-		}
-
-		$snowpilot_Density = $snowpilot_xmldoc->createElement('Density_Profile');
-		//
-		// profile
-		$density_prof = $snowpilot_xmldoc->createAttribute('profile');
-		$density_prof->value = implode( '?', $profile );
-		$snowpilot_Density->appendChild($density_prof);
-	
-		//
-		// depthUnits
-		$depthUnits = $snowpilot_xmldoc->createAttribute('depthUnits');
-		$depthUnits->value =  $unit_prefs['depthUnits'];
-		$snowpilot_Density->appendChild($depthUnits);
-	
-		//
-		//densityUnits
-	
-		$densityUnits = $snowpilot_xmldoc->createAttribute('densityUnits');
-		$densityUnits->value =  _density_unit_fix($unit_prefs['rhoUnits']);
-		$snowpilot_Density->appendChild($densityUnits);
-		
-		$snowpilot_PitCore->appendChild($snowpilot_Density);
-		
-	
-		$outXML = $snowpilot_xmldoc->saveXML();
-		$formatted_xml = new DOMDocument('1.0', 'UTF-8');
-		$formatted_xml->preserveWhiteSpace = false;
-		$formatted_xml->formatOutput = true;
-		$formatted_xml->loadXML($outXML);
-		$final_xml = $formatted_xml->saveXML();
-		//dsm($final_xml);
-		$xml_filehandle = fopen(DRUPAL_ROOT.$xml_filename, 'w');
-		$value = fwrite($xml_filehandle, $final_xml );
-		fclose($xml_filehandle);
-		watchdog('snowpilot', "Snowpit $node->nid fwrite results: ". $value);
-		
-		dsm($final_xml);
-		return $final_xml;
-		*/
-		dsm($values_list);
-	}else{
-		watchdog('snowpilot', "Snowpit $node->nid file exists: ". $xml_filename);
-		
-		$xml_filehandle = fopen(DRUPAL_ROOT.$xml_filename, 'r');
-		$xmlvalues = fread($xml_filehandle,8192);
-		fclose($xml_filehandle);
-		return $xmlvalues;
-	}
-}
 
 function avscience_query_output(){
-
-	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 	global $user;
+	$account = user_load($user->uid);
+	
+	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
+		return MENU_ACCESS_DENIED;
+	}
+	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+	
 		Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
 	
 		db_set_active('avscience_db');
-	$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ";
+	$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ";
 	$query_args = array();
 	$where_clause = '';
 	$output = '';
@@ -996,9 +367,9 @@ function avscience_query_output(){
 	}
 
 
-	if (isset( $_GET['LOC_NAME']) && $_GET['LOC_NAME'] <> ''  ){
-	    $where_clause .=  " AND LOC_NAME LIKE :LOC_NAME " ;
-			$query_args[':LOC_NAME'] = $loc_name = $_GET['LOC_NAME'];
+	if (isset( $_GET['PIT_NAME']) && $_GET['PIT_NAME'] <> ''  ){
+	    $where_clause .=  " AND PIT_NAME LIKE :PIT_NAME " ;
+			$query_args[':PIT_NAME'] = $loc_name = $_GET['PIT_NAME'];
 	}
 
 	if ( !isset($_GET['testpit']) || $_GET['testpit'] <> '1'  ){
@@ -1029,7 +400,7 @@ function avscience_query_output(){
 	<form action = "/avscience-query" method = "get" class = "form-item">
 	<div class = "geo-selection">
 		  <div style = "display: inline-block; width : 160px; vertical-align: top;">
-		  	Location/Snowpit Name<br /><input type = "text" name = "LOC_NAME" value= "' .$loc_name. '" />
+		  	Location/Snowpit Name<br /><input type = "text" name = "PIT_NAME" value= "' .$loc_name. '" />
 	  		<div class = "description">Uses \'contains\'. You need only partial match of the name.</div>
 	  	</div>
 	    <div style = "display: inline-block; width : 160px; vertical-align: top;">
@@ -1076,7 +447,7 @@ $output .=
 
 		//
 		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
-		$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL, LOCAL_SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
+		$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL, LOCAL_SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
 		
 		$query2 = "SELECT count(SERIAL) FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause ;
 
@@ -1117,7 +488,7 @@ $output .=
 			
 				$this_item = '
 	              <div class = "item-wrapper">
-				  <div class="views-field views-field-title">' . $record->LOC_NAME . '</div>  
+				  <div class="views-field views-field-title">' . $record->PIT_NAME . '</div>  
 				  <div class="field-content views-graph-image"><a href="' . $pre_img_url  . '"><img src="'. $layers_image .'"></a></div>    
 				  <div class="field-content views-field-field-date-time"><span class="views-snowpit-region-range">'.$record->STATE . ' » '.$record->MTN_RANGE . '</span>
 				<br>
@@ -1201,7 +572,12 @@ function avscience_pit_xml_doc($serials ){
 
 function snowpilot_query_output(){
 	global $user;
+	$account = user_load($user->uid);
 	
+	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
+		return MENU_ACCESS_DENIED ;
+	}
+		
 	$query = new EntityFieldQuery();
 	$query->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'snowpit_profile')
@@ -1262,8 +638,8 @@ function snowpilot_query_output(){
 	}
 
 
-	if (isset( $_GET['LOC_NAME']) && $_GET['LOC_NAME'] <> ''  ){
-			$loc_name = $_GET['LOC_NAME'];
+	if (isset( $_GET['PIT_NAME']) && $_GET['PIT_NAME'] <> ''  ){
+			$loc_name = $_GET['PIT_NAME'];
 			$query->propertyCondition('title', '%'.$loc_name.'%' , 'like');
 	}
 
@@ -1312,7 +688,7 @@ function snowpilot_query_output(){
 	<form action = "/snowpilot-query" method = "get" class = "form-item">
 	<div class = "geo-selection">
 		  <div style = "display: inline-block; width : 160px; vertical-align: top;">
-		  	Location/Snowpit Name<br /><input type = "text" name = "LOC_NAME" value= "' .$loc_name. '" />
+		  	Location/Snowpit Name<br /><input type = "text" name = "PIT_NAME" value= "' .$loc_name. '" />
 	  		<div class = "description">Uses \'contains\'. You need only partial match of the name.</div>
 	  	</div>
 	    <div style = "display: inline-block; width : 160px; vertical-align: top;">
@@ -1464,7 +840,10 @@ function  avscience_xml_link($url)  {
 }
 	
 function snowpilot_query_xml(){
+	global $user;
+	$account = user_load($user->uid);
 	
+	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ return MENU_ACCESS_DENIED ;}
 	header('Content-type: application/xml');
   //header('Content-Disposition: attachment; filename="query-results.xml"');
 	
@@ -1498,8 +877,8 @@ function snowpilot_query_xml(){
 	}
 
 
-	if (isset( $_GET['LOC_NAME']) && $_GET['LOC_NAME'] <> ''  ){
-			$loc_name = $_GET['LOC_NAME'];
+	if (isset( $_GET['PIT_NAME']) && $_GET['PIT_NAME'] <> ''  ){
+			$loc_name = $_GET['PIT_NAME'];
 			$query->propertyCondition('title', '%'.$loc_name.'%' , 'like');
 	}
 
@@ -1542,6 +921,10 @@ function snowpilot_query_xml(){
 }
 
 function avscience_query_xml(){
+	global $user;
+	$account = user_load($user->uid);
+	
+	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) ) ){ return MENU_ACCESS_DENIED ;}
 	header('Content-type: application/xml');
   //header('Content-Disposition: attachment; filename="avscience-query-results.xml"');
 	
@@ -1550,7 +933,7 @@ function avscience_query_xml(){
 		Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
 	
 		db_set_active('avscience_db');
-	$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ";
+	$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ";
 	$query_args = array();
 	$where_clause = '';
 	$output = '';
@@ -1610,9 +993,9 @@ function avscience_query_xml(){
 	}
 
 
-	if (isset( $_GET['LOC_NAME']) && $_GET['LOC_NAME'] <> ''  ){
-	    $where_clause .=  " AND LOC_NAME LIKE :LOC_NAME " ;
-			$query_args[':LOC_NAME'] = $loc_name = $_GET['LOC_NAME'];
+	if (isset( $_GET['PIT_NAME']) && $_GET['PIT_NAME'] <> ''  ){
+	    $where_clause .=  " AND PIT_NAME LIKE :PIT_NAME " ;
+			$query_args[':PIT_NAME'] = $loc_name = $_GET['PIT_NAME'];
 	}
 
 	if ( !isset($_GET['testpit']) || $_GET['testpit'] <> '1'  ){
@@ -1631,11 +1014,6 @@ function avscience_query_xml(){
 	    $where_clause .=  " AND PIT_DATA LIKE :AFFIL" ;
 			$query_args[':AFFIL'] = "%affil~1" .  $_GET['AFFIL']."%" ; $affil = $_GET['AFFIL'];
 	}
-
-	if ( isset( $_GET['ADV_WHERE_QUERY']) && $_GET['ADV_WHERE_QUERY'] <>''){
-		$where_clause .=  " AND :ADV_WHERE_QUERY ";
-		$query_args[':ADV_WHERE_QUERY'] = $adv_where_query = $_GET['ADV_WHERE_QUERY'];
-	}
 	
 	$per_page = (isset($_GET['per_page']) && $_GET['per_page'] > 0) ? $_GET['per_page'] : 10 ;
 	if ( $per_page > 100 ) $per_page = 100; // limiting to select 100 items
@@ -1644,7 +1022,7 @@ function avscience_query_xml(){
 
 		//
 		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
-		$query = "SELECT LOC_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
+		$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
 		
 		$query2 = "SELECT count(SERIAL) FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause ;
 
