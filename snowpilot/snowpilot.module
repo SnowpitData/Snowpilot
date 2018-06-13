@@ -553,7 +553,6 @@ function snowpilot_user_login(&$edit, $account){
 function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
-	$user_agent = $_SERVER['HTTP_USER_AGENT'];
 	
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
@@ -2447,12 +2446,18 @@ function snowpilot_user_edit(){
 	
 }
 
-function snowpilot_user_has_role($roles) {  
-	global $user;	
-    if (in_array($roles, $user->roles)) {
+function snowpilot_user_has_role() {  
+	$roles = func_get_args();
+	if ( !is_array($roles)) {
+		$role_val = $roles;
+		$roles = array( $role_val );
+	}
+	global $user;
+	foreach ( $user->roles as $user_role ){
+    if (in_array($user_role , $roles)) {
       return TRUE;
     }
- 
+  }
   return FALSE; 
 }
 

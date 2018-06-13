@@ -805,7 +805,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				  $test_results = array_reverse($test_results);
 				}
 			
-				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
+				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
 
 				imagettftext( $img, 11, 0 , 625, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
 				

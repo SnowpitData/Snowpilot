@@ -1703,3 +1703,10 @@ td.views-field-field-last-name .org.admin {
 #edit-field-display-full-profile + a.advanced-help-topic{
 	display: inline-block;
 }
+
+#snowpilot-query-form > div > div.form-item,
+#snowpilot-query-form > div > fieldset.form-wrapper{
+	display: inline-block;
+	vertical-align: top;
+	
+}
