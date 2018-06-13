@@ -11,6 +11,10 @@ snowpilot/snowpilot-live.module
 
 snowpilot/snowpilot-testsite.module
 
+snowpilot/avscience_connect/includes/populate_pit_fields.php
+
+snowpilot/avscience_connect/includes/populate_XML_field.php
+
 .eslintrc.js
 
 *.bak
