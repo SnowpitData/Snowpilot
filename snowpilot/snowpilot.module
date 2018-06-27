@@ -750,9 +750,9 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			unset($form['field_snowpit_visibility']['und']['#options']['_none']);
 	
 		  if (isset($form['#user']->timezone)) {
-		      // edit timezone list
-		      $form['#after_build'][] = 'snowpilot_timezone_modify';
-		    }
+	      // edit timezone list
+	      $form['#after_build'][] = 'snowpilot_timezone_modify';
+	    }
 			$form['#after_build'][] = 'snowpilot_password_field';
 			$form['#validate'][] = 'snowpilot_user_profile_form_validate';	
 			$form['#submit'][] = 'snowpilot_user_profile_form_submit';
@@ -760,13 +760,14 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$user_account = user_load($user->uid);
 			$account = user_load($form['#user']->uid);
 			$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
-			if ( is_array($snowpit_unit_prefs['field_professional_affiliation'] )){
+		  if ( is_array($snowpit_unit_prefs['field_professional_affiliation'] )){
 		    foreach ( $form['field_org_ownership']['und']['#options'] as $tid => $option ){
 			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  ) unset ( $form['field_org_ownership']['und']['#options'][$tid] );
 		    }
-		  }else{  // user has only one group association
-		  	unset($form['field_org_ownership']); // This is actually the default organization, in the user context. 
+		  }elseif ( isset($snowpit_unit_prefs['field_professional_affiliation']) ){  // user has only one group association
+		  	unset($form['field_org_ownership']); // This is the default organization, in the user context. 
 		  }
+
 			// if this is not an administrator working on the user profile, and the user profile isn't already an 'org admin', then hide the field
 			if ( !in_array('administrator' , $user_account->roles) || !in_array( 'org admin' ,$account->roles) ){
 				unset($form['field_org_admin_groups']);
@@ -954,22 +955,24 @@ function snowpilot_new_user_register_validate(&$form, &$form_state){
 
 function snowpilot_user_profile_form_validate(&$form, &$form_state){
 	$group_tids = array();
-	foreach ( $form['field_professional_affiliation']['und']['#value'] as $n => $group ){
-	if ($form['field_professional_affiliation']['und']['#value'][$n]['tid'] == '226' ){
-		form_set_error('field_professional_affiliation', 'Please choose a Ski Patrol, or create a new one.');
-	}elseif ($form['field_professional_affiliation']['und']['#value'][$n]['tid'] == '243' ){
-		form_set_error('field_professional_affiliation', 'Please choose an Avalanche Center, or create a new one.');
-	}elseif ($form['field_professional_affiliation']['und']['#value'][$n]['tid'] == '245' ){
-		form_set_error('field_professional_affiliation', 'Please choose an Education group, or create a new one.');
-	}elseif ($form['field_professional_affiliation']['und']['#value'][$n]['tid'] == '244' ){
-		form_set_error('field_professional_affiliation', 'Please choose a Ski or Snowmobile Guide Service, or create a new one.');
-	}elseif ($form['field_professional_affiliation']['und']['#value'][$n]['tid'] == '246' ){
-		form_set_error('field_professional_affiliation', 'Please choose a Department of Transportation, or create a new one.');
-	}
-	$group_tids[] = $form['field_professional_affiliation']['und']['#value'][$n]['tid'];
+	dsm($form['field_professional_affiliation']); dsm($form_state['values']);
+	
+	foreach ( $form_state['values']['field_professional_affiliation']['und'] as $n => $group ){
+		if ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '226' ){
+			form_set_error('field_professional_affiliation', 'Please choose a Ski Patrol, or create a new one.');
+		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '243' ){
+			form_set_error('field_professional_affiliation', 'Please choose an Avalanche Center, or create a new one.');
+		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '245' ){
+			form_set_error('field_professional_affiliation', 'Please choose an Education group, or create a new one.');
+		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '244' ){
+			form_set_error('field_professional_affiliation', 'Please choose a Ski or Snowmobile Guide Service, or create a new one.');
+		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '246' ){
+			form_set_error('field_professional_affiliation', 'Please choose a Department of Transportation, or create a new one.');
+		}
+		$group_tids[] = $form_state['values']['field_professional_affiliation']['und'][$n]['tid'];
 	}
 	
-	if ( isset ( $form['field_org_ownership'] ) && (!in_array($form['field_org_ownership']['und']['#value'] , $group_tids) ) ){
+	if ( isset ( $form_state['values']['field_org_ownership']['und'][0]['tid'] ) && (!in_array($form_state['values']['field_org_ownership']['und'][0]['tid'] , $group_tids) ) ){
 		form_set_error('field_org_ownership', 'You must add yourself as a member of a group in order set that group as your default. 
 		<br />Either add yourself to the group which is now your default, or change your default to a group that you are still a member of.');
 	}
@@ -1241,6 +1244,7 @@ function snowpilot_login_success($js, $action) {
 function snowpilot_timezone_modify($form, &$form_state){
   $zonelist = timezone_identifiers_list();
   $zones = array();
+	//dsm($zonelist);
   
   foreach ($zonelist as $zone) {
     // Only use certain cities
@@ -1261,7 +1265,9 @@ function snowpilot_timezone_modify($form, &$form_state){
 			|| $zone == 'Asia/Kolkata'
 			|| $zone == 'Asia/Kathmandu'
 			|| $zone == 'Asia/Tokyo'
+			|| $zone == 'Asia/Dushanbe'
 			|| $zone == 'Pacific/Auckland'
+			|| $zone == 'Australia/Sydney'
 				
 		){
       // Get timezone abbreviation
