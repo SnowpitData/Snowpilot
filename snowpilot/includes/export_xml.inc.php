@@ -227,7 +227,7 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 		//  timestamp
 		//
 		$timestamp=$snowpilot_xmldoc->createAttribute('timestamp');
-		$timestamp->value = $node->created . '000';
+		$timestamp->value = strtotime($node->field_date_time['und'][0]['value']) . '000';
 		$snowpilot_PitCore->appendChild($timestamp);
 		//
 		// Snowpilot name: User; drupal object: account

@@ -24,8 +24,8 @@ function avscience_connect_menu(){
 	$items['snowpilot-query-feed.xml'] = array(
 		'title' => 'query feed page',
 		'page callback' => 'snowpilot_query_xml',
-		'access callback' => 'snowpilot_user_has_role',
-		'access arguments' => array('administrator', 'researcher'),
+		'access callback' => TRUE, //'snowpilot_user_has_role',
+	//	'access arguments' => array('administrator', 'researcher','anonymous', 'authenticated'),
 		'type' => MENU_CALLBACK,	
 	);
 	$items['avscience-query-feed.xml'] = array(
@@ -45,8 +45,8 @@ function avscience_connect_menu(){
 	$items['snowpilot-query'] = array(
 		'title' => 'Recent Online Snowpits query page',
 		'page callback' => array('snowpilot_query_page'),
-		'access callback' => 'snowpilot_user_has_role',
-		'access arguments' => array('researcher', 'administrator'),
+		'access callback' => TRUE, //'snowpilot_user_has_role',
+	//	'access arguments' => array('researcher', 'administrator','anonymous', 'authenticated'),
 		'type' => MENU_NORMAL_ITEM,	
 	);
 	
@@ -61,9 +61,9 @@ function snowpilot_query_page(){
 	global $user;
 	$account = user_load($user->uid);
 	
-	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
-		return MENU_ACCESS_DENIED;
-	}
+//	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
+//		return MENU_ACCESS_DENIED;
+//	}
 	drupal_set_title('Online Snowpits query page');
 	$output = 'This page is intended for snow scientists to query the snowpits that have been added to the online database. 
 		This page does not query for snowpits entered via the installed application, for that go to the <a href ="/avscience-query">AvScience Query page</a> '.
@@ -356,7 +356,6 @@ function snowpilot_query_form( $form, &$form_state, $default){
 				
         $per_page = isset($form_state['values']['per_page']) ? $form_state['values']['per_page'] : 10 ;
 				$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
-				dsm($form_state['values']);
 
 				$query->range($per_page * $page_num, $per_page);
 				$count_query = $query;
@@ -401,7 +400,7 @@ function snowpilot_query_form( $form, &$form_state, $default){
 function snowpilot_query_form_submit( $form, &$form_state){
 
 	if ( $form_state['clicked_button']['#value'] == 'XML Feed Output'){
-		dsm($form_state['values']);
+		//dsm($form_state['values']);
 		$form_state['redirect'] = array('snowpilot-query-feed.xml', array( 'query' => snowpilot_xml_link($form_state['values'])));
 	}else{
 		$form_state['redirect'] = current_path() . '/' . $form_state['values']['snowpilot_query_form'];
@@ -607,11 +606,11 @@ function avscience_query_output(){
 			$query_args[':AFFIL'] = "%affil~1" .  $_GET['AFFIL']."%" ; $affil = $_GET['AFFIL'];
 	}
 
-	if ( isset( $_GET['ADV_WHERE_QUERY']) && $_GET['ADV_WHERE_QUERY'] <>''){
+/*	if ( isset( $_GET['ADV_WHERE_QUERY']) && $_GET['ADV_WHERE_QUERY'] <>''){
 		$where_clause .=  " AND :ADV_WHERE_QUERY ";
 		$query_args[':ADV_WHERE_QUERY'] = $adv_where_query = $_GET['ADV_WHERE_QUERY'];
 	}
-
+*/
 	$output .='
 	<div class = "view-snowpit-list">
 		<div class= "views-exposed-form">
@@ -646,9 +645,9 @@ function avscience_query_output(){
 		<div class = "researcher-query">
 	';		
 	
-			if ( in_array('administrator' , $user->roles ) || in_array('researcher' , $user->roles ) ){
+		/*	if ( in_array('administrator' , $user->roles ) || in_array('researcher' , $user->roles ) ){
 			 $output .= ' 	<div style ="display: inline-block;">Advanced WHERE query : <input type = "text" name = "ADV_WHERE_QUERY" value= "' . $adv_where_query . '" /></div>';
-			}
+			}*/
 $output .=
 		'</div>
 		<div class = "tests-button">
@@ -666,7 +665,6 @@ $output .=
 		//
 		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
 		$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL, LOCAL_SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
-		
 		$query2 = "SELECT count(SERIAL) FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause ;
 
 	  $results = db_query($query,$query_args);
@@ -826,7 +824,7 @@ function snowpilot_query_xml(){
 	global $user;
 	$account = user_load($user->uid);
 	
-	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ return MENU_ACCESS_DENIED; }
+	//if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ return MENU_ACCESS_DENIED; }
 	
 	header('Content-type: application/xml');
 	
