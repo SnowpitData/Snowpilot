@@ -107,7 +107,7 @@ function snowpilot_permission(){
 
 function snowpilot_organization(){
 	global $user;
-	
+	//dsm($user);
 	$org_admin_user = entity_metadata_wrapper('user', $user);
 	$default_org = $org_admin_user->field_org_ownership->value();
 	$result = '';
@@ -121,12 +121,13 @@ function snowpilot_organization(){
 			$result .= 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.';
 		  return $result;
 		}
-		$org_admin_user->field_org_ownership->set( $org_admin_groups[0]->tid );
-		$org_admin_user->save();
+		//$org_admin_user->field_org_ownership->set( $org_admin_groups[0]->tid );
+		//$org_admin_user->save();
 		$default_org = $org_admin_user->field_org_ownership->value(); // we need to refill this variable since it changed
 	}	
-	//$result .= views_embed_view( 'new_test_search' , 'page', $default_org->tid );
-	//drupal_set_title ( t('Manage Organization Users and Snowpits: '.$default_org->name ));
+	$result .= '<h2>Snowpits for '. $default_org->name  . '</h2>';
+	$result .= views_embed_view( 'new_test_search' , 'page', $default_org->tid );
+	drupal_set_title ( t('Manage Organization Users and Snowpits: '.$default_org->name ));
 	return $result;
 }
 
@@ -144,13 +145,13 @@ function snowpilot_org_admin_page_links( $groups ){
 
 function snowpilot_organizations($tid ){
 	global $user;
-	
 	$org_admin_user = entity_metadata_wrapper('user', $user);
 	$default_org = $org_admin_user->field_org_ownership->value();
 	if ( $default_org->tid <> $tid ){
 		//$org_admin_user->field_org_ownership->offsetUnset( 0 );
 		$org_admin_user->field_org_ownership->set( $tid );
 		$org_admin_user->save();
+		$default_org = $org_admin_user->field_org_ownership->value();
 	}
 	if ( count ( $org_admin_user->field_org_admin_groups->value() ) > 1 ) {
 		$result = snowpilot_org_admin_page_links($org_admin_user->field_org_admin_groups->value() );
@@ -166,13 +167,12 @@ function snowpilot_add_affiliation_form($form, &$form_state){
 	global $user;
 	$org_admin_user = entity_metadata_wrapper('user', $user);
 	$form['#access'] = 'snowpilot_org_admin_access';
-	
 	$form['snowpilot_add_affiliation'] = array(
 		'#type' => 'textfield',
 		'#size' => 30,
 		'#autocomplete_path' => 'user/autocomplete',
 		'#title' => t('@thegroup', array( '@thegroup' => $org_admin_user->field_org_ownership->label() ) ),
-		'#description' => t('Begin typing username to find ', array( '@thegroup' => $org_admin_user->field_org_ownership->label() ) ),	
+		'#description' => t('Begin typing username to find user'),	
 		'#weight' => '15',
 		'#required' => TRUE,
 	);
@@ -330,7 +330,6 @@ function snowpilot_user_org(&$argument){
 	$user_info = $user_wrapper->field_org_ownership->value();  // this is ther users DEFAULT org, if they have more than one group, and it's set.
 	$user_info2 = $user_wrapper->field_professional_affiliation->value(); /// this is the array of all orgs that they are members of
 	
-	$argument->validated_title = $user_wrapper->field_org_ownership->label();
 		
 	
 	if ( isset($user_info->tid) ){
@@ -345,19 +344,21 @@ function snowpilot_user_org(&$argument){
 		$org_admin_groups = $user_wrapper->field_org_admin_groups->value();
 		$admin_org_tids= array();
 		foreach ( $org_admin_groups as $group ) { $admin_org_tids[] = $group->tid; 		}
-		if ( !in_array($default_tid , $org_admin_tids  )){  // If this organization is not one they can manage, reset their default org to something standard.
+		if ( !in_array($default_tid , $admin_org_tids  )){  // If this organization is not one they can manage, reset their default org to something standard.
+			
 			if ( ! isset( $org_admin_groups[0]) ) {
-				dsm( 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.');
-			  return $result;
-			}else{
-			  $user_wrapper->field_org_ownership->set( $org_admin_groups[0]->tid );
-			  //$user_wrapper->save();
-			  //$default_org = $user_wrapper->field_org_ownership->value(); // we need to refill this variable since it changed
-		  }
+				drupal_set_message( 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.');
+			  return ;
+			}
+		  $user_wrapper->field_org_ownership->set( $org_admin_groups[0]->tid );
+		  $user_wrapper->save();
+		  
 		}	
 		
 		
 	}
+	$argument->validated_title = $user_wrapper->field_org_ownership->label();
+	
 	return $default_tid;
 }
 
@@ -402,7 +403,6 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			watchdog('snowpilot', "Snowpit $node->nid set to LOCKED.");
 			// and save it to the avscience db
 			if ( $serial = snowpilot_node_avscience_save_pit($node)) {
-				dsm($serial);
 				$image_result_code = populate_snowpit_image($serial);
 				$layers_result_code = populate_layers_table($serial);
 				$tests_result_code = populate_shear_tests_table($serial);		
@@ -551,8 +551,14 @@ function snowpilot_user_login(&$edit, $account){
 }
 
 function snowpilot_init(){
+	drupal_add_css('https://unpkg.com/leaflet@1.4.0/dist/leaflet.css', 'external');
+	drupal_add_css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css', 'exernal');
+	drupal_add_css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css', 'external');
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
+	drupal_add_js('https://unpkg.com/leaflet@1.4.0/dist/leaflet.js', 'external');
+	drupal_add_js('https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js', 'external');
+	
 	
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
@@ -757,12 +763,18 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['#validate'][] = 'snowpilot_user_profile_form_validate';	
 			$form['#submit'][] = 'snowpilot_user_profile_form_submit';
 			
-			$user_account = user_load($user->uid);
+			$user_account = user_load($user->uid); // this could be the administrator acting on a different account
 			$account = user_load($form['#user']->uid);
 			$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
-		  if ( is_array($snowpit_unit_prefs['field_professional_affiliation'] )){
+		  if ( is_array($snowpit_unit_prefs['field_professional_affiliation'] )){   /// 									if the user is a member of multiple orgs
+
 		    foreach ( $form['field_org_ownership']['und']['#options'] as $tid => $option ){
-			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  ) unset ( $form['field_org_ownership']['und']['#options'][$tid] );
+					
+			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  ) {	//				then remove the ones from the 'default org' list that they 
+						
+						unset ( $form['field_org_ownership']['und']['#options'][$tid] );   //											are not a member of 
+
+					}
 		    }
 		  }elseif ( isset($snowpit_unit_prefs['field_professional_affiliation']) ){  // user has only one group association
 		  	unset($form['field_org_ownership']); // This is the default organization, in the user context. 
@@ -912,26 +924,38 @@ function snowpilot_user_profile_form_submit($form, &$form_state){
 	global $user;
 	$org_admins = array();
 	//if ( $user->uid == $form_state['values']['uid']) { // we only call this if the user is changing their own prof affil.
-		if ( $form['field_professional_affiliation']['und']['#value'][0]['tid'] <> $form['field_professional_affiliation']['und']['#default_value'][0]){
-			$user_wrapper = entity_metadata_wrapper( 'user', user_load($form_state['values']['uid']));
-	    $tid = $form['field_professional_affiliation']['und']['#value'][0]['tid'];
-	    $query = new EntityFieldQuery();
-	    $query->entityCondition('entity_type', 'user')
-	      ->fieldCondition('field_professional_affiliation' ,  'tid' , $tid , '=');
-	    $result = $query->execute();
-			$group_users = array_keys($result['user']);
-			$group = user_load_multiple($group_users);
-			foreach($group as $individual){
-				if ( isset($individual->roles[6])){
-					$org_admins[] = $individual;
-					$org_admin_user = entity_metadata_wrapper( 'user', $individual);
-			    drupal_mail('snowpilot', 
-					  'org-admin-notify', // 
-						$individual->mail ,
-						 user_preferred_language($individual),
-						  array ( 'org_admin_user' => $org_admin_user  , 'user_wrapper' => $user_wrapper), 'admin@snowpilot.org' , TRUE  );
+		if ( count($form['field_professional_affiliation']['und']['#value']) > count($form['field_professional_affiliation']['und']['#default_value'])){ // i.e. -they were added to a group
+			foreach( $form['field_professional_affiliation']['und']['#value'] as $group_tid ){
+				
+				if ( !in_array( $group_tid['tid'] , $form['field_professional_affiliation']['und']['#default_value'] )) {
+					$tid = $group_tid['tid'];
+					//dsm($group_tid);
+					//dsm($form['field_professional_affiliation']['und']['#default_value'] );
+					$user_wrapper = entity_metadata_wrapper( 'user', user_load($form_state['values']['uid']));
+			    $query = new EntityFieldQuery();
+			    $query->entityCondition('entity_type', 'user')
+			      ->fieldCondition('field_org_admin_groups' ,  'tid' , $tid , '=');
+			    $result = $query->execute();
+					$group_users = array_keys($result['user']);
+					$group = user_load_multiple($group_users);
+					foreach($group as $individual){
+						if ( isset($individual->roles[6]) && in_array( $group_tid, $individual->field_org_admin_groups['und'] ) ){
+							$org_admins[] = $individual;
+							$org_admin_user = entity_metadata_wrapper( 'user', $individual);
+					    drupal_mail('snowpilot', 
+							  'org-admin-notify', // 
+								$individual->mail ,
+								 user_preferred_language($individual),
+								  array ( 'org_admin_user' => $org_admin_user  , 'user_wrapper' => $user_wrapper), 'admin@snowpilot.org' , TRUE  );
+						}
+					}
+					
+					
 				}
+				
+				
 			}
+	    
 			
 			if ( !count ( $org_admins) && !in_array( $tid , array ('none', 108, 57, 59, 60, 62, 58, 61, 172) )){
 		    drupal_set_message('<h3>You have joined the group '. $user_wrapper->field_professional_affiliation->label().'</h3>
@@ -1326,11 +1350,12 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 	unset($form['field_snowpit_visibility']['und']['#options']['_none']);
  
   if ( !user_access('administer nodes')  ){
-		if ( (! is_array($snowpit_unit_prefs['field_professional_affiliation']) || count ($snowpit_unit_prefs['field_professional_affiliation'] ) < 2 ) ){
+		if ( ( !is_array($snowpit_unit_prefs['field_professional_affiliation']) || count ($snowpit_unit_prefs['field_professional_affiliation'] ) < 2 ) ){
 	  	$form['field_org_ownership']['#access'] = FALSE ; 
 			if (!isset($snowpit_unit_prefs['field_professional_affiliation']) || $snowpit_unit_prefs['field_professional_affiliation'] == '57'){
 				unset ($form['field_snowpit_visibility']['und']['#options']['group']);
-			}else{			$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
+			}else{		
+				$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
 			  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
 				//dsm($form['field_snowpit_visibility']['und']['#options']);
 			}
@@ -1403,9 +1428,10 @@ function snowpilot_entity_presave($entity, $type){
 	}
 	// core info fields updates
 	//Aspect - Cardinal -> degrees Azimuth convert and write value
-	
+	//dsm ( $entity->field_direction_format['und'][0]['value'] );
 	if ( $type == 'node' && isset($entity->field_direction_format['und']) && $entity->field_direction_format['und'][0]['value'] == 'cardinal' ){
-		$entity->field_aspect = $entity->field_aspect_cardinal;
+		$entity->field_aspect['und'][0]['value'] = $entity->field_aspect_cardinal['und'][0]['value'];
+		//dsm($entity->field_aspect_cardinal);
 	}
 	
 	if ($type == 'node' && $entity->type == 'snowpit_profile' && isset( $entity->field_air_temp['und'][0]['value']) ){ 
@@ -1649,6 +1675,11 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	if ( ! isset( $form_state['values']['field_loaction']['und'][1]['tid'] ) && count ( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) )){
 		form_set_error( 'field_loaction', t('Please enter a valid Mountain Range or Region at deepest possible level.'));
 		
+	}
+	if ( isset ($form_state['values']['field_aspect']['und'][0]['value']) && $form_state['values']['field_aspect']['und'][0]['value'] <> '' && !is_numeric($form_state['values']['field_aspect']['und'][0]['value'])  ){
+		//dsm($form_state['values']['field_aspect']);
+		//dsm($form_state['values']['field_aspect_cardinal']);
+		form_set_error( 'field_aspect', t('Please enter a numerical value for Aspect. <p>For later snowpits, you can set the default aspect type to \'Cardinal\' in your <a href ="/snowpilot/user/edit" target = "_blank">User Preferences</a>.' ));
 	}
 	
 	return;
@@ -2160,7 +2191,7 @@ function snowpilot_cardinal_wind_dir($degrees){
 function _snowpilot_find_pit_depth($node){
 	$max = 0;
 	if ( isset($node->field_total_height_of_snowpack['und'][0]['value'])  && ( (isset($node->field_display_full_profile['und']) && ($node->field_display_full_profile['und'][0]['value'] == 1) )
-	  || $node->field_depth_0_from['und'][0]['value'] == 'bottom')){	
+	  || $node->field_depth_0_from['und'][0]['value'] == 'bottom') ){	
 		
 		  $max = $node->field_total_height_of_snowpack['und'][0]['value'];
 	}else{
@@ -2548,7 +2579,7 @@ function snowpilot_node_avscience_save_pit($node){
 		//
 		// testpit
 		//
-		if(	isset($node->field_practice_pit['und'][0]['value']) && ($node->field_practice_pit['und'][0]['value'] == 1 || $node->field_practice_pit['und'][0]['value'] = 'true') ) {
+		if(	isset($node->field_practice_pit['und'][0]['value']) && ($node->field_practice_pit['und'][0]['value'] == '1' ) ) {
 		  $values_list[] =  " TEST_PIT = 1 ";
 	  }else {
 	  	$values_list[] =  " TEST_PIT = 0 ";
@@ -2737,12 +2768,9 @@ function snowpilot_node_avscience_save_pit($node){
 		$values_list[] = " tempUnits = '". $unit_prefs['tempUnits'] ."' ";
 		$values_list[] = " depthUnits = '". $unit_prefs['depthUnits'] ."' ";
 		
-	
-		
 		$insert_query = "INSERT INTO PIT_TABLE SET ".implode(',', $values_list);
 	  db_set_active('avscience_db');
 		$insert_results = db_query($insert_query);
-		dsm($insert_results);
 		$extract_serial_query = "SELECT SERIAL FROM PIT_TABLE WHERE LOCAL_SERIAL = 'drupal-nid-".$node->nid ."-". $node->created . "000' ";
 		$serial_results = db_query($extract_serial_query)->fetchField();
 		db_set_active('default');

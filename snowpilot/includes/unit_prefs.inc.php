@@ -222,11 +222,12 @@ function snowpilot_user_unit_prefs_check($uid,$redirect_to_user_edit = TRUE){
 			$field = field_info_field($key);
 			$field_instance = field_info_instance('node', $key, 'snowpit_profile');
 			$missing_keys[] = $field_instance['label'];	
+			
 		}
 	}
 	if (count($missing_keys)){
 		drupal_set_message( "<h3>Missing User Unit Preferences</h3>You need to set your <a href = '/user/". $uid 
-			."/edit#edit-field-first-name'>User Unit Preferences</a> before you can create a new Snowpit Profile.<br/>", 'warning');
+			."/edit#edit-field-first-name'>User Unit Preferences</a> before you can create a new Snowpit Profile. <h3>Missing Preferences:</h3><ul><li>".implode($missing_keys, "</li><li>" ).'</li></ul> ', 'warning');
 		if ( $redirect_to_user_edit == TRUE ) {
 			drupal_goto("snowpilot/user/edit", array('query' => array('destination' => drupal_get_destination())) );
 		}

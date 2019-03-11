@@ -129,7 +129,6 @@ $result_code = array( 'continue' => TRUE, 'message'=>'default message-layers');
 							if ( count($id_results) == 0 ){
 								$query3 = "INSERT INTO layers ( `pid`, `startDepth` , `endDepth`,  `layerNumber` , `waterContent` , `grainType1`, `grainType2` , `grainSize1` , `grainSize2` , `grainSizeUnits1` , `grainSizeUnits2` , `grainSuffix1` , `grainSuffix2` , `hardness1` , `hardness2` , `hsuffix1` , `hsuffix2` , `density1` , `density2` , `fromTop` , `multipleHardness` , `multipleDensity` , `multipleGrainType` , `multipleGrainSize`, `iLayerNumber`, `iDepth` )". 
 									" VALUES ( ".  $values_list . "  )";
-								dsm($query3);
 								$result3 = db_query($query3);
 								if (!$result3){			
 									$result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' Could not insert new layer: '.$layer->getAttribute('layerNumber') . " ".$query3);	

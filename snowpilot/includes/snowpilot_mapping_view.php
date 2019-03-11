@@ -3,6 +3,7 @@ $nid = arg(1);
 $node = node_load($nid);
 $longitude = ''; $latitude = '';
 
+$zoom = '11';
 
 if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && isset( $node->field_east['und'][0]['value'] ) 
 && isset( $node->field_north['und'][0]['value'] ) && isset ( $node->field_utm_zone['und'][0]['value'] )){
@@ -19,30 +20,23 @@ if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && isset( $node-
 ?>
 
 
-<link rel="stylesheet" href="https://google-developers.appspot.com/maps/documentation/javascript/demos/demos.css">
 
 <div id="map" style= "height: 450px; width: 600px;"></div>
     <script>
-      function initMap() {
-        var myLatLng = {lat: <?php echo $latitude  ?>, lng: <?php  echo $longitude; ?>};
-        
-        // Create a map object and specify the DOM element for display.
-        var map = new google.maps.Map(document.getElementById('map'), {
-          center: myLatLng,
-          scrollwheel: false,
-          zoom: 10,
-          mapTypeId: 'terrain'
+			var gnfacmap = L.map('map').setView([<?php echo $latitude; ?>, <?php  echo $longitude; ?>], <?php  echo $zoom; ?>);
+      var attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+			var BaseMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+			    attribution: attribution,
+			    maxZoom: 18
+			});
+			
+	    // Add baselayers and overlays to groups
+	    var baseLayers = {
+	        "Mapbox" : BaseMap,
+	    };
 
-        });
-
-        // Create a marker and set its position.
-        var marker = new google.maps.Marker({
-          map: map,
-          position: myLatLng,
-          title: '<?php echo $node->title; ?>'
-        });
-      }
+	    BaseMap.addTo(gnfacmap);
+      var marker = L.marker([<?php echo $latitude; ?>, <?php  echo $longitude; ?>]).addTo(gnfacmap);
 
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIqPh8YaNVnoRZex5LfxLUPnYbFrCaQN0&callback=initMap" async defer></script>
 

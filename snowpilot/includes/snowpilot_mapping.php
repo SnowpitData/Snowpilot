@@ -5,14 +5,21 @@ $nid = arg(1);
 $node = node_load($nid);
 $existing_node = FALSE;
 
-drupal_add_js('https://maps.googleapis.com/maps/api/js?key=AIzaSyCIqPh8YaNVnoRZex5LfxLUPnYbFrCaQN0');
-
 // default location:
 $latitude = 46.2938;
 $longitude = -112.01;
-$zoom = 6;
+$zoom = 9;
+$account = user_load ( $user->uid);
+
+if ($account->field_elevation_units['und'][0]['value']  == 'm'){
+	$attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+	$base_map = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+}else{
+	$attribution = '<a href="https://www.doi.gov">U.S. Department of the Interior</a> | <a href="https://www.usgs.gov">U.S. Geological Survey</a> | <a href="https://www.usgs.gov/laws/policies_notices.html">Policies</a>';
+	$base_map = 'https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}';
+}
+
 if (  !isset($node->nid) || isset($node->is_new) ){
-  $account = user_load ( $user->uid);
 
   if ( isset ( $account->field_loaction['und'][1])){
      $default_location = taxonomy_term_load($account->field_loaction['und'][1]['tid']);
@@ -25,7 +32,7 @@ if (  !isset($node->nid) || isset($node->is_new) ){
 	if ( isset ( $default_location->field_lat_center['und'][0]['value']) && isset ( $default_location->field_lng_center['und'][0]['value']) && isset( $default_location->field_zoom_level['und'][0]['value'])){
 	  $latitude = $default_location->field_lat_center['und'][0]['value'];
 	  $longitude = $default_location->field_lng_center['und'][0]['value'];
-	  $zoom = $default_location->field_zoom_level['und'][0]['value'];
+	  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
 	}
 } else {  // existing node, let's check for existing lat /long settings and put the map and marker there
 	
@@ -41,112 +48,87 @@ if (  !isset($node->nid) || isset($node->is_new) ){
 		$longitude = $node->field_longitude['und'][0]['value'];
 		$existing_node = TRUE ; 
 	}
-	
 }
-
-
 ?>
 
 
 <script>
-var map;
-var marker;
+	var snowpilotmap = L.map('snowpilot-map').setView([<?php echo $latitude; ?>, <?php  echo $longitude; ?>], <?php  echo $zoom; ?>);
+	setTimeout(function () {
+	    snowpilotmap.invalidateSize();
+	}, 100);
+	var BaseMap = L.tileLayer('<?php echo $base_map; ?>', {
+	    attribution: '<?php echo $attribution ?>' ,
+	    maxZoom: 18
+	});
 
-function initialize() {
-   var mapOptions = {
-      center: new google.maps.LatLng(<?php echo $latitude ; ?>,<?php  echo $longitude; ?> ),
-      zoom: <?php echo isset( $zoom ) ? $zoom : '9' ; ?> ,
-      mapTypeId: 'terrain'
+	
+   // Add baselayers and overlays to groups
+   var baseLayers = {
+       "Mapbox" : BaseMap,
    };
-elevator = new google.maps.ElevationService();
-   map = new google.maps.Map(document.getElementById('google-map'), mapOptions);
 
-   // This event detects a click on the map.
-   google.maps.event.addListener(map, "click", function(event) {
+   BaseMap.addTo(snowpilotmap);
 
-      // Get lat lng coordinates.
-      // This method returns the position of the click on the map.
-      var lat = event.latLng.lat().toFixed(6);
-      var lng = event.latLng.lng().toFixed(6);
-
-      // Call createMarker() function to create a marker on the map.
-      createMarker(lat, lng);
-
-      // getCoords() function inserts lat and lng values into text boxes.
-      getCoords(lat, lng);
-
-   });
+	var marker = L.marker([<?php echo $latitude; ?>, <?php  echo $longitude; ?>], {draggable:'true'} );
+		 
    <?php   /// If this is an existing node with already-set lat / long, place the marker in appropriate location
 	 if ( $existing_node ){  ?>
-		 createMarker(<?php echo $latitude ; ?>,<?php  echo $longitude; ?> );
-		 <?php } ?>
+		 marker.addTo(snowpilotmap);
+   <?php }  ?>
+		 marker.on('dragend', function (e) {
+		   updatePosition(marker.getLatLng().lat, marker.getLatLng().lng);
+		 });
+		 snowpilotmap.on('click', function (e) {
+		   marker.addTo(snowpilotmap);
+		   marker.setLatLng(e.latlng);
+		   updatePosition(marker.getLatLng().lat, marker.getLatLng().lng);
+		 });
 
-}
-google.maps.event.addDomListener(window, 'load', initialize);
+// Add listeners to form for latitude and longitude inputs
+		 window.onload = function() {
+		   jQuery("[id^=edit-field-latitude]").blur(updatePositionreverse );
+		   jQuery("[id^=edit-field-longitude]").blur(updatePositionreverse );
+		 };
+		 
 
-// Function that creates the marker.
-function createMarker(lat, lng) {
-
-   // The purpose is to create a single marker, so
-   // check if there is already a marker on the map.
-   // With a new click on the map the previous
-   // marker is removed and a new one is created.
-
-   // If the marker variable contains a value
-   if (marker) {
-      // remove that marker from the map
-      marker.setMap(null);
-      // empty marker variable
-      marker = "";
-   }
-
-   // Set marker variable with new location
-   marker = new google.maps.Marker({
-      position: new google.maps.LatLng(lat, lng),
-      draggable: true, // Set draggable option as true
-      map: map
-   });
-
-
-   // This event detects the drag movement of the marker.
-   // The event is fired when left button is released.
-   google.maps.event.addListener(marker, 'dragend', function() {
-      
-      // Updates lat and lng position of the marker.
-      marker.position = marker.getPosition();
-
-      // Get lat and lng coordinates.
-      var lat = marker.position.lat().toFixed(6);
-      var lng = marker.position.lng().toFixed(6);
-
-      // Update lat and lng values into text boxes.
+		 function updatePosition(lat, lng ){	
+		 	document.getElementById('edit-field-latitude-und-0-value').value = marker.getLatLng().lat.toFixed(6);
+		 	document.getElementById('edit-field-longitude-und-0-value').value = marker.getLatLng().lng.toFixed(6);
+		 	snowpilotmap.panTo([lat,lng]);
+		 	marker.setLatLng([lat,lng]);
       getCoords(lat, lng);
+		 }
 
-   });
-}
-
+		 function updatePositionreverse(){
+		 	lat = document.getElementById('edit-field-latitude-und-0-value').value;
+		 	lng = document.getElementById('edit-field-longitude-und-0-value').value;
+		 	if ( lat && lng){
+		 	  marker.setLatLng([lat,lng]);
+		 		marker.addTo(snowpilotmap);
+		 	  snowpilotmap.panTo([lat,lng]);
+		   }
+		 }
+		 setTimeout(function () {
+		     snowpilotmap.invalidateSize();
+		 }, 0);
 // This function updates text boxes values.
 function getCoords(lat, lng) {
 
    // Reference input html element with id="lat".
-   var coords_lat = document.getElementById('edit-field-latitude-und-0-value');
+   var coords_lat = document.getElementById('edit-field-latitude-und-0-value').toFixed(6);
 
    // Update latitude text box.
    coords_lat.value = lat;
 
    // Reference input html element with id="lng".
-   var coords_lng = document.getElementById('edit-field-longitude-und-0-value');
+   var coords_lng = document.getElementById('edit-field-longitude-und-0-value').toFixed(6);
 
    // Update longitude text box.
    coords_lng.value = lng;
 	 
 	 var elevation = document.getElementById('edit-field-elevation-und-0-value');
 	 
-	 var latlng = new google.maps.LatLng (parseFloat(lat),parseFloat(lng));
-	 	var obj=new Object();
-	 	obj.latLng=latlng;
-	 	getElevation(latlng);
-		
 		
 		
 	 //
@@ -192,20 +174,6 @@ function getCoords(lat, lng) {
 
 }
 
-function updatePosition(){
-	  
-	
-    var lat = parseFloat(document.getElementById('edit-field-latitude-und-0-value').value);
-    var lon = parseFloat(document.getElementById('edit-field-longitude-und-0-value').value);
-    if (lat && lon) {
-        //var newPosition = new google.maps.LatLng(lat,lon);
-        //placeMarker(newPosition);
-        createMarker(lat, lon);
-				var latLng = new google.maps.LatLng(lat, lon);
-				map.panTo(latLng);
-    }
-}
-
 function updatePositionUtm(){
   var lat = document.getElementById('edit-field-latitude-und-0-value');
   var lon = document.getElementById('edit-field-longitude-und-0-value');
@@ -227,7 +195,7 @@ function updatePositionUtm(){
 		console.log('updatepositionUTM: '+ lat_long_string + ' decimal: '+ lat_pos_decimal + '  ' + long_pos_decimal);
 		lat.value = lat_pos_decimal;
 		lon.value = long_pos_decimal;
-		updatePosition();
+		updatePosition(lat_pos_decimal,long_pos_decimal );
 	
 	}
 }
@@ -266,52 +234,14 @@ function updatePositionMgrs(){
 		console.log('updateposition MGRS: '+ lat_long_string + ' decimal: '+ lat_pos_decimal + '  ' + long_pos_decimal);
 		lat.value = lat_pos_decimal;
 		lon.value = long_pos_decimal;
-		updatePosition();
+		updatePosition( lat_pos_decimal ,long_pos_decimal);
 	
 	}
 }
 
-function getElevation(clickedLocation) 
-{
-	var locations = [];
-		
-	locations.push(clickedLocation);
-	
-	// Create a LocationElevationRequest object using the array's one value
-	var positionalRequest = {'locations': locations};
-	console.log("IN get elevation "+clickedLocation);
-	console.log(positionalRequest);
-	
-	// Initiate the location request
-	elevator.getElevationForLocations(positionalRequest, function(results, status) 
-	{
-		
-		if (status == google.maps.ElevationStatus.OK) 
-		{
-			// Retrieve the first result
-			if (results[0]) 
-			{
-				// Open an info window indicating the elevation at the clicked position
-			console.log( "elevation: " + results[0].elevation.toFixed(3) );
-				
-				//add the marker
-	
-				
-				output_lat.push(clickedLocation.lat());
-				output_lng.push(clickedLocation.lng());
-				output_f.push((results[0].elevation*3.2808399).toFixed(3));
-				output_m.push(results[0].elevation.toFixed(3));
-				
-			} 
-			
-	  	} 
-	  	
-	});
-}
-
 // Add listeners to SnowPilot form for latitude and longitude inputs
-jQuery("[id^=edit-field-latitude]").blur(updatePosition);
-jQuery("[id^=edit-field-longitude]").blur(updatePosition);
+jQuery("[id^=edit-field-latitude]").blur(updatePositionreverse);
+jQuery("[id^=edit-field-longitude]").blur(updatePositionreverse);
 
 // Add listeners for UTM coords
 jQuery("[id^=edit-field-east]").blur(updatePositionUtm);

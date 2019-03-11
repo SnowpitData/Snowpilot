@@ -130,21 +130,11 @@ function st_collision_check_down($test_x, $test_y, &$cg = array(), $measure_from
 // 
 	
 
-function _strip_dupe_tests(&$test_results, $pit_depth, $measure_from ){
+function _strip_dupe_tests(&$test_results ){
 	foreach ($test_results as $x => $test){
-		
-		if ( !isset($test->field_depth['und'][0]['value'])){ // in case of CTN ( and some other test results), depth may not be set.	
-			$depth_field = ($measure_from == 'bottom') ? 0 : $pit_depth;
-		}else {
-			$depth_field = $test->field_depth['und'][0]['value'];
-		}
-		
+				
 		if ( $test->multiple > 0){
-		  $test->y_val = snowpit_graph_pixel_depth($depth_field, $pit_depth, $measure_from );
 			$simple_test_results[] = $test;
-			
-	  }else{
-			// dont set y_val, dont set str[]
 	  }
 	}
 	return $simple_test_results;
@@ -482,14 +472,13 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 		// If so we 'continue 3; to skip the last processing in the foreach loop, so test->y_position is never set.
 		//
 		$test->multiple = 1;
-		$depth_true = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value'] : 0 ;
-		$test->y_position = snowpit_graph_pixel_depth($depth_true, $pit_depth, $measure_from, $global_max, $pit_min);
-		foreach ( $test_results as $test_compare){
+		$test->y_position = snowpit_graph_pixel_depth(  $test->field_depth['und'][0]['value'] , $pit_depth, $measure_from, $global_max, $pit_min);
+		foreach ( $test_results as $y => $test_compare){
 			if ( ($test->item_id != $test_compare->item_id) &&
 				( $test->field_stability_test_type == $test_compare->field_stability_test_type  ) &&
 				( $test->field_stability_test_score == $test_compare->field_stability_test_score  ) &&
 				( $test->field_depth == $test_compare->field_depth  ) &&
-				( isset ($test_compare->multiple) && ($test_compare->multiple > 0))
+				( isset ($test_compare->multiple) && ($test_compare->multiple > 0) )
 
 			){ 		// so the two tests ARE exactly alike for those previous fields; how about for test-specific fields?
 
@@ -498,30 +487,30 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
  					  if (( $test->field_ec_score == $test_compare->field_ec_score) &&
 							  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 								( $test->field_fracture_character == $test_compare->field_fracture_character)
- 						) {$test->multiple += 1; $test_compare->multiple = 0; unset($test_compare); continue 3;	}
+ 						) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0; unset($test_compare); continue 3;	}
  					break;
 					case 'CT':
 				  
 					if (( $test->field_ct_score == $test_compare->field_ct_score) &&
 						  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_fracture_character == $test_compare->field_fracture_character)
-					) {$test->multiple += 1; $test_compare->multiple = 0;  unset($test_compare); continue 3;	}
+					) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	}
 					break;
 					case 'PST':
 				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
 						  ( $test->field_length_of_saw_cut == $test_compare->field_length_of_saw_cut) &&
 							( $test->field_data_code_pst == $test_compare->field_data_code_pst)
-					) {$test->multiple += 1; $test_compare->multiple = 0;  unset($test_compare); continue 3;	}
+					) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	}
 					break;
 					case 'RB':
 				  if (( $test->field_stability_test_score_rb == $test_compare->field_stability_test_score_rb) &&  
-					  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
+					    ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_release_type == $test_compare->field_release_type)
-					) {$test->multiple += 1; $test_compare->multiple =0;  unset($test_compare); continue 3;	}				
+					) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	}				
 					break;
 					case 'ST':
 					case 'SB':
-					$test->multiple += 1; $test_compare->multiple =0 ;  unset($test_compare); continue 3;	
+					  $test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	
 					break;
 				} 
 			} // end of "yes, this could be a repeated test" processing
@@ -529,29 +518,29 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 	 		
 	} // end of looping through test results in general
 	// now we begin to set the y_position
+	
 	$st_cg = array();
-  $simple_test_results = _strip_dupe_tests($test_results, $pit_depth, $measure_from );
+  $simple_test_results = _strip_dupe_tests($test_results);
+	
 	// loop through it again to set the y_position to correct height
 	foreach ( $simple_test_results as $x => $test){
   	if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
-  		$test->collision_flag = TRUE;
-			$test->y_position = ($test->field_depth['und'][0]['value'] <> 0) ? $simple_test_results[$x - 1]->y_position +20 : $simple_test_results[$x - 1]->y_position - 20;
-
+  		$test->collision_flag = TRUE;	
+				
+		  if ( ($measure_from == 'top' && $test->field_depth['und'][0]['value'] <> $pit_depth) ||
+			     ($measure_from == 'bottom' && $test->field_depth['und'][0]['value'] <> $pit_min)) { 
+				$test->y_position = $simple_test_results[$x - 1]->y_position +20 ;
+			} else{ $test->y_position =  $simple_test_results[$x - 1]->y_position - 20;
+			}
+			
     }else{
   	 if ( count ($st_cg)){
-  		 //st_write_xlate_group( $st_cg, $test_results);
 	  	 $st_cg = array();
-		
   	 }else{ // this is a singluar item, write straight across
-			 if ( ! ( isset ($test->field_depth['und'][0]['value']))){  // in case of CTN or other test results with no depth value, set y_position
-			 	$test->y_position =  $measure_from == 'bottom' ? snowpit_graph_pixel_depth( 0, $pit_depth, $measure_from, $global_max,$pit_min) :  snowpit_graph_pixel_depth( $pit_depth, $pit_depth, $measure_from, $global_max, $pit_min) ;		
-			 }else{
-  	  	 $test->y_position = snowpit_graph_pixel_depth($test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min );
-		   }
+  	   $test->y_position = snowpit_graph_pixel_depth( $test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min );
 	   }
 	  }
 	 } // end of second looping through
-	 // stability test write xlate group
 	 $test_results = $simple_test_results;
 	return $simple_test_results;
 }
@@ -581,7 +570,11 @@ function _generate_specifics_string($node) {
 					break;
 					case 'field_near_avalanche':
 					break;
-					
+					case'field_practice_pit':
+					if ($field_item['und'][0]['value'] ==='1'){ 
+					  $specifics[] = $item_full['label'];
+					}
+					break;
 					default:
 						$specifics[] = $item_full['label'];
 					break;
@@ -659,11 +652,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				imagettftext($img, 11, 0, 14, 53, $black, $value_font, $term_obj_region->name); 
 				if ( isset ( $node->field_loaction['und'][1]['tid'] )){
 					$term_obj_region = taxonomy_term_load($node->field_loaction['und'][1]['tid']);
-					
 					imagettftext($img, 11, 0, 14, 35, $black, $value_font, substr($term_obj_region->name , 0, 24 ));
-					
 				}
-
 			}
       $text_pos = imagettftext($img, 11, 0, 14, 71, $black, $label_font, 'Elevation: ');
 			if (isset($node->field_elevation['und'])){
@@ -795,7 +785,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				// Here we go ahead and set a value for no-release type test results: ECTX, CTN, etc
 				foreach($test_results as $test) {
 					if ( !isset($test->field_depth['und'][0]['value'] ) ){
-						$test->field_depth['und'][0]['value'] = ($snowpit_unit_prefs['field_depth_0_from'] == 'top') ? $pit_depth : 0 ;
+						$test->field_depth['und'][0]['value'] = ($snowpit_unit_prefs['field_depth_0_from'] == 'top') ? $pit_depth : $pit_min ;
 					}
 				}
 				uasort($test_results, 'depth_val');
@@ -804,8 +794,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				if ( $snowpit_unit_prefs['field_depth_0_from'] == 'top'){
 				  $test_results = array_reverse($test_results);
 				}
-			
-				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
+				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max  ,$pit_min ); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
 
 				imagettftext( $img, 11, 0 , 625, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
 				
@@ -828,7 +817,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 									$xtra_specifics .= t('Additional Stability Test Notes') .': ';
 									$comment_count++;
 								}
-								imagettftext($img, 7, 0, 625, 5*13 + 31, $red_layer , $label_font, '[ More Stability Test Notes below ]' );
+								imagettftext($img, 7, 0, 625, 5*13 + 31, $red_layer , $label_font, t('[ More Stability Test Notes below ]') );
 								$xtra_specifics .= $test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'].'; ';
 							}
 						}

@@ -327,8 +327,10 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 		$pitprofAffil  = $snowpilot_xmldoc->createAttribute('affil');
 		
 		$pitprofAffil->value = $profAffil->value = isset ($node->field_org_ownership['und'][0]['tid']) ? taxonomy_term_load($node->field_org_ownership['und'][0]['tid'])->name : '';
+		// Commenting out  where affiliation is attached as a pit core attribute- 
+		//$snowpilot_PitCore->appendChild($pitprofAffil);
 		
-		$snowpilot_PitCore->appendChild($pitprofAffil);
+		//we will leave affil in the  User
 		$snowpilot_User->appendChild($profAffil);
 		//
 		//  Location Element
@@ -642,11 +644,15 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 		$formatted_xml->loadXML($outXML);
 		$final_xml = $formatted_xml->saveXML();
 		//dsm($final_xml);
-		$xml_filehandle = fopen(DRUPAL_ROOT.$xml_filename, 'w');
-		$value = fwrite($xml_filehandle, $final_xml );
-		fclose($xml_filehandle);
-		watchdog('snowpilot', "Snowpit $node->nid fwrite results: ". $value);
-		
+		//
+		//  Only save the file to the public filesystem if it is a public pit
+		//
+	  if ( $node->field_snowpit_visibility['und'][0]['value'] == 'public' ){	
+		  $xml_filehandle = fopen(DRUPAL_ROOT.$xml_filename, 'w');
+		  $value = fwrite($xml_filehandle, $final_xml );
+		  fclose($xml_filehandle);
+		  watchdog('snowpilot', "Snowpit $node->nid fwrite results: ". $value);
+	  }
 		return $final_xml;
 	}else{		
 		$xml_filehandle = fopen(DRUPAL_ROOT.$xml_filename, 'r');
