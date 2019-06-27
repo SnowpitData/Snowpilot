@@ -3,7 +3,8 @@ description = Custom modifications for the snowpilot webapp.
 core = 7.x
 
 ;files[] = snowpilot.module
-
+; Views Handlers
+files[] = views/snowpilot_handler_snowpits.inc
 version = "7.x-0.01"
 core = "7.x"
 project = "snowpilot"

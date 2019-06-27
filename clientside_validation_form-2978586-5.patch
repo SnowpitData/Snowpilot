@@ -1,0 +1,13 @@
+diff --git a/clientside_validation_form/clientside_validation_form.module b/clientside_validation_form/clientside_validation_form.module
+index b0920b5..f73fe9f 100644
+--- a/clientside_validation_form/clientside_validation_form.module
++++ b/clientside_validation_form/clientside_validation_form.module
+@@ -167,7 +167,7 @@ function clientside_validation_regular($form_id, $element, &$js_rules, $form_sta
+         break;
+       case 'checkbox':
+       case 'checkboxes':
+-        $is_multiple = (isset($element['#options']) && count($element['#options']>1));
++        $is_multiple = (isset($element['#options']) && count($element['#options']) > 1);
+         if ($is_multiple && $element['#required']) {
+           $id = '#' . $element['#id'];
+           if (isset($element['#entity_type'])) {

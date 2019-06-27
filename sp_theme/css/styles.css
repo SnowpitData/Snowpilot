@@ -1123,6 +1123,10 @@ fieldset.group-stability .fieldset_wrapper{
 	
 }
 
+.tabs-secondary {
+    margin-top: -0.5em;
+}
+
 #snowpit-profile-node-form fieldset.group-core-info #edit-body{
 	width: 46%;
 	
@@ -1499,13 +1503,23 @@ body.node-type-snowpit-profile{
 
 }
 /* User name */
-.view-snowpit-list .views-user-name{
+.view-id-snowpit_list .views-user-name{
 	
 	
 }
 
 .view-snowpit-list .date-display-single{
-	
+	/*color: white; */
+}
+
+.view-snowpit-list.view-display-id-page_2 a{
+	color: white;
+}
+
+
+
+.view-snowpit-list.view-display-id-page_2 td > div{
+	background-color: #c87931;
 }
 
 /* graph image wrapper*/
@@ -1632,7 +1646,7 @@ body.node-type-snowpit-profile{
 		border-top: 7px solid #fff;
 		text-align: center; 
 }
-.view-snowpit-list table td > div,
+.view-id-snowpit_list table td > div,
 .view-new-test-search table td > div{
 	background-color: #fff;
 	border-left: 4px solid #c87931;
@@ -1661,6 +1675,10 @@ body.node-type-snowpit-profile{
 .view-snowpit-list table td,
 .view-new-test-search table td{
 	padding: 0 10px;
+}
+
+.view-snowpit-list.view-display-id-page_2 table td{
+	height: 18px;
 }
 
 .region-bottom{

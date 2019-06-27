@@ -1,0 +1,145 @@
+diff --git a/includes/bootstrap.inc b/includes/bootstrap.inc
+index 2abc7f044b..4edf50e241 100644
+--- a/includes/bootstrap.inc
++++ b/includes/bootstrap.inc
+@@ -3780,8 +3780,12 @@ function _drupal_shutdown_function() {
+   chdir(DRUPAL_ROOT);
+ 
+   try {
+-    while (list($key, $callback) = each($callbacks)) {
++    // Manually iterate over the array instead of using a foreach loop.
++    // A foreach operates on a copy of the array, so any shutdown functions that
++    // were added from other shutdown functions would never be called.
++    while ($callback = current($callbacks)) {
+       call_user_func_array($callback['callback'], $callback['arguments']);
++      next($callbacks);
+     }
+   }
+   catch (Exception $exception) {
+diff --git a/includes/install.inc b/includes/install.inc
+index 5e1d3c6326..b7db783586 100644
+--- a/includes/install.inc
++++ b/includes/install.inc
+@@ -779,7 +779,7 @@ function drupal_uninstall_modules($module_list = array(), $uninstall_dependents
+     $module_list = array_flip(array_values($module_list));
+ 
+     $profile = drupal_get_profile();
+-    while (list($module) = each($module_list)) {
++    foreach (array_keys($module_list) as $module) {
+       if (!isset($module_data[$module]) || drupal_get_installed_schema_version($module) == SCHEMA_UNINSTALLED) {
+         // This module doesn't exist or is already uninstalled. Skip it.
+         unset($module_list[$module]);
+diff --git a/includes/menu.inc b/includes/menu.inc
+index 4664d27e89..ca37ba509d 100644
+--- a/includes/menu.inc
++++ b/includes/menu.inc
+@@ -576,7 +576,8 @@ function _menu_load_objects(&$item, &$map) {
+           // 'load arguments' in the hook_menu() entry, but they need
+           // some processing. In this case the $function is the key to the
+           // load_function array, and the value is the list of arguments.
+-          list($function, $args) = each($function);
++          $args = current($function);
++          $function = key($function);
+           $load_functions[$index] = $function;
+ 
+           // Some arguments are placeholders for dynamic items to process.
+@@ -2402,7 +2403,8 @@ function menu_set_active_trail($new_trail = NULL) {
+       // a stripped down menu tree containing the active trail only, in case
+       // the given menu has not been built in this request yet.
+       $tree = menu_tree_page_data($preferred_link['menu_name'], NULL, TRUE);
+-      list($key, $curr) = each($tree);
++      $curr = current($tree);
++      next($tree);
+     }
+     // There is no link for the current path.
+     else {
+@@ -2432,7 +2434,8 @@ function menu_set_active_trail($new_trail = NULL) {
+         }
+         $tree = $curr['below'] ? $curr['below'] : array();
+       }
+-      list($key, $curr) = each($tree);
++      $curr = current($tree);
++      next($tree);
+     }
+     // Make sure the current page is in the trail to build the page title, by
+     // appending either the preferred link or the menu router item for the
+diff --git a/includes/module.inc b/includes/module.inc
+index 2e251080b7..4c2b3fbeeb 100644
+--- a/includes/module.inc
++++ b/includes/module.inc
+@@ -404,7 +404,11 @@ function module_enable($module_list, $enable_dependencies = TRUE) {
+     // Create an associative array with weights as values.
+     $module_list = array_flip(array_values($module_list));
+ 
+-    while (list($module) = each($module_list)) {
++    // The array is iterated over manually (instead of using a foreach) because
++    // modules may be added to the list within the loop and we need to process
++    // them.
++    while ($module = key($module_list)) {
++      next($module_list);
+       if (!isset($module_data[$module])) {
+         // This module is not found in the filesystem, abort.
+         return FALSE;
+@@ -540,7 +544,11 @@ function module_disable($module_list, $disable_dependents = TRUE) {
+     $module_list = array_flip(array_values($module_list));
+ 
+     $profile = drupal_get_profile();
+-    while (list($module) = each($module_list)) {
++    // The array is iterated over manually (instead of using a foreach) because
++    // modules may be added to the list within the loop and we need to process
++    // them.
++    while ($module = key($module_list)) {
++      next($module_list);
+       if (!isset($module_data[$module]) || !$module_data[$module]->status) {
+         // This module doesn't exist or is already disabled, skip it.
+         unset($module_list[$module]);
+diff --git a/modules/book/book.module b/modules/book/book.module
+index 7afed9ae42..32047f93f5 100644
+--- a/modules/book/book.module
++++ b/modules/book/book.module
+@@ -768,11 +768,13 @@ function book_prev($book_link) {
+     return NULL;
+   }
+   $flat = book_get_flat_menu($book_link);
+-  // Assigning the array to $flat resets the array pointer for use with each().
++  reset($flat);
+   $curr = NULL;
+   do {
+     $prev = $curr;
+-    list($key, $curr) = each($flat);
++    $curr = current($flat);
++    $key = key($flat);
++    next($flat);
+   } while ($key && $key != $book_link['mlid']);
+ 
+   if ($key == $book_link['mlid']) {
+@@ -806,9 +808,10 @@ function book_prev($book_link) {
+  */
+ function book_next($book_link) {
+   $flat = book_get_flat_menu($book_link);
+-  // Assigning the array to $flat resets the array pointer for use with each().
++  reset($flat);
+   do {
+-    list($key, $curr) = each($flat);
++    $key = key($flat);
++    next($flat);
+   }
+   while ($key && $key != $book_link['mlid']);
+ 
+diff --git a/modules/locale/locale.test b/modules/locale/locale.test
+index db87e05548..b890b06147 100644
+--- a/modules/locale/locale.test
++++ b/modules/locale/locale.test
+@@ -3188,11 +3188,7 @@ private function checkFixedLanguageTypes() {
+     foreach (language_types_info() as $type => $info) {
+       if (isset($info['fixed'])) {
+         $negotiation = variable_get("language_negotiation_$type", array());
+-        $equal = count($info['fixed']) == count($negotiation);
+-        while ($equal && list($id) = each($negotiation)) {
+-          list(, $info_id) = each($info['fixed']);
+-          $equal = $info_id == $id;
+-        }
++        $equal = array_keys($negotiation) === array_values($info['fixed']);
+         $this->assertTrue($equal, format_string('language negotiation for %type is properly set up', array('%type' => $type)));
+       }
+     }

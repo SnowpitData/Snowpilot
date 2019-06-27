@@ -552,8 +552,9 @@ function snowpilot_user_login(&$edit, $account){
 
 function snowpilot_init(){
 	drupal_add_css('https://unpkg.com/leaflet@1.4.0/dist/leaflet.css', 'external');
-	drupal_add_css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css', 'exernal');
 	drupal_add_css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css', 'external');
+	drupal_add_css('sites/all/modules/snowpilot/css/MarkerCluster.Default.css');
+	
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 	drupal_add_js('https://unpkg.com/leaflet@1.4.0/dist/leaflet.js', 'external');
@@ -710,7 +711,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 
 			snowpilot_snowpit_set_stability_test_titles($form, $snowpit_unit_prefs);
 						
-			snowpilot_snowpit_set_frac_cat($form, $snowpit_unit_prefs);
+			snowpilot_snowpit_set_frac_cat($form);
 			
 			snowpilot_set_visibility_field_options($form, $snowpit_unit_prefs);
 			
@@ -1324,21 +1325,20 @@ function snowpilot_password_field( $form, &$form_state){
   return $form;
 }
 
-function snowpilot_snowpit_set_frac_cat(&$form, $snowpit_unit_prefs){
+function snowpilot_snowpit_set_frac_cat(&$form){
 	foreach( $form['field_test']['und'] as $delta => $test_result){
 					if (is_numeric($delta)){
 						// this hides or shows the shear_quality / fracture_character fields based on user prefs. 
 						// Most fields, we do this through the gui admin/structure/dependencies
 						// shear quality is a show or hide within the 'stability test' field collection, based on frac_category at the node level
-						//dsm($form['field_fracture_category']);
 						if ($form['field_fracture_category']['und']['#default_value'][0] == 'shear_quality' )  {
-							$form['field_test']['und'][$delta]['field_fracture_character']['#type'] = 'hidden';
+							$form['field_test']['und'][$delta]['field_fracture_character']['#access'] = FALSE;
 						}else{
-							$form['field_test']['und'][$delta]['field_shear_quality']['#type'] = 'hidden';
+							$form['field_test']['und'][$delta]['field_shear_quality']['#access'] = FALSE;
+							
 						}
+						$form['field_test']['und'][$delta]['field_stability_test_score']['#access'] = FALSE;
 						// this hides the Score field, which is set by _entity_presave 
-					
-						$form['field_test']['und'][$delta]['field_stability_test_score']['#type'] ='hidden';
 						//dsm($form['field_test']['und'][0]);
 					}
 				
@@ -1945,7 +1945,8 @@ function snowpilot_node_access_records($node) {
       );
     
 		  if ( isset($node->field_org_ownership['und'][0]['tid'])){
-	  	  $node_group = $node->field_org_ownership['und'][0]['tid'];
+				$node_group = $node->field_org_ownership['und'][0]['tid'];
+	  	  
 		  	//			
 		    $grants[] = array(
 		    	'nid' => $node->nid,
@@ -1957,10 +1958,21 @@ function snowpilot_node_access_records($node) {
 		 	    'priority' => 1,
 	      );
 		  }
-   }
+   }elseif ($node->sticky && isset($node->field_org_ownership['und'][0]['tid']) ){ // Just to be explicit that this applies to LOCK pits ... org admins can still delete them
+	   $node_group = $node->field_org_ownership['und'][0]['tid'];
+		 $grants[] = array(
+     'nid' => $node->nid,
+     'realm' => 'snowpit_locked_admin',
+     'gid' => $node_group,
+     'grant_view' => 1,
+     'grant_update' => 0,
+     'grant_delete' => 1,
+     'priority' => 2
+	   );
+	 }
 	 if ( isset($node->field_snowpit_visibility['und'][0]['value']) && $node->field_snowpit_visibility['und'][0]['value'] == 'group'){
 		
-		if ( isset($user->field_professional_affiliation['und'][0]['tid'])){
+		if ( isset($user->field_professional_affiliation['und'][0]['tid']) ){
 	  	$node_group = $node->field_org_ownership['und'][0]['tid'];
 	  	// if u$user-> group is not something like unaffiliated, or education , then ......
       $grants[] = array(
@@ -2027,7 +2039,6 @@ function snowpilot_node_grants($account, $op) {
   $grants = array();
   // Set default grants condition. 
 	$grants['snowpit_unlocked'] = array(0);
-    // Make sure the user is logged in.
 	$grants['all'] = array(0);
   
 	if ($account->uid) {
@@ -2038,23 +2049,19 @@ function snowpilot_node_grants($account, $op) {
 		// set group visibility ; set shared org visibility; for all roles except merely 'authenticated user', which is disabled from group permissions
 	  if ( isset( $current_user->field_professional_affiliation['und']) && (in_array( 'forecaster' , $current_user->roles) || in_array( 'limited' , $current_user->roles) || in_array( 'org admin' , $current_user->roles) || in_array( 'researcher' , $current_user->roles))){
 	  	foreach ($current_user->field_professional_affiliation['und'] as $user_groups ) {
-	  	$grants['snowpit_group'][] = $user_groups['tid'];
-			$grants['org_shared'][] = $user_groups['tid'];
-		}
+		  	$grants['snowpit_group'][] = $user_groups['tid'];
+				$grants['org_shared'][] = $user_groups['tid'];
+			}
 			//
 			// likewise, org admins get more permissions for edit/delete
 			if ( in_array( 'org admin' , $current_user->roles)  && isset($current_user->field_org_admin_groups['und'])  ){
 				foreach ( $current_user->field_org_admin_groups['und'] as $admin_of_group){
 			    $grants['org_admin'][] = array($admin_of_group['tid']);
+					$grants['snowpit_locked_admin'][] = array($admin_of_group['tid']);
 			  }
-			
 			}
-			
   	}
-
 	}
-	
-	
   return $grants;
 }
  
@@ -2872,4 +2879,13 @@ function ToLL($north, $east, $utmZone)
   return $PC_LatLon;
 }
 
+/**
+ * Implements hook_views_api().
+ */
+function snowpilot_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'snowpilot') . '/views',
+  );
+}
 
