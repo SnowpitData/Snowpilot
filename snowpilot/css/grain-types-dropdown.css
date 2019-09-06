@@ -20,7 +20,9 @@
 .grain-type-primary-display-wrapper .field-suffix,
 .grain-type-secondary-display-wrapper .field-suffix,
 .grain-type-primary-display,
-.grain-type-secondary-display{
+.grain-type-secondary-display,
+.grain-type-surface-display-wrapper .field-suffix,
+.grain-type-surface-display{
   font-size: 1.7em;
 	float: right;
 	padding-right:25px;
@@ -63,7 +65,8 @@
 	
 }
 
-.grain-type-primary-display-wrapper{
+.grain-type-primary-display-wrapper,
+.grain-type-surface-display-wrapper{
 	padding-top: 7px;
 	margin-top: 2px;
 	border-top: solid 1px #c87931;
@@ -78,7 +81,8 @@
 }
 
 #grain-types-modal,
-#grain-types-secondary-modal{
+#grain-types-secondary-modal,
+#grain-types-surface-modal{
 	width: 250px;
 	vertical-align:top;
 	top:70px;

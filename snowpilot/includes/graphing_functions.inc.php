@@ -445,6 +445,7 @@ function _tid2snowsymbols($tid = NULL, $all = FALSE){
 		// Machine made snow types
 		'102' => '&#xe012;', // rounded Polycrystalline particles
 		'103' => '&#xe013;', // crushed Ice Particles  
+		'_none' => '' //none
 		
 	);
 	

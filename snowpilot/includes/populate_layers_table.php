@@ -4,11 +4,7 @@ use \ForceUTF8\Encoding;
 
 
 function populate_layers_table($SERIAL){
-	global $user;
-	$account = user_load($user->uid);
-	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
-		return MENU_ACCESS_DENIED;
-	}
+
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
 

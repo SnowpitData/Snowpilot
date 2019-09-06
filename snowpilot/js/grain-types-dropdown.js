@@ -23,7 +23,16 @@
 				var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
 				layerNum = parseInt(layerString, 10);
 			});
-      
+    // Attach listener to set actual grain-size field whenever the 'sisplay' field is changed
+			$('#edit-field-surface-grain-size-select').change( function() {
+     var the_val = $("#edit-field-surface-grain-size-select option:selected").val();
+				
+				$("#edit-field-surface-grain-size-und").val(the_val);
+				
+			});
+			
+			
+			
       // Listener for secondary, also opens model if checkbox is checked
       $('#edit-field-layer', context).delegate( "input[id*='field-use-multiple-grain-type-und']", 'change', function (event) {
         var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
@@ -57,7 +66,6 @@
 				// Set value in old primary grain type select
 				var selector = 'select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-und"]';
 				$(selector).val(tid);
-				
 				// Fire event to update live profile
 				$(selector).trigger('change');
 				// don't try to go to the #id-value
@@ -99,7 +107,33 @@
 				
 			});
 		});
-
+		
+		// Surface grain type
+		$('#grain-types-surface-modal', context).once('modal_click_listener', function () {       
+			$('#grain-types-surface-modal', context).delegate( 'a.parent, a.child', 'click', function (event) {
+				
+				// Set div image in Layers Form
+				var selected_grain = $(this).children("div.grain-types").eq(0).html();
+				$('div.layer_num_' + layerNum + ' span.grain-type-surface-display').html(selected_grain);
+								
+				// Parse TID from class attribute
+				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
+				var tid = parseInt(selected_tid, 10);
+				
+				// Set value in old primary grain type select
+				var selector = 'select[id^="edit-field-surface-grain-type-und"]';
+				$(selector).val(tid);
+				console.log(tid);
+				// Fire event to update live profile
+				$(selector).trigger('change');
+				// don't try to go to the #id-value
+				event.preventDefault();
+				
+				// Close modal window after click
+				$.modal.close();
+				
+			});
+		});
 		
     }    // end of attach
   };  //end of Drupal.behavior.snowpilot4

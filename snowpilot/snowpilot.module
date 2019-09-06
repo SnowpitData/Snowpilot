@@ -491,6 +491,49 @@ function populate_snowpit_image($SERIAL){
 	return array( 'continue' => !($critical) , 'message' => $message );
 }
 
+function snowpilot_node_delete($node){
+	if ($node->type  == 'snowpit_profile'){
+		
+		include_once(DRUPAL_ROOT.'/sites/default/db_settings.php' );
+		Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info	
+		
+		if ( $serial = snowpilot_avscience_pit_exists($node) ){
+			db_set_active('avscience_db');
+			
+		  $query = "DELETE from PIT_TABLE WHERE SERIAL = $serial ";
+			$query_layers = "DELETE from layers WHERE pid = $serial ";
+			$query_tests = "DELETE from shear_tests WHERE pid = $serial ";
+			
+			$message = '';
+		  $results = db_query($query);
+		  $results_layers = db_query($query_layers);
+		  $results_tests = db_query($query_tests);
+			db_set_active('default');
+			
+			//dsm($serial);
+			//dsm($node->nid);
+			// Delete the image file: jpg, png, xml; and also the layers image
+			
+		  if (unlink ( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/graph-serial-'. $serial .'.jpg' )) $message .= '<li>Avscience Serial JPG deleted</li>';
+			if (unlink ( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/layers/layers-serial-'. $serial .'.jpg' )) $message .= '<li>Avscience Layers JPG deleted</li>';
+			// Is Node- id correct?
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/graph-'. $node->nid .'.jpg')) $message .= '<li>JPG deleted</li>';
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/graph-'. $node->nid .'.png')) $message .= ' <li>PNG deleted</li>';
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/layers-'. $node->nid .'.png')) $message .= '<li>Layers Deleted</li>';
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/graph-'. $node->nid .'.png')) $message .= '<li>Graph deleted</li>';
+			
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/xml/node-'. $node->nid .'.xml')) $message .= '<li>XML deleted</li>';
+			
+			$message .= '<p>The snowpit ID:' .$node->nid  .' , Serial: '. $serial .' has been deleted from the avscience database.';
+			
+			drupal_set_message( $message  );
+			watchdog( 'snowpilot' , $message  );
+	  }
+	}
+	return;
+}
+
+
 function snowpilot_avscience_pit_exists($node){
 	include_once(DRUPAL_ROOT.'/sites/default/db_settings.php' );
 
@@ -500,22 +543,16 @@ function snowpilot_avscience_pit_exists($node){
 	db_set_active('avscience_db');
 	//
 	//   performing query to see if it exists under avscience:LOCAL_SERIAL
-	$query = "SELECT * FROM `PIT_TABLE` WHERE LOCAL_SERIAL = 'drupal-nid-". $node->nid.'-'.$node ->created."000' ";
+	$query = "SELECT * FROM `PIT_TABLE` WHERE node_id = '$node->nid'";
   $results = db_query($query);
-	$records = array();
+	db_set_active('default');
   while ( $record = $results->fetch() )	{
-	  $records[] = $record;
+		if ( isset($record->SERIAL) && is_numeric($record->SERIAL)){
+			watchdog('snowpilot' , "snowpit serial exist:$account->name $node->created : true". var_export($record, TRUE));
+			return $record->SERIAL;
+		}
   }
-	db_set_active();
-	if ( count( $records)){
-			watchdog('snowpilot' , "snowpit serial exist:$account->name $node->created : true". var_export($records, TRUE));
-			return true;
-	}else{
-		watchdog('snowpilot' , "snowpit serial exist:$account->name $node->created :  false");
-		
-		return false;
-	}
-
+	return false;
 }
 
 //
@@ -620,67 +657,14 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			}
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
 				
-				$grain_types_vocab = taxonomy_get_tree('3');				
-				//
-				//  
-				//
-				$markup = '';
-				$markup .= '<div class = "scotch-modal" id = "grain-types-modal" ><div class = "scotch-content dropdown">';
-				$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
-				foreach( $grain_types_vocab as $grain_type ){
-					if ($grain_type->parents[0] == 0 ){
-						$grain_type_groups[] = $grain_type;
-					}
-				}	
-					foreach ( $grain_type_groups as $grain_type_parent ){
-						$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
-						foreach ( $grain_types_vocab as $grain_type_child ){
-							if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
-								$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
-								
-							}
-						}
-						
-						$markup .=  "</div>"; // end dropright-content
-						$markup .= "</div>";  // end dropdown-item
-					}
-					$markup .= "</div>"; // end dropdown-content
-					
-				
-				$markup .= "</div> </div>";// end scotch modal wrappers
-				
-				//
-				//  begin secondary grain types dropdown modal
-				//
-				$markup .= '<div class = "scotch-modal" id = "grain-types-secondary-modal" ><div class = "scotch-content dropdown">';
-				$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
-
-					foreach ( $grain_type_groups as $grain_type_parent ){
-						$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
-						foreach ( $grain_types_vocab as $grain_type_child ){
-							if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
-								$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
-								
-							}
-						}
-						
-						$markup .=  "</div>"; // end dropright-content
-						$markup .= "</div>";  // end dropdown-item
-					}
-					$markup .= "</div>"; // end dropdown-content
-					
-				
-				$markup .= "</div> </div>";// scotch modal wrappers
-				// end secondary grain types modal dropdown
-				
-				$form['field_layer']['und'][0]['field_grain_type_display'] = array( 
-			  	'#type' => 'container',
-			  	'#weight' => '7',
-			  	'und' => array ( 
-			  	'markup' => array (
-			      '#markup' =>  $markup ,),
-				  ),	
-			  );
+			$form['field_layer']['und'][0]['field_grain_type_display'] = array( 
+		  	'#type' => 'container',
+		  	'#weight' => '7',
+		  	'und' => array ( 
+		  	'markup' => array (
+		      '#markup' =>  snowpilot_modal_data() ),
+			  ),	
+		  );
 				
 			// Done wiwth new / or / existing pit logic, now we do things to all pits
 			/*if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
@@ -1099,7 +1083,30 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			}
 			if ( isset( $form['field_layer']['und'][$key]['field_grain_type_secondary']['und']['#default_value'][0])) {
 				$secondary_gt = _tid2snowsymbols($form['field_layer']['und'][$key]['field_grain_type_secondary']['und']['#default_value'][0]);
+			}	
+			if ( isset( $form['field_surface_grain_type']['und']['#default_value'][0])) {
+				$surface_gt = _tid2snowsymbols($form['field_surface_grain_type']['und']['#default_value'][0]);
 			}			
+			dsm($form['field_surface_grain_type']['und']['#default_value'][0]);
+			watchdog( 'snowpilot',var_export($form['field_surface_grain_type']['und'], TRUE));
+			if (  $key == '0' ){
+		 		$form['field_layer']['und'][0]['field_surface_grain_type_select_link'] = array( 
+			  	'#type' => 'container',
+			  	'#weight' => '-2',
+			  	'und' => array ( 
+			  	  'markup' => array (
+			        '#markup' => '<a href = "#grain-types-surface-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >
+						  Surface grain type <span class ="grain-type-surface-display grain-types field-suffix" >'. $surface_gt  .'</span> </a> ',
+				    ),
+				  ),	
+				  '#attributes' => array( 'class' => array('grain-type-surface-display-wrapper') ),
+			  );
+				
+				$form['field_layer']['und'][0]['field_surface_grain_size_select'] = $form['field_surface_grain_size'];
+				$form['field_layer']['und'][0]['field_surface_grain_size_select']['#weight'] = '-1';
+				$form['field_layer']['und'][0]['field_surface_grain_size_select']['und']['#options']['_none'] = "Surface Snow Grain Size";
+				$form['field_layer']['und'][0]['field_surface_grain_size_select']['#id'] = 'edit-field-surface-grain-size-select';
+			}
 			if ( is_numeric( $key ) && ( $layer_num <> $key )){ // this is a layer other than the current one ... give existing 
 
 			 		$form['field_layer']['und'][$key]['field_grain_type_select_link'] = array( 
@@ -1967,7 +1974,7 @@ function snowpilot_node_access_records($node) {
      'grant_view' => 1,
      'grant_update' => 0,
      'grant_delete' => 1,
-     'priority' => 2
+     'priority' => 1
 	   );
 	 }
 	 if ( isset($node->field_snowpit_visibility['und'][0]['value']) && $node->field_snowpit_visibility['und'][0]['value'] == 'group'){
@@ -2514,6 +2521,8 @@ function snowpilot_graph_field_trunc(&$img,$string,$x_limit){
 //
 */
 function snowpilot_node_avscience_save_pit($node){
+
+	
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
 	
@@ -2887,5 +2896,90 @@ function snowpilot_views_api() {
     'api' => 3,
     'path' => drupal_get_path('module', 'snowpilot') . '/views',
   );
+}
+
+function snowpilot_modal_data(){
+	
+	$grain_types_vocab = taxonomy_get_tree('3');				
+	//
+	//  
+	//
+	$markup = '';
+	$markup .= '<div class = "scotch-modal" id = "grain-types-modal" ><div class = "scotch-content dropdown">';
+	$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
+	foreach( $grain_types_vocab as $grain_type ){
+		if ($grain_type->parents[0] == 0 ){
+			$grain_type_groups[] = $grain_type;
+		}
+	}	
+	// this adds a 'none' option tothe grain types modal popups
+	$grain_type_groups[] = (object) array( 'tid'=> '_none' , 'description' => '_none', 'name' => 'None');
+	
+		foreach ( $grain_type_groups as $grain_type_parent ){
+			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+			foreach ( $grain_types_vocab as $grain_type_child ){
+				if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
+					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+					
+				}
+			}
+			
+			$markup .=  "</div>"; // end dropright-content
+			$markup .= "</div>";  // end dropdown-item
+		}
+		$markup .= "</div>"; // end dropdown-content
+		
+	
+	$markup .= "</div> </div>";// end scotch modal wrappers
+	
+	//
+	//  begin secondary grain types dropdown modal
+	//
+	$markup .= '<div class = "scotch-modal" id = "grain-types-secondary-modal" ><div class = "scotch-content dropdown">';
+	$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
+
+		foreach ( $grain_type_groups as $grain_type_parent ){
+			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+			foreach ( $grain_types_vocab as $grain_type_child ){
+				if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
+					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+					
+				}
+			}
+			
+			$markup .=  "</div>"; // end dropright-content
+			$markup .= "</div>";  // end dropdown-item
+		}
+		$markup .= "</div>"; // end dropdown-content
+		
+	
+	$markup .= "</div> </div>";// scotch modal wrappers
+	// end secondary grain types modal dropdown
+	
+	//
+	//  begin surface grain types dropdown modal
+	//
+	$markup .= '<div class = "scotch-modal" id = "grain-types-surface-modal" ><div class = "scotch-content dropdown">';
+	$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
+
+		foreach ( $grain_type_groups as $grain_type_parent ){
+			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+			foreach ( $grain_types_vocab as $grain_type_child ){
+				if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
+					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+					
+				}
+			}
+			
+			$markup .=  "</div>"; // end dropright-content
+			$markup .= "</div>";  // end dropdown-item
+		}
+		$markup .= "</div>"; // end dropdown-content
+		
+	
+	$markup .= "</div> </div>";// scotch modal wrappers
+	
+	return $markup;
+	
 }
 

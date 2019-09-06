@@ -2,11 +2,7 @@
 include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
 use \ForceUTF8\Encoding;
 function populate_shear_tests_table($SERIAL){
-	global $user;
-	$account = user_load($user->uid);
-	if ( !(user_has_role( 3, $account ))  ){ 
-		return MENU_ACCESS_DENIED;
-	}
+
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
 	
