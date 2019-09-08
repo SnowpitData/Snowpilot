@@ -14,8 +14,8 @@
 		$('.field-name-field-grain-type').hide();
 		// Hide the secondary grain type select dropdown
 		$('.field-name-field-grain-type-secondary').hide();
-		// Hide 'use multiple grain types' checkbox 
-		//$('.field-name-field-use-multiple-grain-type').hide();
+		// Hide surface grain type dropdown 
+		$('#edit-field-surface-grain-type').hide();
 		
 		// Attach listener to save layer number when modal is opened
 		$('#edit-field-layer', context).once('grain_modal_layer_listeners', function () {       
@@ -23,14 +23,6 @@
 				var layerString = $(this).parents("div[class*='layer_num_']")[0].className.split(" ")[1].split("_")[2];
 				layerNum = parseInt(layerString, 10);
 			});
-    // Attach listener to set actual grain-size field whenever the 'sisplay' field is changed
-			$('#edit-field-surface-grain-size-select').change( function() {
-     var the_val = $("#edit-field-surface-grain-size-select option:selected").val();
-				
-				$("#edit-field-surface-grain-size-und").val(the_val);
-				
-			});
-			
 			
 			
       // Listener for secondary, also opens model if checkbox is checked
@@ -114,7 +106,7 @@
 				
 				// Set div image in Layers Form
 				var selected_grain = $(this).children("div.grain-types").eq(0).html();
-				$('div.layer_num_' + layerNum + ' span.grain-type-surface-display').html(selected_grain);
+				$('span.grain-type-surface-display').html(selected_grain);
 								
 				// Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
@@ -123,7 +115,6 @@
 				// Set value in old primary grain type select
 				var selector = 'select[id^="edit-field-surface-grain-type-und"]';
 				$(selector).val(tid);
-				console.log(tid);
 				// Fire event to update live profile
 				$(selector).trigger('change');
 				// don't try to go to the #id-value

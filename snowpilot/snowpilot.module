@@ -1087,25 +1087,10 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			if ( isset( $form['field_surface_grain_type']['und']['#default_value'][0])) {
 				$surface_gt = _tid2snowsymbols($form['field_surface_grain_type']['und']['#default_value'][0]);
 			}			
-			dsm($form['field_surface_grain_type']['und']['#default_value'][0]);
-			watchdog( 'snowpilot',var_export($form['field_surface_grain_type']['und'], TRUE));
+
 			if (  $key == '0' ){
-		 		$form['field_layer']['und'][0]['field_surface_grain_type_select_link'] = array( 
-			  	'#type' => 'container',
-			  	'#weight' => '-2',
-			  	'und' => array ( 
-			  	  'markup' => array (
-			        '#markup' => '<a href = "#grain-types-surface-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >
-						  Surface grain type <span class ="grain-type-surface-display grain-types field-suffix" >'. $surface_gt  .'</span> </a> ',
-				    ),
-				  ),	
-				  '#attributes' => array( 'class' => array('grain-type-surface-display-wrapper') ),
-			  );
-				
-				$form['field_layer']['und'][0]['field_surface_grain_size_select'] = $form['field_surface_grain_size'];
-				$form['field_layer']['und'][0]['field_surface_grain_size_select']['#weight'] = '-1';
-				$form['field_layer']['und'][0]['field_surface_grain_size_select']['und']['#options']['_none'] = "Surface Snow Grain Size";
-				$form['field_layer']['und'][0]['field_surface_grain_size_select']['#id'] = 'edit-field-surface-grain-size-select';
+				$form['field_surface_grain_type']['#prefix'] = '<div class = "surface_snow_elements" ><a href = "#grain-types-surface-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >Surface grain type <span class ="grain-type-surface-display grain-types field-suffix" >'. $surface_gt  .'</span> </a> ';
+			  $form['field_surface_grain_size']['#suffix'] = '</div>';
 			}
 			if ( is_numeric( $key ) && ( $layer_num <> $key )){ // this is a layer other than the current one ... give existing 
 

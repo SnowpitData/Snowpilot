@@ -29,6 +29,11 @@
   vertical-align: middle;
 }
 
+.form-item-field-surface-grain-size-und label,
+.form-item-field-surface-grain-size-und select{
+	display:inline-block;
+}
+
 .grain-type-primary-display{
 	left: -18px;
 	position: relative;
@@ -47,6 +52,15 @@
 	padding-right: 5px;
 	width: 180px;
 	position: relative;
+}
+
+.surface_snow_elements{
+	padding-top: 5px;
+	padding-left: 1px;
+  border: 1px #c87931 solid;
+  width: 300px;
+  margin-top: 5px;
+  padding-bottom: 5px;
 }
 
 .button-like {
