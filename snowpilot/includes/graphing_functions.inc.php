@@ -838,6 +838,18 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					imagettftext($img, 8, 0, 671, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min )+12,$black, $label_font, $density->field_density_top['und'][0]['value']);
 				}
 			}
+
+			// set surface grain type image and size
+			
+			if ( isset($node->field_surface_grain_type['und'][0]['tid']) ){
+				// insert grain type image
+				$surf_grain_type_image = _tid2snowsymbols($node->field_surface_grain_type['und'][0]['tid']);
+				imagettftext($img, '12', 0, 520 , 154 , $black, $snowsymbols_font, $surf_grain_type_image);
+			}
+			if ( isset($node->field_surface_grain_size['und'][0]['value']) ){
+
+				imagettftext($img, '8', 0, 580 , 154 , $black, $label_font, $node->field_surface_grain_size['und'][0]['value']);
+			}
 			//
 			//  Prep for the 2 Cycles through layers 
 			// 

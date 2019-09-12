@@ -2595,7 +2595,7 @@ function snowpilot_node_avscience_save_pit($node){
 		//windspeed
 		$wind_speed_labels = array('calm'=> 'C', 'moderate'=>'M' , 'light' => 'L', 'strong' => 'S', 'gale' => 'X');
 		if ( isset($node->field_wind_speed['und'][0]['value']) ){
-		  $values_list[] = " WIND_SPEED = '".  $wind_speed_labels[ $node->field_wind_speed['und'][0]['value'] ] . "' " ;
+		  $values_list[] = " WIND_SPEED = '".  $node->field_wind_speed['und'][0]['value']  . "' " ;
 	  }
 		//
 		// aspect
