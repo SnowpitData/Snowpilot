@@ -86,11 +86,11 @@
 				
         // Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
-				var tid = parseInt(selected_tid, 10);
+			//	var tid = parseInt(selected_tid, 10);
 				
 				// Set value in old secondary grain type select
 				var selector = 'select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]';
-				$(selector).val(tid);
+				$(selector).val(selected_tid);
 				
 				// Fire event to update live profile
 				$(selector).trigger('change');
@@ -113,11 +113,11 @@
 								
 				// Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
-				var tid = parseInt(selected_tid, 10);
+				//var tid = parseInt(selected_tid, 10);
 				
 				// Set value in old primary grain type select
 				var selector = 'select[id^="edit-field-surface-grain-type-und"]';
-				$(selector).val(tid);
+				$(selector).val(selected_tid);
 				// Fire event to update live profile
 				$(selector).trigger('change');
 				// don't try to go to the #id-value
