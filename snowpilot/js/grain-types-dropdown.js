@@ -53,10 +53,6 @@
 								
 				// Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
-				// REmoving this since parseInt seems superflous, and makes it so it doesn't work with '_none'
-				//console.log(selected_tid);
-				//var tid = parseInt(selected_tid, 10);
-				//console.log('tid: '+tid);
 				// Set value in old primary grain type select
 				var selector = 'select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-und"]';
 				
@@ -85,9 +81,7 @@
 				$('#edit-field-layer-und-' + layerNum + '-field-use-multiple-grain-type-und').prop('checked' , true);
 				
         // Parse TID from class attribute
-				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
-			//	var tid = parseInt(selected_tid, 10);
-				
+				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];				
 				// Set value in old secondary grain type select
 				var selector = 'select[id^="edit-field-layer-und-' + layerNum + '-field-grain-type-secondary-und"]';
 				$(selector).val(selected_tid);
@@ -113,8 +107,7 @@
 								
 				// Parse TID from class attribute
 				var selected_tid = $(this).attr('class').split(" ")[1].split("-")[1];
-				//var tid = parseInt(selected_tid, 10);
-				
+
 				// Set value in old primary grain type select
 				var selector = 'select[id^="edit-field-surface-grain-type-und"]';
 				$(selector).val(selected_tid);

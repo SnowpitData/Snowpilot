@@ -575,16 +575,21 @@ h3.test-title{
 }
 
 #snowpit-profile-node-form .field-name-field-bottom-depth,
-#snowpit-profile-node-form .group-layers .field-name-field-depth,
-#snowpit-profile-node-form .field-name-field-grain-size-max,
-#snowpit-profile-node-form .field-name-field-hardness2{
+#snowpit-profile-node-form .group-layers .field-name-field-depth
+{
 	padding-left: 25px;
 	
 }
 
-#snowpit-profile-node-form .field-name-field-use-multiple-hardnesses,
+#snowpit-profile-node-form .field-name-field-grain-size-max{
+	padding-left: 10px;
+}
+#snowpit-profile-node-form .field-name-field-hardness {
+
+    width: 40%;
+	}
+
 #snowpit-profile-node-form .field-name-field-use-multiple-grain-type,
-#snowpit-profile-node-form .field-name-field-use-multiple-grain-size,
 #snowpit-profile-node-form .field-name-field-use-multiple-density,
 #snowpit-profile-node-form .field-name-field-water-content,
 #snowpit-profile-node-form .field-name-field-this-is-my-layer-of-greate {
@@ -594,6 +599,11 @@ h3.test-title{
 	*/
 	/* All that was making the layers form to lengthy */
 }
+#snowpit-profile-node-form .field-name-field-use-multiple-grain-size,
+#snowpit-profile-node-form .field-name-field-use-multiple-hardnesses{
+	display: none;
+}
+
 
 #field-test-add-more-wrapper>div.form-item,
 #field-temp-collection-add-more-wrapper>div.form-item,
@@ -1208,6 +1218,11 @@ button#print-button{
 	background-color:#f8fff0;
 }
 
+#block-block-2 .save,
+#edit-button{
+	float: right;
+}
+
 .group-snowpit .horizontal-tabs ul.horizontal-tabs-list,
 #edit-actions{
 	background-color: #3b6e8b;
@@ -1374,14 +1389,18 @@ form.node-snowpit_profile-form .vertical-tabs{
 
 #block-block-2 .download {
     background-color: #3b6e8b;
-    margin-left: 622px;
     width: 175px;
+		float:right;
 }
 
 #block-block-2 button + div.download {
   margin-left: 22px;
 	display: inline-block;
   
+}
+.field-name-field-stability-test-score-ct,
+.field-name-field-ct-score{
+	display: inline-block;
 }
 
 #block-block-2 .download div.ctools-dropdown-container,
@@ -1393,9 +1412,6 @@ form.node-snowpit_profile-form .vertical-tabs{
 	float: right;
 }
 
-#edit-button{
-	margin-left: 622px;
-}
 
 #block-block-2 {
     position: relative;
@@ -1532,6 +1548,11 @@ body.node-type-snowpit-profile{
 .view-snowpit-list.view-display-id-block .view-content  {
 }
 
+#content .view-snowpit-list.view-display-id-page_3 .view-content{
+	float: right;
+	display: inline-block;
+}
+
 
 #block-views-snowpit-list-block,
 #block-views-snowpit-list-block-1{
@@ -1593,7 +1614,7 @@ body.node-type-snowpit-profile{
 		padding-left: 35px;
 }
 
-.view-snowpit-list table td>div,
+.view-snowpit-list.view-display-id-page table td>div,
 .view-new-test-search table td>div{
 	max-width: 260px;
 }

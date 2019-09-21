@@ -16,4 +16,5 @@ function snowpilot_views_data_alter(&$data) {
       'handler' => 'snowpilot_handler_snowpits',
     ),
   );
+	
 }

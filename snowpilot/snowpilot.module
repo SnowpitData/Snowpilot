@@ -109,7 +109,6 @@ function snowpilot_organization(){
 	global $user;
 	//dsm($user);
 	$org_admin_user = entity_metadata_wrapper('user', $user);
-	$default_org = $org_admin_user->field_org_ownership->value();
 	$result = '';
 	if ( count ( $org_admin_user->field_org_admin_groups->value() ) > 1 ) {
 		$result .= snowpilot_org_admin_page_links($org_admin_user->field_org_admin_groups->value() );
@@ -121,11 +120,11 @@ function snowpilot_organization(){
 			$result .= 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.';
 		  return $result;
 		}
-		//$org_admin_user->field_org_ownership->set( $org_admin_groups[0]->tid );
+		$org_admin_user->field_org_ownership->set( $org_admin_groups[0]->tid );
 		//$org_admin_user->save();
-		$default_org = $org_admin_user->field_org_ownership->value(); // we need to refill this variable since it changed
 	}	
-	$result .= '<h2>Snowpits for '. $default_org->name  . '</h2>';
+	$default_org = $org_admin_user->field_org_ownership->value();
+	$result .= '<h2>Snowpits for '. $default_org->name  . '</h2>'; 
 	$result .= views_embed_view( 'new_test_search' , 'page', $default_org->tid );
 	drupal_set_title ( t('Manage Organization Users and Snowpits: '.$default_org->name ));
 	return $result;
@@ -350,7 +349,7 @@ function snowpilot_user_org(&$argument){
 				drupal_set_message( 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.');
 			  return ;
 			}
-		  $user_wrapper->field_org_ownership->set( $org_admin_groups[0]->tid );
+		  $user_wrapper->field_org_ownership->set( $org_admin_groups[0]->tid ); $default_tid = $org_admin_groups[0]->tid;
 		  $user_wrapper->save();
 		  
 		}	
@@ -659,7 +658,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				
 			$form['field_layer']['und'][0]['field_grain_type_display'] = array( 
 		  	'#type' => 'container',
-		  	'#weight' => '7',
+		  	'#weight' => '12',
 		  	'und' => array ( 
 		  	'markup' => array (
 		      '#markup' =>  snowpilot_modal_data() ),
@@ -727,6 +726,13 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				}
 				$form['#after_build'][] = 'snowpit_list_view_after_build';
 			}	
+			if ( $form['#id'] == 'views-exposed-form-snowpit-list-page-3' ){
+		 	 $form['#attached']['js'][] = array(
+		 	    'type' => 'file',
+		 	    'data' => drupal_get_path('module','snowpilot') . '/js/snowpits_map.js',
+					'scope' => 'footer',
+		 	  );
+			}
 			if ( isset($form['field_practice_pit_value']) ){
 				$form['field_practice_pit_value']['#options'] = array(  0 => 'Exclude Practice Pits' , 1 => 'Just Practice Pits' ,'All' => 'Include Practice Pits');
 			
@@ -815,6 +821,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	} // end switch
 	return $form;
 }
+
 //
 //  Begin customizations for 'add another' more than one!
 //
@@ -1125,7 +1132,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			  );
 				$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = '';
 		 		$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#field_suffix'] = 
-					'<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
+					'<a href = "#grain-types-secondary-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >
 								 Secondary grain type <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
 			}
 
@@ -1453,32 +1460,10 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 					   	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_ct", "Please enter a CT test score result.");
 					}elseif( (!isset($test['field_depth']['und'][0]['value']) || $test['field_depth']['und'][0]['value'] == '') &&  $test['field_stability_test_score_ct']['und'][0]['value'] <> 'CTN' ){ 
 						form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , "Please enter a value for depth.");
-					}elseif ( isset( $test['field_ct_score']['und'][0]['value'] )){
-				    $test_score_ct = $test['field_stability_test_score_ct']['und'][0]['value'];
-		        $ct_score = $test['field_ct_score']['und'][0]['value'];
-						if ( $ct_score <> ''){
-		      	switch ( $test['field_stability_test_score_ct']['und'][0]['value']){
-		      		case 'CTE':
-		        			if ( $ct_score <1 || $ct_score >10  ){
-	                	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
-					      		', which means the CT Score should be between 1 and 10 (inclusive).'));
-			        	  }
-			       	break;
-				      case 'CTM':
-				        if ( $ct_score <11 || $ct_score >20  ){
-	                form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
-						      ', which means the CT Score should be between 11 and 20 (inclusive).'));
-				        	}				
-				      break;
-				      case 'CTH':
-				        	if ( $ct_score <21 || $ct_score >30  ){
-	                	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ct_score", t('You have a Compression Test with Stability Score of '. $test_score_ct.
-						      	', which means the CT Score should be between 21 and 30 (inclusive).'));
-				        	}				
-				      break;
-			      	} // end switch CT result type
-
-						}  // end if ct score is not empty
+					}elseif ( ($test['field_stability_test_score_ct']['und'][0]['value'] == 'CT') && !is_numeric( $test['field_ct_score']['und'][0]['value'] )){
+						form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_ct_score" , "Please enter an integer value for '# of taps'.");
+				    
+	
 		      } // end "if" we have full CT test results
           break;
 					case 'DT':
@@ -2097,10 +2082,27 @@ function snowpilot_field_widget_form_alter(&$element, &$form_state, $context) {
     // Be sure not to overwrite existing attributes.
     $element['#attributes']['class'][] = 'myclass';
   }
+	if ($context['field']['type']  == 'datetime' ){
+		$location = $form_state['build_info']['args'][0]->field_loaction ;
+		//dsm($location['und'][0]['tid']);
+		if ( isset( $location['und'][0]['tid'] ) ){
+      $form_state['field']['field_date_time']['und']['instance']['widget']['settings']['input_format'] = snowpilot_date_output_format($location['und'][0]['tid']);
+		}else{
+			$account = user_load( $form_state['build_info']['args'][0]->uid );
+			$snowpilot_user_prefs = snowpilot_unit_prefs_get($account);
+			$form_state['field']['field_date_time']['und']['instance']['widget']['settings']['input_format'] = snowpilot_date_output_format( $snowpilot_user_prefs['field_loaction_0'] );
+    }
+	}
 }
 		
-// use a 'favorite locations' node type to store fields that should be prepopulated on the snowpit profile form.
-
+// this function determines whether a region uses 'Euro' formatted date time ; or American style.
+function snowpilot_date_output_format($tid){
+	if ( in_array ($tid, array( 1,2 ,3,4,5,6,7,8,9,10,11,13,14) )){
+		return 'm/d/Y - g:ia';
+	}else{
+		return 'd/m/Y - H:i';
+	}
+}
 
 
 function snowpilot_snopit_prof_set_suffices(&$form, $snowpit_unit_prefs){
@@ -2400,7 +2402,7 @@ function stability_test_score_shorthand($test, $snowpit_unit_prefs){
 		}
 		break;
 		case 'CT':
-			if (in_array($test->field_stability_test_score_ct['und'][0]['value'], array('CTE','CTM', 'CTH', 'CTN'  )) && isset($test->field_ct_score['und'][0]['value'])){
+			if ( ($test->field_stability_test_score_ct['und'][0]['value'] == 'CT') && isset($test->field_ct_score['und'][0]['value'])){
 				$string = 'CT' . $test->field_ct_score['und'][0]['value'] . $fracture;
 			}else{
 		  	$string = $test->field_stability_test_score_ct['und'][0]['value'] . $fracture;
@@ -2451,7 +2453,7 @@ function stability_test_score_shorthand_form($stab_test){
 		break;
 		case 'CT':
 	  	$string = $stab_test['field_stability_test_score_ct']['und']['#default_value'][0];
-			if (in_array($stab_test['field_stability_test_score_ct']['und']['#default_value'][0], array('CTE','CTM', 'CTH', 'CTN'  )) && isset($stab_test['field_ct_score']['und'][0]['value']['#default_value'])){
+			if ( ( $stab_test['field_stability_test_score_ct']['und']['#default_value'][0] == 'CT' ) && isset($stab_test['field_ct_score']['und'][0]['value']['#default_value'])){
 				$string .= $stab_test['field_ct_score']['und'][0]['value']['#default_value'] . $shear_quality;
 			}
 		break;	
@@ -2620,10 +2622,18 @@ function snowpilot_node_avscience_save_pit($node){
 				$values_list[] =  " surfacePen = " . $node->field_ski_penetration['und'][0]['value']." "  ;
 			}
 		}
-		
+		// surface grain type and size
+		if (isset($node->field_surface_grain_type['und'][0]['tid']  ) ){
+			$grain_types_vocab = taxonomy_term_load($node->field_surface_grain_type['und'][0]['tid']);
+			$values_list[] =  " surfGrainType = '" . $grain_types_vocab->description."' "  ;
+		}
+		if (isset($node->field_surface_grain_size['und'][0]['value']  ) ){
+			$values_list[] =  " surfGrainSize = '" . $node->field_surface_grain_size['und'][0]['value']."' "  ;
+		}
 
 		//
 		//  measureFrom
+		//
 				if (isset($node->field_depth_0_from['und'][0]['value']) && $node->field_depth_0_from['und'][0]['value'] == 'top' ) {
 			$values_list[] = " measureFrom = 'top' ";
 		}else{

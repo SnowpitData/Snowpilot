@@ -29,6 +29,11 @@
   vertical-align: middle;
 }
 
+.field-name-field-use-multiple-grain-type .field-suffix{
+	padding-right:25px;
+  vertical-align: middle;
+}
+
 .form-item-field-surface-grain-size-und label,
 .form-item-field-surface-grain-size-und select{
 	display:inline-block;
@@ -38,11 +43,6 @@
 	left: -18px;
 	position: relative;
 }
-
-.grain-type-secondary-display{
-	padding-right: 0px;
-}
-
 .grain-type-primary-display .field-suffix,
 .grain-type-secondary-display .field-suffix{
 	
@@ -88,10 +88,24 @@
 }
 .grain-type-secondary-display-wrapper,
 .field-name-field-use-multiple-grain-type{
+	padding-top: 7px;
+	margin-bottom: 2px;
+	border-top: solid 1px #c87931;
+	
+}
+.field-name-field-grain-size-max .form-item .description,
+.field-name-field-grain-size .form-item .description,
+.field-name-field-grain-size-secondary .form-item .description{
+	display: inline-block;
+}
+
+.field-name-field-grain-size-secondary {
 	padding-bottom: 7px;
 	margin-bottom: 2px;
 	border-bottom: solid 1px #c87931;
-	
+}
+#snowpit-profile-node-form .field-name-field-use-multiple-grain-type{
+	padding-bottom: 7px;
 }
 
 #grain-types-modal,

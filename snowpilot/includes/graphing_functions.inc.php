@@ -330,16 +330,7 @@ function _output_formatted_notes($string, $font , $short = TRUE){
 			  $parts[] = substr($string, 0, $pointer);
 				$string = '' ; 
 		  }	
-			//
-			//  This makes sure that there is enough room at the end of the fourth line to include " [ ... more notes ]". which will be added in the main function, not this helper function
-			//
-			if ( $short && isset ($parts) && count ( $parts ) > 4 ){
-				$line = imagettfbbox(9,0,$font,$parts[3]);
-				while ( $line[2] > 800 ){
-					$parts[3] = substr($parts[3],0, strlen($parts[3]) -1 );
-					$line = imagettfbbox(9,0,$font,$parts[3]);
-				}
-			}
+		
 		}
 	return $parts;
 }
@@ -560,7 +551,6 @@ function _generate_specifics_string($node) {
 	foreach($included_fields as $key => $field){
 		
 		if (isset( $node->$field) ){
-			// Anything beyond the specific field here ,  will require accessing via the $node  object  
 			
 			$field_item = $node->$field;
 			if ( isset($field_item['und'][0]) && ($field_item['und'][0]['value'] != '0')){
@@ -674,8 +664,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			imagettftext($img, 9, 0, $text_pos[2], 107, $black, $value_font, $specifics );
 			// Observer
 			imagettftext($img, 11, 0, 193 , 17, $black,  $value_font, $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value']);
-			imagettftext($img, 11, 0, 193, 35, $black, $value_font, date('D M j H:i Y', 
+			imagettftext($img, 11, 0, 193, 35, $black, $value_font, date(snowpilot_date_output_format($snowpit_unit_prefs['field_loaction_0']), 
 			strtotime($node->field_date_time['und'][0]['value']))); //Date / Time of observation
+			
 			$text_pos = imagettftext($img, 11, 0, 193, 53, $black, $label_font, "Co-ord: ");
 			if ($snowpit_unit_prefs['field_coordinate_type'] == 'lat_long'){
 				if (isset($node->field_latitude['und']) && isset($node->field_longitude['und'])){
@@ -908,11 +899,22 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				
 				// calculate grain size string
 					$grain_size_string = isset($layer->field_grain_size['und']) ? $layer->field_grain_size['und'][0]['value'] : '' ;
-					if ( $layer->field_use_multiple_grain_size['und'][0]['value'] == '1' && isset( $layer->field_grain_size_max['und'][0]['value'])) $grain_size_string .= '-' . $layer->field_grain_size_max['und'][0]['value'];
+					if ( isset( $layer->field_grain_size_max['und'][0]['value'])) $grain_size_string .= '-' . $layer->field_grain_size_max['und'][0]['value'];
 				
-				// Ouptut grain sizes
+				// Ouptut primary grain sizes
 					$textpos = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
-				
+					// output secondary grain size
+					if ( isset ( $layer->field_grain_size_secondary['und'][0]['value']) && $layer->field_grain_size_secondary['und'][0]['value'] <> ''){
+						if ( $textpos[ 2 ] > 600){  // a "wide load" grain size field, breaking into two rows. This will cause problems on a narrow layer at 20 pixels or less.
+						//dsm($layer->field_grain_size_secondary['und'][0]['value'] ); 
+						$grain_size_secondary_string = $layer->field_grain_size_secondary['und'][0]['value'];
+						// bump down this to the next layer
+						$textpos2 = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +15, $black, $label_font, '(' .$grain_size_secondary_string . ')' );
+					  }else{
+						$textpos2 = imagettftext($img, 8, 0, 600, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, '(' . $grain_size_secondary_string . ')' );
+					  }
+					}
+					
 				// calculate & output layer moisture	
 					if ( isset($layer->field_water_content['und'] )){
 						$moisture = $layer->field_water_content['und'][0]['value'];
@@ -987,20 +989,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				}
 			}
 			
-			// writing the pit notes now that we have any extra layer or stability test notes that didn't fit
-			$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
-			$final_notes_string = (isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' )  ? $node->body['und'][0]['safe_value'] . $xtra_specifics : $xtra_specifics;
-			if ( $final_notes_string <> '' ){ 
-				$notes_lines = _output_formatted_notes($final_notes_string, $value_font);
-				foreach($notes_lines as $x => $line){
-					if ($x <= 3 ){
-					  imagettftext($img, 9, 0, $textpos[2], 779 + $x * 19 ,$black, $value_font,$line);
-					}else {
-						imagettftext($img, 9, 0, 870, 779 + 3 * 19 ,$red_layer, $value_font, "[ ... more notes ]");
-						break;
-					}
-				}
-			}			
+		
 			// Temperature Profile:
 			// If we have temp profile readings,then we'll make the tick marks
 			
@@ -1166,7 +1155,23 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	imagecopy ( $img , $sp_watermark , 35 , 170 , 0 , 0, 160 , 99);
 	imagedestroy($sp_watermark); 	
 	
-	// Output the png image
+	// writing the pit notes now that we have any extra layer or stability test notes that didn't fit
+	$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
+	$final_notes_string = (isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' )  ? $node->body['und'][0]['safe_value'] . $xtra_specifics : $xtra_specifics;
+	if ( $final_notes_string <> '' ){ 
+		$notes_lines = _output_formatted_notes($final_notes_string, $value_font);
+    if ( count($notes_lines) > 3 ){
+	  	$rescaled_img = imagecreatetruecolor('994', 840 + (count($notes_lines)-3) * 19);
+		  imagefill($rescaled_img, 0, 0, $white);
+			$resultes = imagecopy ( $rescaled_img , $img , 0 , 0 , 0 , 0, 994, 840);
+			$img = $rescaled_img;
+		}
+		foreach($notes_lines as $x => $line){
+			imagettftext($img, 9, 0, $textpos[2], 779 + $x * 19 ,$black, $value_font,$line);
+		}
+	}	
+
+	// Output the jpg and png image
 	$filename = 'graph-'.$node->nid ;
 	imagejpeg($img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.jpg',100);
 	

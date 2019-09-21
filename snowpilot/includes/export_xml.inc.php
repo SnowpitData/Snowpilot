@@ -561,7 +561,7 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 				if ( ($shear_test->field_stability_test_type['und'][0]['value'] == 'ECT')){
 				  $numTaps->value = $ecScore->value ;
 			  }elseif ($shear_test->field_stability_test_type['und'][0]['value'] == 'CT' ){
-					$numTaps->value = isset($shear_test->field_ct_score['und'][0]['value'] ) ? $shear_test->field_ct_score['und'][0]['value']  : '';
+					$numTaps->value = $ctScore->value;
 				}else{ $numTaps->value = ''; }
 				$snowpilot_ShearTest->appendChild($numTaps);
 		
@@ -586,7 +586,7 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 				//s
 				$date_part = date( 'm/d/Y.H:i:s:0' , strtotime($node->field_date_time['und'][0]['value']));
 				$test_s = $snowpilot_xmldoc->createAttribute('s');
-				$test_s->value =  $test_score->value.' '.$shear_quality->value.$test_character->value.' '. $sdepth->value. ' ' . $date_part;
+				$test_s->value =  $test_score->value.$numTaps->value.' '.$shear_quality->value.$test_character->value.' '. $sdepth->value. ' ' . $date_part;
 				$snowpilot_ShearTest->appendChild($test_s);
 				//
 				// lengthOfCut
@@ -697,7 +697,7 @@ function snowpilot_node_write_caaml($node){
 	
 		);
 	
-	$snowpilot_SnowProfile->setAttributeNS('http://www.snowpilot.org/Schema/caaml', 'snowpilot:NodeID', $node->nid) ;
+	$snowpilot_SnowProfile->setAttributeNS('http://www.snowpilot.org/Schemas/caaml', 'snowpilot:NodeID', $node->nid) ;
 	$snowpilot_SnowProfile->setAttributeNS('http://www.opengis.net/gml', 'gml:id' ,'SnowPilot-'.$node->nid);
 	
 	$snowpilot_metaDataProperty = $snowpilot_caaml->createElement('metaDataProperty'); $snowpilot_SnowProfile->appendChild($snowpilot_metaDataProperty);
@@ -723,7 +723,7 @@ function snowpilot_node_write_caaml($node){
 	  $contactPerson = $snowpilot_caaml->createElement('contactPerson');
 		$Person = $snowpilot_caaml->createElement('Person');
 		$Person->appendChild( $snowpilot_caaml->createElement('name' , $account->name ));
-		$Person->setAttribute('gml:id', 'User-'.$account->id );
+		$Person->setAttribute('gml:id', 'User-'.$account->uid );
 		
 		$contactPerson->appendChild($Person);
 		$srcRef->appendChild($contactPerson);
