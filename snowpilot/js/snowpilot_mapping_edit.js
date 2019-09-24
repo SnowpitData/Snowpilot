@@ -1,64 +1,16 @@
-<?php
-global $user;
-global $node;
-$nid = arg(1);
-$node = node_load($nid);
-$existing_node = FALSE;
-
-// default location:
-$latitude = 46.2938;
-$longitude = -112.01;
-$zoom = 9;
-$account = user_load ( $user->uid);
-
-if ($account->field_elevation_units['und'][0]['value']  == 'm'){
-	$attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
-	$base_map = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-}else{
-	$attribution = '<a href="https://www.doi.gov">U.S. Department of the Interior</a> | <a href="https://www.usgs.gov">U.S. Geological Survey</a> | <a href="https://www.usgs.gov/laws/policies_notices.html">Policies</a>';
-	$base_map = 'https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}';
-}
-
-if (  !isset($node->nid) || isset($node->is_new) ){
-
-  if ( isset ( $account->field_loaction['und'][1])){
-     $default_location = taxonomy_term_load($account->field_loaction['und'][1]['tid']);
-  }elseif ( isset ( $account->field_loaction['und'][0])){
-          $default_location = taxonomy_term_load($account->field_loaction['und'][0]['tid']);
-  }else{
-     $default_location = taxonomy_term_load(1);
-  // Montana is the default - default location if NONE other is given.
-  } 
-	if ( isset ( $default_location->field_lat_center['und'][0]['value']) && isset ( $default_location->field_lng_center['und'][0]['value']) && isset( $default_location->field_zoom_level['und'][0]['value'])){
-	  $latitude = $default_location->field_lat_center['und'][0]['value'];
-	  $longitude = $default_location->field_lng_center['und'][0]['value'];
-	  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
-	}
-} else {  // existing node, let's check for existing lat /long settings and put the map and marker there
+	var latitude = Drupal.settings.snowpilot.marker.latitude;
+	var longitude = Drupal.settings.snowpilot.marker.longitude;
+	var attribution = Drupal.settings.snowpilot.marker.attribution;
+	var basemap = Drupal.settings.snowpilot.marker.basemap;
+	var zoom = Drupal.settings.snowpilot.marker.zoom;
+	var existing = Drupal.settings.snowpilot.marker.existing;
 	
-	if ( $node->field_coordinate_type['und'][0]['value'] == 'UTM' && isset( $node->field_east['und'][0]['value'] ) && isset( $node->field_north['und'][0]['value'] ) && isset ( $node->field_utm_zone['und'][0]['value'] )){
-		
-		$latlong = Toll( $node->field_north['und'][0]['value'] , $node->field_east['und'][0]['value'], $node->field_utm_zone['und'][0]['value'] );
-		
-		$latitude = $latlong['lat'];
-		$longitude = $latlong['lon'];
-		$existing_node = TRUE ; 
-	}elseif ( isset ( $node->field_latitude['und'][0]['value'] ) && isset( $node->field_longitude['und'][0]['value']) ){ // if the user set the gmap location ( lat long ) on an older snowpit, this will still work. 
-		$latitude = $node->field_latitude['und'][0]['value'];
-		$longitude = $node->field_longitude['und'][0]['value'];
-		$existing_node = TRUE ; 
-	}
-}
-?>
-
-
-<script>
-	var snowpilotmap = L.map('snowpilot-map').setView([<?php echo $latitude; ?>, <?php  echo $longitude; ?>], <?php  echo $zoom; ?>);
+	var snowpilotmap = L.map('snowpilot-map').setView([latitude, longitude], zoom);
 	setTimeout(function () {
 	    snowpilotmap.invalidateSize();
 	}, 100);
-	var BaseMap = L.tileLayer('<?php echo $base_map; ?>', {
-	    attribution: '<?php echo $attribution ?>' ,
+	var BaseMap = L.tileLayer(basemap, {
+	    attribution: attribution ,
 	    maxZoom: 18
 	});
 
@@ -70,12 +22,11 @@ if (  !isset($node->nid) || isset($node->is_new) ){
 
    BaseMap.addTo(snowpilotmap);
 
-	var marker = L.marker([<?php echo $latitude; ?>, <?php  echo $longitude; ?>], {draggable:'true'} );
-		 
-   <?php   /// If this is an existing node with already-set lat / long, place the marker in appropriate location
-	 if ( $existing_node ){  ?>
-		 marker.addTo(snowpilotmap);
-   <?php }  ?>
+	var marker = L.marker([latitude, longitude], {draggable:'true'} );
+	  if ( existing == 'true'){
+		console.log(existing);
+		  marker.addTo(snowpilotmap);
+	  }
 		 marker.on('dragend', function (e) {
 		   updatePosition(marker.getLatLng().lat, marker.getLatLng().lng);
 		 });
@@ -97,7 +48,19 @@ if (  !isset($node->nid) || isset($node->is_new) ){
 		 	document.getElementById('edit-field-longitude-und-0-value').value = marker.getLatLng().lng.toFixed(6);
 		 	snowpilotmap.panTo([lat,lng]);
 		 	marker.setLatLng([lat,lng]);
+			fetch_elevation(lat, lng)
       getCoords(lat, lng);
+		 }
+		 function fetch_elevation(lat, lng){
+			 $.ajax({url: "https://elevation-api.io/api/elevation?key=0u6Ymc8JF8jg8uxEVP8Gu4c-669v3G&resolution=30-interpolated&points=("+lat+","+lng+")", success: function(result){
+				 	 var elevation_field = document.getElementById('edit-field-elevation-und-0-value');
+					 elev_units = document.getElementById('edit-field-elevation-units-und').value;
+					 if ( elev_units == 'ft'){ 
+						 var simple_elev = result.elevations[0].elevation * 3.2808399 ;
+					 }else{ 
+						 var simple_elev = result.elevations[0].elevation; }
+					elevation_field.value =  simple_elev.toFixed(0);
+			 }});
 		 }
 
 		 function updatePositionreverse(){
@@ -115,22 +78,6 @@ if (  !isset($node->nid) || isset($node->is_new) ){
 // This function updates text boxes values.
 function getCoords(lat, lng) {
 
-   // Reference input html element with id="lat".
-   var coords_lat = document.getElementById('edit-field-latitude-und-0-value').toFixed(6);
-
-   // Update latitude text box.
-   coords_lat.value = lat;
-
-   // Reference input html element with id="lng".
-   var coords_lng = document.getElementById('edit-field-longitude-und-0-value').toFixed(6);
-
-   // Update longitude text box.
-   coords_lng.value = lng;
-	 
-	 var elevation = document.getElementById('edit-field-elevation-und-0-value');
-	 
-		
-		
 	 //
 	 //
 	 // start calculating utm and mgrs field values
@@ -255,5 +202,3 @@ jQuery("[id^=edit-field-mgrs-northing]").blur(updatePositionMgrs);
 jQuery("[id^=edit-field-utm-zone]").blur(updatePositionMgrs);
 jQuery("[id^=edit-field-100-km-grid-square-id]").blur(updatePositionMgrs);
 
-
-</script>

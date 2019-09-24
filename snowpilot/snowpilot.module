@@ -650,10 +650,10 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
 				$account = user_load($node->uid);
 				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
-
 				$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
 	
 			}
+			// Done wiwth new / or / existing pit logic, now we do things to all pits
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
 				
 			$form['field_layer']['und'][0]['field_grain_type_display'] = array( 
@@ -665,15 +665,50 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			  ),	
 		  );
 				
-			// Done wiwth new / or / existing pit logic, now we do things to all pits
-			/*if ($snowpit_unit_prefs['tempUnits'] == 'C' ){
-				$form['#attached']['js'][] = array(
+//		This attachs the leaflet for elevation lookup
+      $form['#attached']['js'][] = array( 
+				  'data' =>'https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js', 
+				  'type' => 'external' );
+			$form['#attached']['js'][] = array(
 					'type' => 'file', 
-					'data' => drupal_get_path('module','snowpilot') . '/js/negative_C_degrees.js',
-				);
+					'data' => drupal_get_path('module','snowpilot') . '/js/snowpilot_mapping_edit.js',
+					'scope' => 'footer',
+			);
+			
+			if ( isset($node->nid) && isset($form['field_latitude']['und'][0]['value']['#default_value']) && isset( $form['field_longitude']['und'][0]['value']['#default_value'])){
+				$latitude = $form['field_latitude']['und'][0]['value']['#default_value'];
+				$longitude = $form['field_longitude']['und'][0]['value']['#default_value'];
+				$zoom = 12;
+				$existing = "true";
+			}else{
+			  if ( isset ( $snowpit_unit_prefs['loaction_1'])){
+			     $default_location = taxonomy_term_load($snowpit_unit_prefs['loaction_1']);
+			  }elseif ( isset ( $snowpit_unit_prefs['loaction_0'])){
+			     $default_location = taxonomy_term_load($snowpit_unit_prefs['loaction_0']);
+			  }else{
+			     $default_location = taxonomy_term_load(1);
+			  // Montana is the default - default location if NONE other is given.
+			  } 
+				if ( isset ( $default_location->field_lat_center['und'][0]['value']) && isset ( $default_location->field_lng_center['und'][0]['value']) && isset( $default_location->field_zoom_level['und'][0]['value'])){
+				  $latitude = $default_location->field_lat_center['und'][0]['value'];
+				  $longitude = $default_location->field_lng_center['und'][0]['value'];
+				  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
+				}
+	    }
+			if (  $snowpit_unit_prefs['field_elevation_units'] == 'ft') {
+				$attribution = '<a href="https://www.doi.gov">U.S. Department of the Interior</a> | <a href="https://www.usgs.gov">U.S. Geological Survey</a> | <a href="https://www.usgs.gov/laws/policies_notices.html">Policies</a>';
+				$base_map = 'https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}';
+			}else{
+				$attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+				$base_map = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 			}
-	*/
-			 
+		  drupal_add_js(array('snowpilot' => array("marker" => array( "latitude" => "$latitude", "longitude" => "$longitude", "zoom" => "$zoom", "basemap" => $base_map,"attribution" => "$attribution", "existing" => "$existing"))), 'setting');
+			
+			
+			
+			
+			
+			///////////////////////////////////////
 			$form['field_layer']['#prefix'] = '<div>';
 			$form['field_layer']['#suffix'] = '</div>';
 			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => '<none>' );
