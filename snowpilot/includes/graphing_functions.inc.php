@@ -289,12 +289,7 @@ function _h2pix($h, $all = FALSE, $scale = 'linear'){
 		}
 }
 
-// TODO: this function will have to take into account extra-long notes entries; 
-// after three break point, we need to keep going to get them short enough; but also leave a [ More Notes ] item on jpgs; and 
-// and for pdf output, an extra sheet of paper
-// $short : boolean - whether long texts will be truncated at three lines ( for png or jpg output; or full, for pdf output .... )
-
-function _output_formatted_notes($string, $font , $short = TRUE){
+function _output_formatted_notes($string, $font){
 
 	  $pointer = 0;
   	$last_space = 0 ;
@@ -310,7 +305,7 @@ function _output_formatted_notes($string, $font , $short = TRUE){
 					$last_space = 0 ;
 			}elseif (substr($string, $pointer, 1) == ' ' ) {
 	  		$line = imagettfbbox(9,0,$font,substr($string, 0, $pointer));
-	  		if ( $line[2] < 935 ){ 
+	  		if ( $line[2] < 930 ){ 
 	  			$last_space = $pointer;
 					$pointer ++;	
 	  		}else{ 
@@ -747,7 +742,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			$comment_count = 0;
 			$textpos = array();
 			if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
-				$textpos = imagettftext($img, 9 , 0, 625, 17, $black, $value_font, 'HS'. $node->field_total_height_of_snowpack['und'][0]['value'] );  
+				$pretextpos = imagettftext($img, 11 , 0, 625, 17, $black, $label_font, 'HS:');
+				$textpos = imagettftext($img, 11 , 0, $pretextpos[2] , 17, $black, $value_font,  $node->field_total_height_of_snowpack['und'][0]['value'] )  ;
+				
 				$comment_count = 1;
 			}
 			if ( isset( $node->field_surface_penetration['und'] )  
@@ -755,11 +752,14 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				&& ( isset($node->field_boot_penetration_depth['und']) )
 			  && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
 				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 625 ;
-					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PF'.$node->field_boot_penetration_depth['und'][0]['value']  );
+					$finalpos = imagettftext($img,11, 0, $xpos, 17, $black, $label_font , 'PF:' );
+					imagettftext($img,11, 0, $finalpos[2], 17, $black, $value_font , $node->field_boot_penetration_depth['und'][0]['value']  );
+					
 					$comment_count = 1;
 			}elseif(isset( $node->field_surface_penetration['und'] )  && isset($node->field_ski_penetration['und'][0]['value']) &&( $node->field_surface_penetration['und'][0]['value'] == 'ski' ) &&  (  $node->field_ski_penetration['und'][0]['value'] != '' ) ){
 				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 625 ;
-					imagettftext($img,9, 0, $xpos, 17, $black, $value_font , 'PS'.$node->field_ski_penetration['und'][0]['value']  );
+				$finalpos = imagettftext($img,11, 0, $xpos, 17, $black, $label_font , 'PS' );
+				imagettftext($img,11, 0, $finalpos[2], 17, $black, $value_font , $node->field_ski_penetration['und'][0]['value']  );
 					$comment_count = 1;
 			}
 			
@@ -1172,10 +1172,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	}	
 
 	// Output the jpg and png image
-	$filename = 'graph-'.$node->nid ;
-	imagejpeg($img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.jpg',100);
+	$fileroot = DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . substr($node->nid, 0, -3 ). '/graph/graph-' .$node->nid;
 	
-	imagepng($img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.png');
+	imagejpeg($img, $fileroot. '.jpg',100);
+	imagepng($img, $fileroot. '.png');
+	
+	snowpilot_imagepdf($fileroot);
 // Destroy GD image
 //imagedestroy($img);
 if ($format == 'jpg') {
@@ -1187,8 +1189,36 @@ if ($format == 'jpg') {
 function snowpilot_snowpit_crop_layers_write($img,$nid){
 	$new_img = imagecreatetruecolor(466,613);
 	$result = imagecopy($new_img, $img, 0,0, 14,140,466,613 );
-	//$new_img = imagescale($new_img,350);
-	$filename = 'layers-'.$nid ;
 	
-	imagepng($new_img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'.$filename. '.png');	
+	imagepng($new_img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . substr($nid, 0, -3 ). '/layers/layers-'.$nid. '.png');	
 }
+
+function snowpilot_imagepdf($fileroot){
+	include_once(DRUPAL_ROOT.'/sites/all/libraries/fpdf181/fpdf.php');
+	$Size = getimagesize($fileroot.'.png');
+	$nid = substr($fileroot,strpos($fileroot,'graph/graph-')+12 );
+		
+	if ( $Size[1] == 840 ){
+		$pdf = new FPDF();
+		$pdf->AddPage('L');
+		$pdf->Image($fileroot.'.png', 0,0,0,205);
+		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($nid, 0, -3 ) .'/pdf/pdf-'.$nid.'.pdf' ,'F');
+	}elseif ( $Size[1] < 994 ){
+		$pdf = new FPDF();
+		$pdf->AddPage('L','Letter');
+		$pdf->Image($fileroot.'.png', 0,0,0, 215.9);
+		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($nid, 0, -3 ) .'/pdf/pdf-'.$nid.'.pdf' ,'F');
+	}else{
+		
+		$pdf = new FPDF();
+		$pdf->AddPage('P','Letter');
+		$pdf->Image($fileroot.'.png', 0,0,215.9, 0);
+		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($nid, 0, -3 ) .'/pdf/pdf-'.$nid.'.pdf' ,'F');
+		
+	}
+	return ;
+}
+
+
+
+

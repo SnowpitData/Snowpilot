@@ -423,6 +423,9 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 				imagepng(snowpilot_snowpit_graph_header_write($node, 'png'));
 				break;
 			case 'pdf':
+			  header('Content-type: application/pdf');
+			  drupal_goto('sites/default/files/snowpit-profiles/' . substr($node->nid, 0, -3 ). '/pdf/pdf-' .$node->nid.'.pdf');
+				break;
 			case 'jpg':
 	      header('Content-type: image/jpeg');
 		    imagejpeg(snowpilot_snowpit_graph_header_write($node, 'jpg'), NULL, 100);
@@ -434,12 +437,11 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			break;
 			case 'caaml':
 				header('Content-type: application/xml');
-				echo snowpilot_node_write_caaml($node);
+				print_r (snowpilot_node_write_caaml($node));
 			break;
 			}
 			//drupal_goto('node/'.$node->nid);
 			
-	  // drupal_goto('sites/default/files/snowpit-profiles/graph-'. $node->nid .'.jpg');
   }else{
   	drupal_access_denied();
   }
@@ -454,7 +456,7 @@ function populate_snowpit_image($SERIAL){
 	if( !file_exists( DRUPAL_ROOT. $img_url )){	
     $node_id = avscience_is_drupal_pit( $SERIAL ) ;
 	  if ( $node_id > 0 ){  // it is a drupal-genrated snowpit, copy over the existing image
-			$orig_img_url = '/sites/default/files/snowpit-profiles/graph-'.$node_id. '.jpg';
+			$orig_img_url = '/sites/default/files/snowpit-profiles/'. substr($node_id, 0, -3 ). '/graph/graph-'.$node_id. '.jpg';
 			//$node = node_load( $match[1] );
 			$_image = fopen( DRUPAL_ROOT.$orig_img_url , 'rb');
 	  	$img_src = fread( $_image, filesize(DRUPAL_ROOT.$orig_img_url));
@@ -509,17 +511,14 @@ function snowpilot_node_delete($node){
 		  $results_tests = db_query($query_tests);
 			db_set_active('default');
 			
-			//dsm($serial);
-			//dsm($node->nid);
 			// Delete the image file: jpg, png, xml; and also the layers image
 			
 		  if (unlink ( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/graph-serial-'. $serial .'.jpg' )) $message .= '<li>Avscience Serial JPG deleted</li>';
 			if (unlink ( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/layers/layers-serial-'. $serial .'.jpg' )) $message .= '<li>Avscience Layers JPG deleted</li>';
-			// Is Node- id correct?
-			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/graph-'. $node->nid .'.jpg')) $message .= '<li>JPG deleted</li>';
-			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/graph-'. $node->nid .'.png')) $message .= ' <li>PNG deleted</li>';
-			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/layers-'. $node->nid .'.png')) $message .= '<li>Layers Deleted</li>';
-			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/graph-'. $node->nid .'.png')) $message .= '<li>Graph deleted</li>';
+			// 
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($node->nid, 0, -3 ).'/graph/graph-'. $node->nid .'.jpg')) $message .= '<li>JPG deleted</li>';
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($node->nid, 0, -3 ).'/graph/graph-'. $node->nid .'.png')) $message .= ' <li>PNG deleted</li>';
+			if (unlink (DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($node->nid, 0, -3 ).'/layers/layers-'. $node->nid .'.png')) $message .= '<li>Layers Deleted</li>';
 			
 			if (unlink (DRUPAL_ROOT.'/sites/default/files/xml/node-'. $node->nid .'.xml')) $message .= '<li>XML deleted</li>';
 			
@@ -594,9 +593,9 @@ function snowpilot_init(){
 	
 	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 	drupal_add_js('https://unpkg.com/leaflet@1.4.0/dist/leaflet.js', 'external');
-	drupal_add_js('https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js', 'external');
+	$ret_val = drupal_add_js('https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js', 'external');
 	
-	
+	return($ret_val);
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
@@ -638,7 +637,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 								'#weight' => '5',
 								'und' =>array(
 									0 => array(
-										'markup' => array( '#markup' => '<div class = "delete_pit_wrapper"><a href = "/node/add/snowpit-profile"class = "" >Delete Snowpit</a> </div>',
+										'markup' => array( '#markup' => '<div class = "delete_pit_wrapper"><a href = "/node/add/snowpit-profile" class = "" >Delete Snowpit</a> </div>',
 									  ),
 									),
 								),
@@ -664,11 +663,12 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		      '#markup' =>  snowpilot_modal_data() ),
 			  ),	
 		  );
-				
+			/*	
 //		This attachs the leaflet for elevation lookup
       $form['#attached']['js'][] = array( 
 				  'data' =>'https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js', 
 				  'type' => 'external' );
+			*/
 			$form['#attached']['js'][] = array(
 					'type' => 'file', 
 					'data' => drupal_get_path('module','snowpilot') . '/js/snowpilot_mapping_edit.js',
@@ -694,6 +694,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				  $longitude = $default_location->field_lng_center['und'][0]['value'];
 				  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
 				}
+				$existing = "false";
 	    }
 			if (  $snowpit_unit_prefs['field_elevation_units'] == 'ft') {
 				$attribution = '<a href="https://www.doi.gov">U.S. Department of the Interior</a> | <a href="https://www.usgs.gov">U.S. Geological Survey</a> | <a href="https://www.usgs.gov/laws/policies_notices.html">Policies</a>';
@@ -702,9 +703,16 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				$attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
 				$base_map = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 			}
-		  drupal_add_js(array('snowpilot' => array("marker" => array( "latitude" => "$latitude", "longitude" => "$longitude", "zoom" => "$zoom", "basemap" => $base_map,"attribution" => "$attribution", "existing" => "$existing"))), 'setting');
+		  drupal_add_js(array('snowpilot' => array("marker" => 
+						array( "latitude" => "$latitude", 
+			             "longitude" => "$longitude", 
+									 "zoom" => "$zoom", 
+									 "basemap" => $base_map,
+									 "attribution" => "$attribution", 
+									 "existing" => "$existing"))
+								 ), 'setting');
 			
-			
+			// */
 			
 			
 			
@@ -753,7 +761,8 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['actions']['#weight'] = 10;
 		break;
 		case 'views_exposed_form':
-			if( $form['#id'] == 'views-exposed-form-snowpit-list-page'){
+		// for the snowpits query page(s) : list, map and table format, this makes the "current user" field more relevant to the context
+			if( in_array($form['#id'] , array('views-exposed-form-snowpit-list-page', 'views-exposed-form-snowpit-list-page-2', 'views-exposed-form-snowpit-list-page-3'))){
 				//$form['field_loaction_tid']['#size'] = '3';
 				$form['uid_current']['#options'] = array( 'All' => 'All Snowpits', 1 => 'Just my snowpits');
 				if ( $user->uid == 0 ){
@@ -1128,7 +1137,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			}	
 			if ( isset( $form['field_surface_grain_type']['und']['#default_value'][0])) {
 				$surface_gt = _tid2snowsymbols($form['field_surface_grain_type']['und']['#default_value'][0]);
-			}			
+			}		else { $surface_gt = ''; }	
 
 			if (  $key == '0' ){
 				$form['field_surface_grain_type']['#prefix'] = '<div class = "surface_snow_elements" ><a href = "#grain-types-surface-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >Surface grain type <span class ="grain-type-surface-display grain-types field-suffix" >'. $surface_gt  .'</span> </a> ';

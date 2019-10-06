@@ -24,7 +24,6 @@
 
 	var marker = L.marker([latitude, longitude], {draggable:'true'} );
 	  if ( existing == 'true'){
-		console.log(existing);
 		  marker.addTo(snowpilotmap);
 	  }
 		 marker.on('dragend', function (e) {
@@ -48,11 +47,11 @@
 		 	document.getElementById('edit-field-longitude-und-0-value').value = marker.getLatLng().lng.toFixed(6);
 		 	snowpilotmap.panTo([lat,lng]);
 		 	marker.setLatLng([lat,lng]);
-			fetch_elevation(lat, lng)
+			fetch_elevation(lat, lng);
       getCoords(lat, lng);
 		 }
 		 function fetch_elevation(lat, lng){
-			 $.ajax({url: "https://elevation-api.io/api/elevation?key=0u6Ymc8JF8jg8uxEVP8Gu4c-669v3G&resolution=30-interpolated&points=("+lat+","+lng+")", success: function(result){
+			 jQuery.ajax({url: "https://elevation-api.io/api/elevation?key=0u6Ymc8JF8jg8uxEVP8Gu4c-669v3G&resolution=30-interpolated&points=("+lat+","+lng+")", success: function(result){
 				 	 var elevation_field = document.getElementById('edit-field-elevation-und-0-value');
 					 elev_units = document.getElementById('edit-field-elevation-units-und').value;
 					 if ( elev_units == 'ft'){ 

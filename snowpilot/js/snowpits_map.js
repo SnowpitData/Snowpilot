@@ -25,7 +25,6 @@ var marker = {};
 for (var  key in markers) {
 	console.log(markers[key].nid);
 	var markername = 'marker'+markers[key].nid;
-	console.log(markername);
         marker[markername] = Allmarkers.addLayer(L.marker(
 				[ markers[key].lat, markers[key].long ],
 				{
@@ -34,6 +33,7 @@ for (var  key in markers) {
         }));
 			  marker[markername].options.pid = markers[key].nid; // makes a pid for use later in the div show	
   }		
+jQuery( "#content .view-snowpit-list.view-display-id-page_3 div.view-content" ).append( "<div id ='marker0000'><img src = '/sites/default/files/snowpit-profiles/0/graph/graph-0000.jpg' /></div>" );
 		
 		
 Allmarkers.on('click', function (a) {

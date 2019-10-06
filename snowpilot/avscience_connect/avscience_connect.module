@@ -228,7 +228,7 @@ function snowpilot_connect_convert_multi($serial_ids){
 	return $result_codes;
 }
 
-function snowpilot_query_form( $form, &$form_state, $default){
+function snowpilot_query_form( $form, &$form_state){
 
 	$regions_list = get_optgroup_by_taxonomy('geographical_location');
 	$affil_options = get_optgroup_by_taxonomy('professional_affiliation');
@@ -421,11 +421,11 @@ function snowpilot_query_theme_output($snowpits_nids){
     $snowpit = node_load($snowpits);
 
 		$x = 1;
-		$pre_img_url = '/sites/default/files/snowpit-profiles/graph-'.$snowpit->nid. '.jpg';
-		$layers_image = '/sites/default/files/snowpit-profiles/layers-'.$snowpit->nid. '.png';
+		$pre_img_url = '/sites/default/files/snowpit-profiles/'. substr($snowpit->nid, 0, -3 ).'/graph/graph-'.$snowpit->nid. '.jpg';
+		$layers_image = '/sites/default/files/snowpit-profiles/'. substr($snowpit->nid, 0, -3 ).'/layers/layers-'.$snowpit->nid. '.png';
 	
 		  $links = array();
-		  $links[] = array('title' => t('JPG'), 'href' => '/sites/default/files/snowpit-profiles/graph-'. $snowpit->nid .'.jpg');
+		  $links[] = array('title' => t('JPG'), 'href' => '/sites/default/files/snowpit-profiles/'. substr($snowpit->nid, 0, -3 ).'/graph/graph-'. $snowpit->nid .'.jpg');
 		  $links[] = array('title' => t('SnowPilot XML'), 'href' => 'snowpit/' . $snowpit->nid. '/download/xml');
 		
 			$this_item = '

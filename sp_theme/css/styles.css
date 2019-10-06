@@ -1211,10 +1211,7 @@ form#views-exposed-form-snowpit-list-page .views-exposed-widget.views-submit-but
 	color: #112F40;
 }
 
-button#edit-button,
-button#save-button,
-button#print-button{
-	/*display: inline-block;*/
+button#edit-button{
 	background-color:#f8fff0;
 }
 
@@ -1545,14 +1542,21 @@ body.node-type-snowpit-profile{
 	margin: 0 auto;
 	width: 100%;
 }
-.view-snowpit-list.view-display-id-block .view-content  {
-}
 
 #content .view-snowpit-list.view-display-id-page_3 .view-content{
 	float: right;
 	display: inline-block;
+	width: 450px;
+	padding-right: 50px;
 }
 
+.form-type-cshs .select-wrapper{
+	display: block;
+}
+.view-snowpit-list .views-exposed-form .views-exposed-widgets > div{
+  height: 70px;
+	
+}
 
 #block-views-snowpit-list-block,
 #block-views-snowpit-list-block-1{

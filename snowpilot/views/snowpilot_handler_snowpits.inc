@@ -78,8 +78,7 @@ class snowpilot_handler_snowpits extends views_handler_field {
 		//dsm($values);
 	  drupal_add_js(array('snowpilot' => array("marker$values->nid" => array( 'nid' => "$values->nid", "lat" => "$values->field_data_field_latitude_field_latitude_value", "long" => "$values->field_data_field_longitude_field_longitude_value", "title" => "$values->node_title"))), 'setting');
 		
-		
-		return '<div id = "marker'. $values->nid .'" style = "width:450px; height:380px;border: 2px solid #162f50; display: none; float: right;">
+		return '<div id = "marker'. $values->nid .'" style = "width:450px; height:380px;border: 2px solid #162f50; display: none; ">
     <a href = "https://snowpilot.org/sites/default/files/snowpit-profiles/graph-' . $values->nid. '.jpg" class = "colorbox" data-colorbox-gallery="gallery-all" >
 		<img src = "https://snowpilot.org/sites/default/files/snowpit-profiles/graph-' . $values->nid. '.jpg" width = 450px />
 		</a>
