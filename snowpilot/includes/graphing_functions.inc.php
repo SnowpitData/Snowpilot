@@ -768,6 +768,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			//
 			// Looping through stability test results
 			//
+			$stab_test_start = 850;
 			
 			if (isset($node->field_test['und'])){
 				$ids = array();
@@ -793,11 +794,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				foreach ( $test_results as $x => $test){
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->y_position) ){
 						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
-							imageline($img, 707, $test->y_position, 979, $test->y_position, $black);
-							$test_pos = imagettftext($img, 8, 0, 712, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
-							if ( isset ( $test->field_stability_comments['und'][0] )){
-						    imagettftext($img, 8, 0, $test_pos[2], $test->y_position - 5, $black, $value_font, '  '.$test->field_stability_comments['und'][0]['safe_value'] );
-						  }
+							imageline($img, $stab_test_start, $test->y_position, 979, $test->y_position, $black); //horiz line at location of stability test 
+							$test_pos = imagettftext($img, 8, 0, $stab_test_start + 5, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
 						}
 						if ( count($test->field_stability_comments) ){
 							if ( $comment_count < 5 ){
@@ -825,7 +823,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					$density = field_collection_item_load($density_item['value']);
 
 					// this use of imageline will need to be updated to include some kind of cluster management
-					imageline($img, 667, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'],$global_max, $pit_min ), 707, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min ),$black);
+					imageline($img, 667, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'],$global_max, $pit_min ), $stab_test_start, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min ),$black);
 					imagettftext($img, 8, 0, 671, snowpit_graph_pixel_depth($density->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min )+12,$black, $label_font, $density->field_density_top['und'][0]['value']);
 				}
 			}
@@ -925,22 +923,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				  $layer_bottom = $layer->field_bottom_depth['und'][0]['value'] + 0 ;
 				  $layer_top = $layer->field_height['und'][0]['value'] + 0;
 
-					if (isset($layer->field_comments['und']) ){
-						if ( $comment_counter <6 ){
+					/// write layer notes next to layer
+				  imagettftext($img, 9, 0, 670, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $layer->field_comments['und'][0]['safe_value']);
 
-						  imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font,
-							$layer_bottom.'-'.$layer_top. ': '.$layer->field_comments['und'][0]['safe_value']);
-					  }else{
-							if( $comment_counter == 6 )  $xtra_specifics .= 'Additional Layer Comments: ';
-						  imagettftext($img, 7, 0, 805, 6*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
-							$xtra_specifics .= $layer_bottom.'-'.$layer_top. ': '.$layer->field_comments['und'][0]['safe_value'].'; ';
-					  }
-					  $comment_counter++;
-						
-					}
 					// write density measurements that are from the 'Layers' tab into the rho column ( in addition to Densities )
 					if ( isset ( $layer->field_density_top['und'][0]['value'] )){
-						imageline($img, 667, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min), 707, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min),$black);
+						imageline($img, 667, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min), $stab_test_start, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min),$black);
 						imagettftext($img, 8, 0, 670, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min)+13,$black, $label_font, $layer->field_density_top['und'][0]['value']);
 						
 					}
@@ -1047,7 +1035,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			
 			while ( $x <= $pit_depth){
 				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
-				imageline($img, 660 , $y_val, 667, $y_val,$black);
+				imageline($img, $stab_test_start-7 , $y_val, $stab_test_start, $y_val,$black);
 				imageline($img, 511 , $y_val, 518, $y_val,$black);
 				imageline($img, 14 , $y_val, 22, $y_val, $black);
 				imageline($img, 440, $y_val, 447, $y_val, $black);
@@ -1087,7 +1075,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			while ( $x <= $pit_depth){
 				$y_val = round(snowpit_graph_pixel_depth($x, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
 				
-				imageline($img, 664 , $y_val, 667, $y_val,$black);
+				imageline($img, $stab_test_start-3 , $y_val, $stab_test_start, $y_val,$black);
 				imageline($img, 511 , $y_val, 515, $y_val,$black);
 				imageline($img, 14, $y_val, 18, $y_val, $black);
 				imageline($img, 443, $y_val, 447,$y_val, $black);
@@ -1098,16 +1086,19 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			
 			//
 			
-	imagettftext($img, 10, 0 , 742, 122, $black ,$label_font, "Stability tests");
+	imagettftext($img, 10, 0 , $stab_test_start +20, 122, $black ,$label_font, "Stability tests");
 			
-	imagettftext($img , 10, 0, 681, 118, $black, $label_font, "&#x3c1;"); // Rho symbol for density
-	imagettftext($img, 10, 0 , 675,135, $black, $label_font , _density_unit_fix($snowpit_unit_prefs['field_density_units']) );
+	imagettftext($img , 10, 0, $stab_test_start -26, 118, $black, $label_font, "&#x3c1;"); // Rho symbol for density
+	imagettftext($img, 10, 0 , $stab_test_start -32,135, $black, $label_font , _density_unit_fix($snowpit_unit_prefs['field_density_units']) );
 	
 	// the rectabngle around stability and density columns
   imagerectangle( $img , 667 ,140 , 979, 751, $black);
 	
 	// the rectangle around the layers hardness profile
 	imagerectangle($img, 14, 140, 447,751, $black );
+	// line at left side of rho column
+	imageline( $img , 820, 140, 820 , 751, $black);
+	
 	
 	//the tickmarks for hardness across the bottom and top, and labels
 	foreach ( _h2pix(NULL, TRUE, $snowpit_unit_prefs['hardnessScaling'] ) as $hardness => $pixels ){
@@ -1125,7 +1116,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	}
 	
 	
-	imageline( $img , 707, 140, 707, 751, $black );
+	imageline( $img , $stab_test_start, 140, $stab_test_start, 751, $black ); //vertical line at left edge of stability tests
 	imageline($img, 483,140, 667,140,$black); // finish line across top
 	imageline($img, 483,751, 667,751,$black); // finish line across bottom
 	imageline($img, 483,140 , 483, 751 , $black); // left edge, first vert line
