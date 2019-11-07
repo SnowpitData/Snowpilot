@@ -540,6 +540,10 @@ h3.test-title{
 	
 }
 
+#edit-field-blade-hardness td .field-name-field-depth{
+	vertical-align: top;
+}
+
 #snowpit-profile-node-form .form-item-title{
 	width: 50%;
 	float: left;
@@ -557,7 +561,8 @@ h3.test-title{
 #snowpit-profile-node-form .field-name-field-height,
 #snowpit-profile-node-form .field-name-field-density-top,
 #snowpit-profile-node-form .field-name-field-temp-temp,
-#snowpit-profile-node-form .field-name-field-depth{
+#snowpit-profile-node-form .field-name-field-depth,
+#snowpit-profile-node-form .field-name-field-bhg-newtons{
 	display:inline-block;
 
 }
@@ -924,7 +929,8 @@ form.node-snowpit_profile-form #edit-field-loaction{
 fieldset.group-layers,
 fieldset.group-stability-tests,
 fieldset.group-temp-profile,
-fieldset.group-density{
+fieldset.group-density,
+fieldset.group-blade-hardness{
 	float: right;
 	width: 300px;
 }
@@ -943,7 +949,9 @@ form.node-snowpit_profile-form table.field-multiple-table tbody.ui-accordion h3{
 form.node-snowpit_profile-form .group-layers,
 form.node-snowpit_profile-form .group-stability-tests,
 form.node-snowpit_profile-form .group-temp-profile,
-form.node-snowpit_profile-form .group-density{
+form.node-snowpit_profile-form .group-density,
+form.node-snowpit_profile-form .group-blade-hardness
+{
 	background: #fff;
   padding: 0;
 }

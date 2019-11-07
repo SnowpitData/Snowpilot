@@ -1,5 +1,21 @@
 <?php
 
+function imagettftext_cr(&$im, $size, $angle, $x, $y, $color, $fontfile, $text)
+        {
+            // retrieve boundingbox
+            $bbox = imagettfbbox($size, $angle, $fontfile, $text);
+           
+            // calculate deviation
+            $dx = ($bbox[2]-$bbox[0])/2.0 - ($bbox[2]-$bbox[4])/2.0;         // deviation left-right
+            $dy = ($bbox[3]-$bbox[1])/2.0 + ($bbox[7]-$bbox[1])/2.0;        // deviation top-bottom
+           
+            // new pivotpoint
+            $px = $x-$dx;
+            $py = $y-$dy;
+           
+            return imagettftext($im, $size, $angle, $px, $py, $color, $fontfile, $text);
+        }
+
 function snowpilot_layers_density_xlate(&$all_layers, $snowpit_unit_prefs, $global_max = 751){
 	usort($all_layers, 'layer_depth_val');
 	//if this is a measure-from-top pit, flip the order of layers, and the top and bottom of each layer
@@ -191,20 +207,6 @@ function snowpilot_collision_check_cg_up($cg, $layer){
 	}
 	return FALSE;
 }
-// this function may not be necessary!
-/*
-function snowpilot_collision_check_multiple($cg, $layer){
-	_cg_stats(&$cg);
-	//dsm('newlayer');dsm($cg_bottom); dsm($layer->y_val_top);
-	if (( $cg['cg_top'] < $layer->y_val_top_xlate  && $cg_top > $layer->y_val_xlate  )
-			|| ($cg_bottom >  $layer->y_val_top )   ){
-				
-				return TRUE; 
-			}
-			return FALSE; 
-}
-*/
-
 
 function _cg_stats($cg, $stat = NULL, $global_min = 157 , $global_max = 751){
 	$span = count($cg) * 20; // span of pixels
@@ -214,9 +216,7 @@ function _cg_stats($cg, $stat = NULL, $global_min = 157 , $global_max = 751){
 	$length = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2;
 	$cg_top = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2 + $first_item[0]['y_val_top']  - $span/2 ;
 	$cg_bottom = ($last_item['y_val'] - $first_item[0]['y_val_top'])/2 + $first_item[0]['y_val_top'] + $span/2 ;
-	
-	
-	
+
 	//$cg_top =  $sum/count($cg)-$span/2;
 	//$cg_bottom =  $sum/count($cg) + $span/2; 
 	
@@ -233,7 +233,39 @@ function _cg_stats($cg, $stat = NULL, $global_min = 157 , $global_max = 751){
 		endswitch;
 	}
 }
-
+function _bhg2pix($bhg, $scale = 'linear'){
+	if ( $scale <> 'exponential'){
+		//$bhg_val_2pix
+		if ( ($bhg >= 0)  && ($bhg <0.21) ){
+		  $bhg_val =  450 - $bhg * 414 ;
+		}elseif ( $bhg >= 0.21 && $bhg < 1.1 ){
+		  $bhg_val =  380 - $bhg * 80.9 ;
+		}elseif ( ($bhg >= 1.1) && ($bhg < 4.69) ){
+			$bhg_val = 313.05 - $bhg * 20.06;
+		}elseif (($bhg >=4.69 ) && ($bhg < 59  )){
+			$bhg_val = 225 - $bhg * 1.33 ; 
+		}else{
+			$bhg_val = 445;
+		}
+		//dsm($bhg);
+	  
+	}else{ // exponential scale
+		if ( ($bhg >= 0)  && ($bhg <0.21) ){
+		  $bhg_val =  450 - $bhg * 152.4 ;
+		}elseif ( $bhg >= 0.21 && $bhg < 1.1 ){
+		  $bhg_val =  429 - $bhg * 48.3 ;
+		}elseif ( ($bhg >= 1.1) && ($bhg < 4.69) ){
+			$bhg_val = 397.2 - $bhg * 19.27;
+		}elseif (($bhg >=4.69 ) && ($bhg < 59  )){
+			$bhg_val = 317.4 - $bhg * 2.23 ; 
+		}else{
+			$bhg_val = 445;
+		}
+		//dsm($bhg);
+	  
+	}
+		return $bhg_val;
+}
 
 function _h2pix($h, $all = FALSE, $scale = 'linear'){
 	if ( $scale <> 'exponential'){
@@ -443,15 +475,31 @@ function _tid2snowsymbols($tid = NULL, $all = FALSE){
 }
 
 
-function snowpit_graph_pixel_depth($depth, $pit_depth, $meas_from = 'bottom', $global_max = 751, $pit_min = 0){
+function snowpit_graph_pixel_depth($depth, $pit_depth, $meas_from = 'bottom', $global_max = 750, $pit_min = 0){
 	$pixels_per_cm = ((int) $global_max - 157) / ($pit_depth - $pit_min );
 	
 	$h = ($meas_from == 'top') ? (157 + $depth * $pixels_per_cm) : ($global_max - ($depth - $pit_min)* $pixels_per_cm );
 	return $h; 
 }
 
+function arrowline_imageline( &$img, $stab_test_start, $original_depth ,  $y_position ){
+	$factor = ($y_position - $original_depth) ; //slope
+	$hypotenuse = sqrt(16 * 16 + $factor * $factor );
+	//dsm(atan($factor/18) * 180/ M_PI);
+	//dsm( sin (atan($factor/18) ) );
+	//dsm( "cos: ".cos (atan($factor/18) ) * $hypotenuse );
+	
+	$arrowline['tilt'] = atan($factor/18) * 180/ M_PI ;
+	$arrowline['hypotenuse'] = sqrt(18 * 18 + $factor * $factor );
+	$c= $factor * $factor ;
+	$arrowline['xstart'] = $stab_test_start + cos (atan($factor/18) ) * $hypotenuse* ($hypotenuse -16 )/45   ;
+	$arrowline['ystart'] =  $original_depth + sin (atan($factor/18) ) * $hypotenuse *($hypotenuse -16 )/45  ;
+							
+	return $arrowline;
+}
 
-function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_from = 'bottom', $global_max = 751, $pit_min = 0 ){
+
+function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_from = 'bottom', $global_max = 750, $pit_min = 0 ){
 
 	foreach ($test_results as $x => $test){
 		//
@@ -481,7 +529,11 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 					if (( $test->field_ct_score == $test_compare->field_ct_score) &&
 						  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_fracture_character == $test_compare->field_fracture_character)
-					) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	}
+					) {
+						$test->multiple += $test_compare->multiple; /* Add the old multiple value onto this one */ 
+						$test_results[$y]->multiple = 0;  
+						unset($test_compare); 
+						continue 3;	}
 					break;
 					case 'PST':
 				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
@@ -508,27 +560,28 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 	
 	$st_cg = array();
   $simple_test_results = _strip_dupe_tests($test_results);
-	
+	$no_result_iter = 0;
 	// loop through it again to set the y_position to correct height
-	foreach ( $simple_test_results as $x => $test){
-  	if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
-  		$test->collision_flag = TRUE;	
-				
-		  if ( ($measure_from == 'top' && $test->field_depth['und'][0]['value'] <> $pit_depth) ||
-			     ($measure_from == 'bottom' && $test->field_depth['und'][0]['value'] <> $pit_min)) { 
-				$test->y_position = $simple_test_results[$x - 1]->y_position +20 ;
-			} else{ $test->y_position =  $simple_test_results[$x - 1]->y_position - 20;
+	foreach ( $simple_test_results as $x => $test){		
+	  if ( ($measure_from == 'top' && $test->field_depth['und'][0]['value'] <> $pit_depth) ||
+		     ($measure_from == 'bottom' && $test->field_depth['und'][0]['value'] <> $pit_min) )
+	  { 
+  	  if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
+  		  $test->collision_flag = TRUE;	
+		    $test->y_position = $simple_test_results[$x - 1]->y_position +20 ;
+		  }else{
+        if ( count ($st_cg)){
+  	      $st_cg = array();
+				}else{ // this is a singluar item, write straight across
+	        $test->y_position = snowpit_graph_pixel_depth( $test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min ) ;
+        }
 			}
-			
-    }else{
-  	 if ( count ($st_cg)){
-	  	 $st_cg = array();
-  	 }else{ // this is a singluar item, write straight across
-  	   $test->y_position = snowpit_graph_pixel_depth( $test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min );
-	   }
-	  }
-	 } // end of second looping through
-	 $test_results = $simple_test_results;
+		}else{ 
+		  $test->y_position =  snowpit_graph_pixel_depth( $test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min ) - 17 * $no_result_iter-8;
+		  $no_result_iter++;
+		}
+	}
+	$test_results = $simple_test_results;
 	return $simple_test_results;
 }
 
@@ -734,46 +787,46 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				 imagettftext($img, 11 , 0, $text_pos[2], 89, $black , $value_font, " ".$wind_speed[0]['#markup']);
 			}
 			
-			
-			imagettftext( $img, 11, 0 , 805, 17, $black, $label_font, 'Layer Notes');
+			imagettftext( $img, 11, 0 , 700, 17, $black, $label_font, 'Layer Notes:');
+			//imageline( $img , 680, 24, 959,24, $black);
 
-			//  write stability tests column and comments 
-			//  TODO : expand into its own function
+	
 			$comment_count = 0;
 			$textpos = array();
 			if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
 				$pretextpos = imagettftext($img, 11 , 0, 625, 17, $black, $label_font, 'HS:');
-				$textpos = imagettftext($img, 11 , 0, $pretextpos[2] , 17, $black, $value_font,  $node->field_total_height_of_snowpack['und'][0]['value'] )  ;
+				imagettftext($img, 11 , 0, $pretextpos[2] , 17, $black, $value_font,  $node->field_total_height_of_snowpack['und'][0]['value'] )  ;
 				
-				$comment_count = 1;
+				$comment_count += 1;
 			}
 			if ( isset( $node->field_surface_penetration['und'] )  
-			  && ( $node->field_surface_penetration['und'][0]['value'] == 'boot' ) 
 				&& ( isset($node->field_boot_penetration_depth['und']) )
 			  && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
-				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 625 ;
-					$finalpos = imagettftext($img,11, 0, $xpos, 17, $black, $label_font , 'PF:' );
-					imagettftext($img,11, 0, $finalpos[2], 17, $black, $value_font , $node->field_boot_penetration_depth['und'][0]['value']  );
+					$finalpos = imagettftext($img,11, 0, 625, 17+$comment_count* 18, $black, $label_font , 'PF:' );
+					imagettftext($img,11, 0, $finalpos[2], 17+$comment_count* 18, $black, $value_font , $node->field_boot_penetration_depth['und'][0]['value']  );
 					
-					$comment_count = 1;
-			}elseif(isset( $node->field_surface_penetration['und'] )  && isset($node->field_ski_penetration['und'][0]['value']) &&( $node->field_surface_penetration['und'][0]['value'] == 'ski' ) &&  (  $node->field_ski_penetration['und'][0]['value'] != '' ) ){
-				$xpos = ( count($textpos) ) ? $textpos[2] + 5  : 625 ;
-				$finalpos = imagettftext($img,11, 0, $xpos, 17, $black, $label_font , 'PS' );
-				imagettftext($img,11, 0, $finalpos[2], 17, $black, $value_font , $node->field_ski_penetration['und'][0]['value']  );
-					$comment_count = 1;
+					$comment_count += 1;
+			}
+			if(isset( $node->field_surface_penetration['und'] )  
+			    && isset($node->field_ski_penetration['und'][0]['value']) 
+			    &&  (  $node->field_ski_penetration['und'][0]['value'] != '' ) ){
+				    $finalpos = imagettftext($img,11, 0, 625, 17+$comment_count* 18, $black, $label_font , 'PS:' );
+				    imagettftext($img, 11, 0, $finalpos[2]+2, 17+$comment_count* 18, $black, $value_font, $node->field_ski_penetration['und'][0]['value'] );
+				  	$comment_count += 1;
 			}
 			
 			$xtra_specifics = ''; // we are setting this to empty string early on.
-			
+			//  write stability tests column and comments 
+			//  TODO : expand into its own function
 			//
 			// Looping through stability test results
 			//
-			$stab_test_start = 850;
+			$stab_test_start = 707;
 			
 			if (isset($node->field_test['und'])){
 				$ids = array();
-				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];}
-				
+				foreach($node->field_test['und'] as $test) {  $ids[] = $test['value'];
+				}
 				$test_results = field_collection_item_load_multiple($ids);
 				// Here we go ahead and set a value for no-release type test results: ECTX, CTN, etc
 				foreach($test_results as $test) {
@@ -788,27 +841,50 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				  $test_results = array_reverse($test_results);
 				}
 				$bak = _set_stability_test_pixel_depths($test_results, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max  ,$pit_min ); // this sets a $test->y_position = integer which is where the line and text should go in the column on the right
-
-				imagettftext( $img, 11, 0 , 625, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
+				//dsm($test_results);
+				//imagettftext( $img, 11, 0 , 625, $comment_count*18 + 17, $black, $label_font, 'Stability Test Notes');
 				
 				foreach ( $test_results as $x => $test){
+					//dsm($test);
+					
 					if ( isset($test->field_stability_test_type['und'][0]['value']) && isset( $test->y_position) ){
-						if (isset( $test->y_position) ){ // if this has been 'multipled' with another stb test, the y_position won't be set
-							imageline($img, $stab_test_start, $test->y_position, 979, $test->y_position, $black); //horiz line at location of stability test 
-							$test_pos = imagettftext($img, 8, 0, $stab_test_start + 5, $test->y_position - 5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
-						}
-						if ( count($test->field_stability_comments) ){
-							if ( $comment_count < 5 ){
-								$test_depth = isset($test->field_depth['und'][0]['value']) ? $test->field_depth['und'][0]['value']+0 : 0 ;
-								imagettftext($img, 9, 0, 625, $comment_count*13 + 35, $black, $value_font,$test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'] );
-								$comment_count++;
-							}else{
-								if ( $comment_count == 5 ) {
-									$xtra_specifics .= t('Additional Stability Test Notes') .': ';
-									$comment_count++;
-								}
-								imagettftext($img, 7, 0, 625, 5*13 + 31, $red_layer , $label_font, t('[ More Stability Test Notes below ]') );
-								$xtra_specifics .= $test_depth .': '.$test->field_stability_comments['und'][0]['safe_value'].'; ';
+						if ( $test->multiple ){ // if this has been 'multipled' with another stb test, the y_position won't be set
+
+							$original_depth = snowpit_graph_pixel_depth(  $test->field_depth['und'][0]['value'] , $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min);
+							
+							$arrowline = arrowline_imageline($img, $stab_test_start, $original_depth ,  $test->y_position);
+							$factor = $test->y_position - $original_depth;
+							imageline($img, $arrowline['xstart']+1, $arrowline['ystart'] , $stab_test_start+17, $test->y_position, $black); //angled arrow to stability test 
+		
+							
+							// Deprecated method of writing in little arrow lines
+					/*		imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) - .4) +1 , $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) - .4), $black );
+							imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) - .32) +1 , $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) - .32), $black );
+							
+							
+							imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) + .4)  +1, $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) + .4), $black );
+							imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) + .32)  +1, $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) + .32), $black );
+					*/	
+					/*  Other deprecated what of writing arrows
+			imagettftext_cr($img, 7, 0-$arrowline['tilt'], $arrowline['xstart'] + 3.2 * abs(cos( (atan($factor/16) )) *  cos( (atan($factor/16) )) * cos( (atan($factor/16) ))), $arrowline['ystart'], $black, $value_font, '&#x25c4;');
+			//imagettftext($img, 7, 0-$arrowline['tilt'], $arrowline['xstart'] - abs(( sin (atan($factor/16) )) * ( sin (atan($factor/16) )) *( sin (atan($factor/16) ))) * 3 , $arrowline['ystart']- ((sin(atan($factor/16) )) * sin(atan($factor/16) ) * sin(atan($factor/16) )      )*6 +4 ,$black, $value_font, '&#x25c4;');  // the little arrow that points to where the test result is at
+
+			$test_pos = imagettftext($img, 8, 0, $stab_test_start + 19, $test->y_position+5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
+			if ( count($test->field_stability_comments) ){
+				imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,$test->field_stability_comments['und'][0]['safe_value'] );
+			}
+					
+					*/
+							//dsm(cos( (atan($factor/16) ) )); 
+							$offset = atan( $factor/ 16) < 0 ? 0 : atan( $factor/ 16) ;
+							imagettftext_cr($img, 6, 0 -$arrowline['tilt'], $arrowline['xstart']  -2.5* (1- cos( (atan($factor/16) )) )  + $offset+2, $arrowline['ystart'], $black, $value_font, '&#x25c4;');
+							
+							
+							//imagettftext($img, 7, 0-$arrowline['tilt'], $arrowline['xstart'] - abs(( sin (atan($factor/16) )) * ( sin (atan($factor/16) )) *( sin (atan($factor/16) ))) * 3 , $arrowline['ystart']- ((sin(atan($factor/16) )) * sin(atan($factor/16) ) * sin(atan($factor/16) )      )*6 +4 ,$black, $value_font, '&#x25c4;');  // the little arrow that points to where the test result is at
+	
+							$test_pos = imagettftext($img, 8, 0, $stab_test_start + 19, $test->y_position+5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
+							if ( count($test->field_stability_comments) ){
+								imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,$test->field_stability_comments['und'][0]['safe_value'] );
 							}
 						}
 					}
@@ -893,8 +969,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 						
 					}
 				//output grain symbols
-					
-				
+
 				// calculate grain size string
 					$grain_size_string = isset($layer->field_grain_size['und']) ? $layer->field_grain_size['und'][0]['value'] : '' ;
 					if ( isset( $layer->field_grain_size_max['und'][0]['value'])) $grain_size_string .= '-' . $layer->field_grain_size_max['und'][0]['value'];
@@ -902,14 +977,12 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				// Ouptut primary grain sizes
 					$textpos = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
 					// output secondary grain size
-					if ( isset ( $layer->field_grain_size_secondary['und'][0]['value']) && $layer->field_grain_size_secondary['und'][0]['value'] <> ''){
+					if ( isset ( $layer->field_grain_size_secondary['und'][0]['value']) && $layer->field_grain_size_secondary['und'][0]['value'] <> ''){						
 						if ( $textpos[ 2 ] > 600){  // a "wide load" grain size field, breaking into two rows. This will cause problems on a narrow layer at 20 pixels or less.
-						//dsm($layer->field_grain_size_secondary['und'][0]['value'] ); 
-						$grain_size_secondary_string = $layer->field_grain_size_secondary['und'][0]['value'];
-						// bump down this to the next layer
-						$textpos2 = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +15, $black, $label_font, '(' .$grain_size_secondary_string . ')' );
+						// bump down this down
+						  $textpos2 = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +15, $black, $label_font, '(' .$layer->field_grain_size_secondary['und'][0]['value'] . ')' );
 					  }else{
-						$textpos2 = imagettftext($img, 8, 0, 600, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, '(' . $grain_size_secondary_string . ')' );
+						  $textpos2 = imagettftext($img, 8, 0, $textpos[ 2 ] +1, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, '(' . $layer->field_grain_size_secondary['und'][0]['value'] . ')' );
 					  }
 					}
 					
@@ -922,10 +995,64 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				// Output Layer comments
 				  $layer_bottom = $layer->field_bottom_depth['und'][0]['value'] + 0 ;
 				  $layer_top = $layer->field_height['und'][0]['value'] + 0;
+					$layer_y_val_text = ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5;
+			
 
-					/// write layer notes next to layer
-				  imagettftext($img, 9, 0, 670, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $layer->field_comments['und'][0]['safe_value']);
+					/// 
+					//   Collisions check with the tests 
+					//   then, write layer notes next to layer
+					// also in this block, we attempt to move layer comments with conflicts down by 18 px , perhaps to just bump into the next test result row. After two bump-downs, we give 
+					//  up and $conflict = TRUE; so no ouptting that layer notes in the graph
+					$conflict = FALSE ; 
+					if ( isset ($layer->field_comments['und'][0]) ){
+						$iter = 0 ;
+					  foreach ( $test_results as $result ){
+							if ( ($result->y_position  > $layer_y_val_text -20  ) &&  $result->y_position < $layer_y_val_text +8 && ( $iter <= 2) ){
+								$layer_y_val_text = $result->y_position+20; 
+								$iter++ ;
+								//dsm( "first level conflict"); dsm( "values, layertext: ". $layer_y_val_text . ', test pos: '.$result->y_position);
+								if ( (($result->y_position  > $layer_y_val_text -17  ) &&  $result->y_position < $layer_y_val_text +8) || $iter > 2  ) {
+								  $conflict = TRUE;
+							  }
+							}
+					  }
+						//
+						// Now, collision check with other Layers
+						//
+						foreach ( $keyed_all_layers as $y => $compare_layer ){
+							if ( isset ($compare_layer->field_comments['und'][0]) ){
+								if ( ($compare_layer->y_val_text  > $layer_y_val_text -20  ) &&  $compare_layer->y_val_text < $layer_y_val_text +8 && ( $iter <= 2) ){
+									$layer_y_val_text = $compare_layer->y_val_text+20; 
+									$iter++ ;
+									//dsm( "first level conflict"); dsm( "values, layertext: ". $layer_y_val_text . ', test pos: '.$result->y_position);
+									if ( (($compare_layer->y_val_text  > $layer_y_val_text -17  ) &&  $compare_layer->y_val_text < $layer_y_val_text +8) || $iter > 2  ) {
+									  $conflict = TRUE;
+								  }
+								}
+							}
+						}
 
+					  if  ( !$conflict  ) {
+							$layer->y_val_text = $layer_y_val_text ;
+							$layer_place_pos = imagettftext($img, 9, 0, $stab_test_start +5, $layer_y_val_text +5, $black, $label_font, $layer_top .'-'. $layer_bottom .$snowpit_unit_prefs['field_depth_units'].': ');
+							imagettftext($img, 9, 0, $layer_place_pos[2] , $layer_y_val_text +5, $black, $value_font, $layer->field_comments['und'][0]['safe_value']); 
+						}
+												
+						if ( $comment_counter <5 ){
+
+						  $textpos2 = imagettftext($img, 9, 0, 682, $comment_counter*13 + 35, $black, $label_font,
+							$layer_top.'-'.$layer_bottom. $snowpit_unit_prefs['field_depth_units'].': ');
+							imagettftext( $img, 9, 0, $textpos2[2]+1, $comment_counter*13 + 35, $black, $value_font,  $layer->field_comments['und'][0]['safe_value']);
+					  }else{
+							if( $comment_counter == 5 ) { 
+								$xtra_specifics .= '. Additional Layer Comments: ';
+						    imagettftext($img, 7, 0, 685, $comment_counter*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
+							}
+							$xtra_specifics .= $layer_bottom.'-'.$layer_top. $snowpit_unit_prefs['field_depth_units'].': '.$layer->field_comments['und'][0]['safe_value'].'; ';
+					  }
+					  $comment_counter++;
+				  }
+				  
 					// write density measurements that are from the 'Layers' tab into the rho column ( in addition to Densities )
 					if ( isset ( $layer->field_density_top['und'][0]['value'] )){
 						imageline($img, 667, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min), $stab_test_start, snowpit_graph_pixel_depth($layer->field_height['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min),$black);
@@ -944,11 +1071,20 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 						$y_redline_top = $layer->y_val_top; $y_redline_bottom = $layer->y_val; /// 
 						$concern_delta = $layer->item_id;
 						
-						if ($comment_counter < 6){
-						 	imagettftext($img, 9, 0, 805, $comment_counter*13 + 35, $black, $value_font, $layer_bottom.'-'.$layer_top.": Problematic layer");
+						if ($comment_counter < 5){
+						 	//imagettftext($img, 9, 0, 682, $comment_counter*13 + 35, $black, $value_font, $layer_bottom.'-'.$layer_top.": Problematic layer");
+							
+							
+						  $textpos3 = imagettftext($img, 9, 0, 682, $comment_counter*13 + 35, $black, $label_font,
+							   $layer_top.'-'.$layer_bottom. $snowpit_unit_prefs['field_depth_units'].':');
+							imagettftext( $img, 9, 0, $textpos3[2]+1, $comment_counter*13 + 35, $black, $value_font,  " Problematic layer");
+							
+							
 						}else{
-							if($comment_counter == 6) $xtra_specifics .= 'Additional Layer Comments: ';
-							imagettftext($img, 7, 0, 805, 6*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
+							if( $comment_counter == 5 ) { 
+								$xtra_specifics .= '. Additional Layer Comments: ';
+						    imagettftext($img, 7, 0, 685, $comment_counter*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
+							}
 							$xtra_specifics .= $layer_bottom.'-'.$layer_top.": " . t("Problematic layer") . '; ';
 						}
 						
@@ -1086,7 +1222,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			
 			//
 			
-	imagettftext($img, 10, 0 , $stab_test_start +20, 122, $black ,$label_font, "Stability tests");
+	imagettftext($img, 10, 0 , $stab_test_start +20, 122, $black ,$label_font, "Stability tests & Layer comments");
 			
 	imagettftext($img , 10, 0, $stab_test_start -26, 118, $black, $label_font, "&#x3c1;"); // Rho symbol for density
 	imagettftext($img, 10, 0 , $stab_test_start -32,135, $black, $label_font , _density_unit_fix($snowpit_unit_prefs['field_density_units']) );
@@ -1097,7 +1233,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	// the rectangle around the layers hardness profile
 	imagerectangle($img, 14, 140, 447,751, $black );
 	// line at left side of rho column
-	imageline( $img , 820, 140, 820 , 751, $black);
+	//imageline( $img , 820, 140, 820 , 751, $black);
 	
 	
 	//the tickmarks for hardness across the bottom and top, and labels

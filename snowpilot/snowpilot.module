@@ -36,6 +36,7 @@ function snowpilot_menu(){
 		'type' => MENU_NORMAL_ITEM,	
 		
 	);
+	
 	$items['organizations'] = array(
 		'title' => 'Manage Organization Users and Snowpits',
 		'page callback' => 'snowpilot_organization', // Note singular, not plural like following $item[]
@@ -63,6 +64,17 @@ function snowpilot_menu(){
 		'access arguments' => array( 'view', 1),
 		'type' => MENU_CALLBACK,
 	);
+	//dsm('bout to call... ');
+	
+	$items['snowpit-blade-hardness/%node'] = array(
+		'title' => 'Snowpit jpg, including Blade Hardness Profile',
+		'page callback' => 'snowpilot_node_blade_hardness_profile',
+		'page arguments' => array(1),
+		'access callback' => 'snowpilot_user_has_role',
+		'access arguments' => array ( 'Blade Hardness Testers', 'administrator' ),
+		'type' => MENU_CALLBACK,
+	);
+	
 	$items['snowpilot/%user/remove_affiliation'] = array(
 		'title' => 'Confirm remove User from group?',
 		'page callback' => 'drupal_get_form',
@@ -389,6 +401,58 @@ function snowpilot_org_admin_access($item){
 	}else{
 		return FALSE;
 	}
+}
+
+function snowpilot_node_blade_hardness_profile( $node ){
+  $snowpit_name_local = $node->title . '-' . date ('d-M', strtotime($node->field_date_time['und'][0]['value']) ).'.'.$format;
+  //header('Content-Disposition: attachment; filename="'. $snowpit_name_local .'"');
+	$img_bh = imagecreatefrompng(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . substr($node->nid, 0, -3 ). '/graph/graph-' .$node->nid .'.png');
+	
+	foreach ($node->field_blade_hardness['und'] as $hardness_meas ){
+		$blade_hardness_id[] =  $hardness_meas['value'];
+	}
+	
+	$bh_results = field_collection_item_load_multiple($blade_hardness_id);
+  //dsm($bh_results);
+	//// scavenged from graphing functions
+	$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');
+	$pit_depth = _snowpilot_find_pit_depth($node);
+	$pit_min = _snowpilot_find_pit_min($node);
+	$green = imagecolorallocate($img_bh, 25, 128, 49); 
+	$value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
+	
+	
+	if ( ( isset ( $node->field_total_height_of_snowpack['und'][0]['value'] )  
+		&& (  abs($node->field_total_height_of_snowpack['und'][0]['value'] - $pit_depth)>15  ) 
+	  && (($node->field_display_full_profile['und'][0]['value'] <> 1 ) || !isset($node->field_display_full_profile['und'][0]['value']) )) 
+			
+	|| ( ( !isset( $node->field_display_full_profile['und'][0]['value'] ) || ($node->field_display_full_profile['und'][0]['value'] <> 1 ) ) && $pit_min >14 )){
+			$shrunken_pit = TRUE;
+			$global_max =  701 ;
+		}else{
+			$shrunken_pit = FALSE;
+			$global_max =  751 ;
+			$pit_min = 0; // we reset pit_min to zero so it comes out the correct height scaling on the final graph
+		}
+		foreach ( array (.21,1.1,4.67,58.93) as $newtons ){
+			
+			imagettftext($img_bh, 9, 0, _bhg2pix($newtons,$snowpit_unit_prefs['field_hardness_scale'])-10 , 765, $green, $value_font, $newtons); 
+			imageline( $img_bh, _bhg2pix($newtons,$snowpit_unit_prefs['field_hardness_scale'] ), 734, _bhg2pix($newtons,$snowpit_unit_prefs['field_hardness_scale'] ), 751, $green);
+			
+		}
+		//dsm($bh_results);
+		/// end graphing functions scavenge
+	foreach ( $bh_results as $bh_result ){
+		$depth = $bh_result->field_depth['und'][0]['value'];
+		$bh_newtons = $bh_result->field_bhg_newtons['und'][0]['value'];
+		$pixel_depth =  snowpit_graph_pixel_depth($depth, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min);
+		//dsm( _bhg2pix($bh_newtons) );
+		imagefilledellipse($img_bh, _bhg2pix($bh_newtons,$snowpit_unit_prefs['field_hardness_scale'] ), $pixel_depth, 6, 6, $green );
+	}
+	header('Content-Type: image/png');
+
+	imagepng($img_bh);
+	return ;
 }
 
 function snowpilot_node_snowpit_download($node, $format = 'jpg'){
@@ -898,7 +962,7 @@ function snowpilot_field_attach_form($entity_type, $entity, &$form, &$form_state
   foreach ($instances as $instance) {
     // field_info_field() is not available for deleted fields, so use
     // field_info_field_by_id().
-		if (  $instance['field_id'] == 99 || $instance['field_id'] == 102 ){
+		if (  $instance['field_id'] == 99 || $instance['field_id'] == 102 || $instance['field_id'] == 147){
 	    $field = field_info_field_by_id($instance['field_id']);
 
 	    //If we are looking at our field type and specific widget type, and we are multiple entries
@@ -1430,6 +1494,10 @@ function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 		$form['field_stability_on_similar_slope']['und']['#title'] = 'AFTER doing stability tests';
 		
 	}	
+	if ( !user_has_role( '11', $account )){
+		unset($form['field_blade_hardness']);
+	}
+	
 	//dsm($form['field_stability_on_similar_slope']);
 	
 }
@@ -1692,6 +1760,9 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	if ( substr($form_state['values']['field_date_time']['und'][0]['value'], -8, 8) == '00:00:00' ){
 		form_set_error('field_date_time', t('Please enter a valid time for when the snowpit was dug.'));
 	}
+	if ( strtotime($form_state['values']['field_date_time']['und'][0]['value']) > time() ){
+		form_set_error('field_date_time', t('Please enter a valid date for when the snowpit was dug. Future date was entered.'));
+	}
 	//dsm( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) );
 	if ( ! isset( $form_state['values']['field_loaction']['und'][1]['tid'] ) && count ( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) )){
 		form_set_error( 'field_loaction', t('Please enter a valid Mountain Range or Region at deepest possible level.'));
@@ -1826,7 +1897,7 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 			$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";		 // don't put dsm here, it will break the "add another"  functionality with AJAX errors.
 	  }
 		//dsm($form['field_test']['und'][$x]);
-		$form['field_test']['und'][$x]['field_stability_comments']['und'][0]['value']['#maxlength'] = 20;
+		$form['field_test']['und'][$x]['field_stability_comments']['und'][0]['value']['#maxlength'] = 16;
 		// here we will attempt to add a "Duplicate test" button and functionality
 
 				
@@ -2105,7 +2176,7 @@ function snowpilot_user_shared_groups($tid){
 
 function snowpilot_node_view($node, $view_mode){
 	if ($node->type == 'snowpit_profile'){
-	snowpilot_snowpit_graph_header_write($node);	
+	//snowpilot_snowpit_graph_header_write($node);	
 		$prefs = snowpilot_unit_prefs_get($node, 'node'); 
 		//$node->content['field_air_temp'][0]['#markup'] = $node->content['field_air_temp']['#items'][0]['value']. $prefs['field_temp_units'];
 	}
@@ -2529,10 +2600,6 @@ function snowpilot_user_edit(){
 
 function snowpilot_user_has_role() {  
 	$roles = func_get_args();
-	if ( !is_array($roles)) {
-		$role_val = $roles;
-		$roles = array( $role_val );
-	}
 	global $user;
 	foreach ( $user->roles as $user_role ){
     if (in_array($user_role , $roles)) {
