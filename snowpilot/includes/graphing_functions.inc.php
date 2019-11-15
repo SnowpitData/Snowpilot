@@ -909,7 +909,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			if ( isset($node->field_surface_grain_type['und'][0]['tid']) ){
 				// insert grain type image
 				$surf_grain_type_image = _tid2snowsymbols($node->field_surface_grain_type['und'][0]['tid']);
-				imagettftext($img, '12', 0, 520 , 154 , $black, $snowsymbols_font, $surf_grain_type_image);
+				$surface_grain_image_pos = imagettftext($img, '12', 0, 520 , 154 , $black, $snowsymbols_font, $surf_grain_type_image);
+				if (  ($node->field_grain_surface_rimed['und'][0]['value'])) {
+					imagettftext($img, 8, 0, $surface_grain_image_pos[2] -1, 154, $black, $label_font, 'r' );
+				}
 			}
 			if ( isset($node->field_surface_grain_size['und'][0]['value']) ){
 
@@ -957,13 +960,19 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			  		$grain_type_image = isset($layer->field_grain_type['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type['und'][0]['tid']);
 						$font_size = ( $grain_type_image == '&#xe028;&#xe007;' ) ? 9 : 12;
 						$grain_image_pos = imagettftext($img, $font_size, 0, 520 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image);
-					  
+						$nextpos = $grain_image_pos[2];
+						if (  ($layer->field_grain_primary_rimed['und'][0]['value'])) {
+							$little_r_pos = imagettftext($img, 8, 0, $grain_image_pos[2] -1, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +7, $black, $label_font, 'r' );
+						  $nextpos = $little_r_pos[2];
+						}
 					}	
 					
 					if (isset($layer->field_grain_type_secondary['und'])){
 						$secondary_grain_type_image = isset($layer->field_grain_type_secondary['und'][1]['tid'] ) ? _tid2snowsymbols($layer->field_grain_type_secondary['und'][1]['tid']) :  _tid2snowsymbols($layer->field_grain_type_secondary['und'][0]['tid']);
 						$font_size = ( $secondary_grain_type_image == '&#xe028;&#xe007;' ) ? 9 : 12;
-						$x_pos1 =  isset($grain_image_pos[2]) ? $grain_image_pos[2]+3 : 520;
+						$x_pos1 =  isset($nextpos) ? $nextpos+2 : 520;
+						
+						
 						$second_grain_image_pos = imagettftext($img, $font_size, 0, $x_pos1 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5,
 						   $black, $snowsymbols_font, '('.$secondary_grain_type_image.')' );
 						
@@ -976,6 +985,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				
 				// Ouptut primary grain sizes
 					$textpos = imagettftext($img, 8, 0, 580, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $label_font, $grain_size_string );
+
 					// output secondary grain size
 					if ( isset ( $layer->field_grain_size_secondary['und'][0]['value']) && $layer->field_grain_size_secondary['und'][0]['value'] <> ''){						
 						if ( $textpos[ 2 ] > 600){  // a "wide load" grain size field, breaking into two rows. This will cause problems on a narrow layer at 20 pixels or less.

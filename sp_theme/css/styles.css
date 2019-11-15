@@ -688,9 +688,6 @@ input#edit-field-elevation-und-0-value{
 #edit-field-aspect,
 #edit-field-aspect-cardinal,
 #edit-field-slope-angle,
-#edit-field-surface-penetration,
-#edit-field-boot-penetration-depth,
-#edit-field-ski-penetration,
 #edit-field-precipitation{
 	display: inline-block;
 	vertical-align: top;
@@ -699,10 +696,11 @@ input#edit-field-elevation-und-0-value{
 
 #edit-field-slope-angle,
 #edit-field-aspect,
-#edit-field-aspect-cardinal,
-#edit-field-ski-penetration,
-#edit-field-boot-penetration-depth{
+#edit-field-aspect-cardinal{
 	margin-left: 25px;
+}
+#edit-field-surface-penetration{
+	display: none;
 }
 
 #edit-field-latitude,
@@ -1260,9 +1258,32 @@ body.page-node-add-snowpit-profile #block-block-6{
 	
 }
 
+body.page-snowpits.page-views #content ul.tabs-secondary a.tabs-secondary__tab-link{
+	background-color: #c87931;
+	color: white;
+	font-size: 16px;
+	text-shadow: 1px 1px 0 gray;
+}
+
 body.page-node-edit.node-type-snowpit-profile nav#secondary-menu,
 body.page-node-add-snowpit-profile nav#secondary-menu{
 	bottom: 15px;
+}
+#block-locale-language{
+  position: relative;
+  bottom: 120px;
+}
+#block-locale-language a{
+	color: white;
+}
+#block-locale-language ul{
+	list-style-type: none;
+	float: right;
+
+}
+#block-locale-language ul li{
+	display:inline-block;
+	margin-left: 16px;
 }
 
 body.page-node-edit.node-type-snowpit-profile header.header,
