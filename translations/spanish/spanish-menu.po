@@ -1,0 +1,329 @@
+# LANGUAGE translation of PROJECT
+# Copyright (c) YEAR NAME <EMAIL@ADDRESS>
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2019-11-19 09:02-0700\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: menu:item:1008:title
+msgctxt "item:1008:title"
+msgid "Login"
+msgstr "Iniciar sesión"
+
+#: menu:item:1013:title
+msgctxt "item:1013:title"
+msgid "Snowpit Preferences"
+msgstr "Preferencias de snowpit"
+
+#: menu:item:1014:title
+msgctxt "item:1014:title"
+msgid "Snowpits Full page"
+msgstr ""
+
+#: menu:item:1015:title
+msgctxt "item:1015:title"
+msgid "Snowpits"
+msgstr ""
+
+#: menu:item:1016:title
+msgctxt "item:1016:title"
+msgid "Snowpit Search"
+msgstr "Búsqueda de Snowpits"
+
+#: menu:item:1174:title
+msgctxt "item:1174:title"
+msgid "Organization"
+msgstr "Organización"
+
+#: menu:item:1185:title
+msgctxt "item:1185:title"
+msgid "SnowPilot Admin"
+msgstr ""
+
+#: menu:item:1186:title
+msgctxt "item:1186:title"
+msgid "Create Bulk Email"
+msgstr ""
+
+#: menu:item:1187:title
+msgctxt "item:1187:title"
+msgid "Organization Users"
+msgstr "Usarios "
+
+#: menu:item:1188:title
+msgctxt "item:1188:title"
+msgid "Organization"
+msgstr "Organización"
+
+#: menu:item:1189:title
+msgctxt "item:1189:title"
+msgid "Advanced Snowpit Search"
+msgstr "Búsqueda avanzada de snowpits"
+
+#: menu:item:1192:title
+msgctxt "item:1192:title"
+msgid "Organization"
+msgstr "Organización"
+
+#: menu:item:1194:description
+msgctxt "item:1194:description"
+msgid "Manage Users and Snowpits of your group."
+msgstr "Administre usuarios y snowpits de su grupo."
+
+#: menu:item:1194:title
+msgctxt "item:1194:title"
+msgid "Organizations"
+msgstr "Organizacións"
+
+#: menu:item:11:description
+msgctxt "item:11:description"
+msgid "View and customize your dashboard."
+msgstr ""
+
+#: menu:item:11:title
+msgctxt "item:11:title"
+msgid "Dashboard"
+msgstr ""
+
+#: menu:item:12:description
+msgctxt "item:12:description"
+msgid "Reference for usage, configuration, and modules."
+msgstr ""
+
+#: menu:item:12:title
+msgctxt "item:12:title"
+msgid "Help"
+msgstr ""
+
+#: menu:item:1341:title
+msgctxt "item:1341:title"
+msgid "Query Page"
+msgstr ""
+
+#: menu:item:1342:title
+msgctxt "item:1342:title"
+msgid "Snowpit Query"
+msgstr "Búsqueda de Snowpits"
+
+#: menu:item:1343:title
+msgctxt "item:1343:title"
+msgid "Snowpit Query"
+msgstr "Búsqueda de Snowpits"
+
+#: menu:item:16:description
+msgctxt "item:16:description"
+msgid "Extend site functionality."
+msgstr ""
+
+#: menu:item:16:title
+msgctxt "item:16:title"
+msgid "Modules"
+msgstr ""
+
+#: menu:item:187:title
+msgctxt "item:187:title"
+msgid "Search"
+msgstr ""
+
+#: menu:item:18:description
+msgctxt "item:18:description"
+msgid "Manage user accounts, roles, and permissions."
+msgstr ""
+
+#: menu:item:18:title
+msgctxt "item:18:title"
+msgid "People"
+msgstr ""
+
+#: menu:item:19:description
+msgctxt "item:19:description"
+msgid "View reports, updates, and errors."
+msgstr ""
+
+#: menu:item:19:title
+msgctxt "item:19:title"
+msgid "Reports"
+msgstr ""
+
+#: menu:item:218:title
+msgctxt "item:218:title"
+msgid "Home"
+msgstr "Página inicial"
+
+#: menu:item:21:description
+msgctxt "item:21:description"
+msgid "Administer blocks, content types, menus, etc."
+msgstr ""
+
+#: menu:item:21:title
+msgctxt "item:21:title"
+msgid "Structure"
+msgstr ""
+
+#: menu:item:2:title
+msgctxt "item:2:title"
+msgid "User account"
+msgstr ""
+
+#: menu:item:394:title
+msgctxt "item:394:title"
+msgid "Build a GMap macro"
+msgstr ""
+
+#: menu:item:403:title
+msgctxt "item:403:title"
+msgid "User locations"
+msgstr ""
+
+#: menu:item:404:title
+msgctxt "item:404:title"
+msgid "Node locations"
+msgstr ""
+
+#: menu:item:488:title
+msgctxt "item:488:title"
+msgid "Downloads"
+msgstr "Descargas"
+
+#: menu:item:489:title
+msgctxt "item:489:title"
+msgid "Chaos Tools AJAX Demo"
+msgstr ""
+
+#: menu:item:490:title
+msgctxt "item:490:title"
+msgid "Successful Jumping"
+msgstr ""
+
+#: menu:item:498:title
+msgctxt "item:498:title"
+msgid "Getting Started"
+msgstr "Empazando con Snowpilot"
+
+#: menu:item:499:title
+msgctxt "item:499:title"
+msgid "Feedback"
+msgstr "Realimentación"
+
+#: menu:item:4:title
+msgctxt "item:4:title"
+msgid "Compose tips"
+msgstr ""
+
+#: menu:item:514:title
+msgctxt "item:514:title"
+msgid "Create Snowpit"
+msgstr "Nuevo Snowpit"
+
+#: menu:item:55:description
+msgctxt "item:55:description"
+msgid ""
+"Get a status report about your site's operation and any detected "
+"problems."
+msgstr ""
+
+#: menu:item:55:title
+msgctxt "item:55:title"
+msgid "Status report"
+msgstr ""
+
+#: menu:item:6:title
+msgctxt "item:6:title"
+msgid "Add content"
+msgstr ""
+
+#: menu:item:7:description
+msgctxt "item:7:description"
+msgid "Select and configure your themes."
+msgstr ""
+
+#: menu:item:7:title
+msgctxt "item:7:title"
+msgid "Appearance"
+msgstr ""
+
+#: menu:item:8:description
+msgctxt "item:8:description"
+msgid "Administer settings."
+msgstr ""
+
+#: menu:item:8:title
+msgctxt "item:8:title"
+msgid "Configuration"
+msgstr ""
+
+#: menu:item:9:description
+msgctxt "item:9:description"
+msgid "Administer content and comments."
+msgstr ""
+
+#: menu:item:9:title
+msgctxt "item:9:title"
+msgid "Content"
+msgstr ""
+
+#: menu:menu:devel:description
+msgctxt "menu:devel:description"
+msgid "Development link"
+msgstr ""
+
+#: menu:menu:devel:title
+msgctxt "menu:devel:title"
+msgid "Development"
+msgstr ""
+
+#: menu:menu:main-menu:description
+msgctxt "menu:main-menu:description"
+msgid ""
+"The <em>Main</em> menu is used on many sites to show the major "
+"sections of the site, often in a top navigation bar."
+msgstr ""
+
+#: menu:menu:main-menu:title
+msgctxt "menu:main-menu:title"
+msgid "Main menu"
+msgstr ""
+
+#: menu:menu:management:description
+msgctxt "menu:management:description"
+msgid "The <em>Management</em> menu contains links for administrative tasks."
+msgstr ""
+
+#: menu:menu:management:title
+msgctxt "menu:management:title"
+msgid "Management"
+msgstr ""
+
+#: menu:menu:navigation:description
+msgctxt "menu:navigation:description"
+msgid ""
+"The <em>Navigation</em> menu contains links intended for site "
+"visitors. Links are added to the <em>Navigation</em> menu "
+"automatically by some modules."
+msgstr ""
+
+#: menu:menu:navigation:title
+msgctxt "menu:navigation:title"
+msgid "Navigation"
+msgstr ""
+
+#: menu:menu:user-menu:description
+msgctxt "menu:user-menu:description"
+msgid ""
+"The <em>User</em> menu contains links related to the user's account, "
+"as well as the 'Log out' link."
+msgstr ""
+
+#: menu:menu:user-menu:title
+msgctxt "menu:user-menu:title"
+msgid "User menu"
+msgstr ""
+

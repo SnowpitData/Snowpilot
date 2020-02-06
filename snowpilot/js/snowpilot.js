@@ -113,7 +113,7 @@
       });
       
 	    $(".save.warn .ctools-dropdown-container-wrapper a").click(function(event) {
-	        if( !confirm('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?') ) 
+	        if( !confirm( Drupal.settings.snowpilot.translatable.lock_save_warning ) ) 
 	            event.preventDefault();
 	    });
 		  /*$('table.field-multiple-table #edit-field-layer-und-2-field-bottom-depth-und-0-value', context).blur( function() { 
@@ -203,7 +203,7 @@
           if($(this).hasClass("horizontal-tab-button-1")) {
             layerTabSelected = true;
           } else if(layerTabSelected && lgcWarningRequired) {
-            alert("Reminder:  You have not yet selected a layer of greatest concern");
+            alert(Drupal.settings.snowpilot.translatable.lgc_warning);
             lgcWarningRequired = false;
           }
         });

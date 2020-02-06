@@ -48,3 +48,29 @@ function sp_liveprofile_init(){
 	}
 	
 }
+
+function sp_liveprofile_form_alter(&$form, &$form_state, $form_id){
+	
+	switch ( $form_id ){
+		
+		case 'snowpit_profile_node_form':
+	  drupal_add_js( array('sp_liveprofile' => array("translatable" => 
+					array( "depth" => t("Depth"), 
+								 "temperature" => t("Temperature"), 
+								 "grain_type" => t('Grain
+Type'),
+								 "grain_size" => t('Size
+(mm)'),
+								 "stability_tests" => t('Stability
+Tests'), 
+								 "hand_hardness" => t('Hand Hardness') )
+									 ) ), 'setting');
+	
+
+		break;
+	}
+	
+	
+return;
+}
+

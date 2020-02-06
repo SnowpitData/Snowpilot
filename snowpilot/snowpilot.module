@@ -29,7 +29,7 @@ function snowpilot_menu(){
       'type' => MENU_CALLBACK,
   );
 	$items['snowpilot/user/edit'] = array(
-		'title' => 'Edit Snowpit Preferences',
+		'title' => t('Edit Snowpit Preferences'),
 		'page callback' => 'snowpilot_user_edit',
 		'access callback' => 'snowpilot_user_has_role',
 		'access arguments' => array ('authenticated user'),
@@ -38,7 +38,7 @@ function snowpilot_menu(){
 	);
 	
 	$items['organizations'] = array(
-		'title' => 'Manage Organization Users and Snowpits',
+		'title' => t('Manage Organization Users and Snowpits'),
 		'page callback' => 'snowpilot_organization', // Note singular, not plural like following $item[]
 		'page arguments' =>array( 1 ),
 		'access callback' => 'snowpilot_user_has_role',
@@ -47,7 +47,7 @@ function snowpilot_menu(){
 		
 	);
 	$items['organizations/%'] = array(
-		'title' => 'Manage Organization Users and Snowpits',
+		'title' => t('Manage Organization Users and Snowpits'),
 		'page callback' => 'snowpilot_organizations',
 		'page arguments' =>array( 1 ),
 		'access callback' => 'snowpilot_org_admin_page',
@@ -57,7 +57,7 @@ function snowpilot_menu(){
 	);
 
 	$items['snowpit/%node/download'] = array(
-		'title' => 'Download snowpit jpg',
+		'title' => t('Download snowpit jpg'),
 		'page callback' => 'snowpilot_node_snowpit_download',
 		'page arguments' => array(1),
 		'access callback' => 'node_access',
@@ -75,8 +75,17 @@ function snowpilot_menu(){
 		'type' => MENU_CALLBACK,
 	);
 	
+	$items['lang/%/%node'] = array(
+		'title' =>'Snowpit in other language',
+		'page callback' => 'snowpilot_profile_language',
+		'page arguments' => array(1,2),
+		'access callback' => 'node_access',
+    'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
 	$items['snowpilot/%user/remove_affiliation'] = array(
-		'title' => 'Confirm remove User from group?',
+		'title' => t('Confirm remove User from group?'),
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('snowpilot_remove_affiliation_form', 1),
 		'access callback' => 'snowpilot_org_admin_access',
@@ -84,7 +93,7 @@ function snowpilot_menu(){
 		'type' => MENU_CALLBACK,		
 	);
 	$items['snowpilot/add_affiliation'] = array(
-		'title' => 'Add user to your Group',
+		'title' => t('Add user to your Group'),
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('snowpilot_add_affiliation_form'),
 		'access callback' => 'snowpilot_org_admin_access',
@@ -117,6 +126,18 @@ function snowpilot_permission(){
 	return $permission;
 }
 
+//
+// this block view alter function just allows translation with normal string translation in the block title, a very limited functionality of the i18n_block module
+//  but, all the functionality we need right now
+// No block content is translated: mostly, it is view-drived, or includes php code 
+//
+
+function snowpilot_block_view_alter(&$data, $block){
+  if (!empty($block->title) && $block->title != '<none>') {
+    $data['title'] = t($block->title);
+  }
+}
+
 function snowpilot_organization(){
 	global $user;
 	//dsm($user);
@@ -129,21 +150,21 @@ function snowpilot_organization(){
 	if ( !in_array($default_org , $org_admin_groups  )){  // If this organization is not one they can manage, reset their default org to something standard.
 		
 		if ( ! isset( $org_admin_groups[0]) ) {
-			$result .= 'You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.';
+			$result .= t('You are an organization admin, but you do not have any Organization of which you are shown to be an admin. Please contact us at admin@snowpilot.org to resolve.');
 		  return $result;
 		}
 		$org_admin_user->field_org_ownership->set( $org_admin_groups[0]->tid );
 		//$org_admin_user->save();
 	}	
 	$default_org = $org_admin_user->field_org_ownership->value();
-	$result .= '<h2>Snowpits for '. $default_org->name  . '</h2>'; 
+	$result .= '<h2>'. t('Snowpits for '). $default_org->name  . '</h2>'; 
 	$result .= views_embed_view( 'new_test_search' , 'page', $default_org->tid );
-	drupal_set_title ( t('Manage Organization Users and Snowpits: '.$default_org->name ));
+	drupal_set_title ( t('Manage Organization Users and Snowpits: ').$default_org->name );
 	return $result;
 }
 
 function snowpilot_org_admin_page_links( $groups ){
-	$result = '<div class ="org-admin-links"><h2>Groups you may administer:</h2> <ul>';
+	$result = '<div class ="org-admin-links"><h2>'. t('Groups you may administer'). ':</h2> <ul>';
 	foreach ( $groups as $group ){
 		$result .= '<li><a href ="/organizations/'. $group->tid .'">'. $group->name .'</a>  </li>';
 	}
@@ -167,9 +188,9 @@ function snowpilot_organizations($tid ){
 	if ( count ( $org_admin_user->field_org_admin_groups->value() ) > 1 ) {
 		$result = snowpilot_org_admin_page_links($org_admin_user->field_org_admin_groups->value() );
 	}
-	$result .= '<h2>Snowpits for '. $default_org->name  . '</h2>';
+	$result .= '<h2>'.t('Snowpits for '). $default_org->name  . '</h2>';
 	$result .= views_embed_view( 'new_test_search' , 'page', $tid );
-	drupal_set_title ( t('Manage Organization Users and Snowpits: '.$default_org->name ));
+	drupal_set_title ( t('Manage Organization Users and Snowpits: ').$default_org->name );
 	
 	return $result;
 }
@@ -190,7 +211,7 @@ function snowpilot_add_affiliation_form($form, &$form_state){
 	$form['#validate'][] = 'snowpilot_add_affilitation_form_validate';
 	$form['submit'] = array(
 		'#type' => 'submit',
-		'#value' => 'Add User',
+		'#value' => t('Add User'),
 		'#weight' => '25',
 	);
 	return $form;
@@ -202,12 +223,12 @@ function snowpilot_add_affilitation_form_validate($form, &$form_state){
 	$added_org = $org_admin_user->field_org_ownership->value();
 	
 	if( ! ($account = user_load_by_name($form['snowpilot_add_affiliation']['#value']))) {
-		form_set_error('snowpilot_add_affiliation' , 'User '. $form['snowpilot_add_affiliation']['#value'] .' Not Found!');
+		form_set_error('snowpilot_add_affiliation' , t('User '). $form['snowpilot_add_affiliation']['#value'] .t(' Not Found!'));
 	}
 	foreach ( $account->field_professional_affiliation['und'] as $group ) $group_tids[] = $group['tid'];
 
 	if( in_array($added_org->tid , $group_tids) ){
-	  form_set_error( '', 'User: '.$form['snowpilot_add_affiliation']['#value'] .' is already a member of '. $org_admin_user->field_org_ownership->label() );
+	  form_set_error( '', t('User: ').$form['snowpilot_add_affiliation']['#value'] .t(' is already a member of '). $org_admin_user->field_org_ownership->label() );
 	}
 }
 
@@ -233,7 +254,7 @@ function snowpilot_remove_affiliation_form($form, &$form_state, $account){
 	$org_admin_user = entity_metadata_wrapper('user', $user);
 	$form['submit'] = array(
 		'#type' => 'submit',
-		'#value' => 'Submit',
+		'#value' => t('Submit'),
 		'#weight' => '25',
 		
 	);
@@ -249,7 +270,7 @@ function snowpilot_remove_affiliation_form($form, &$form_state, $account){
 	);
 
 	$form['snowpilot_remove_affiliation']['confirm'] = array( 
-	  '#description' => t('Snowpits created by this user will remain associated with the group: '.$org_admin_user->field_org_ownership->label() ),
+	  '#description' => t('Snowpits created by this user will remain associated with the group: ').$org_admin_user->field_org_ownership->label() ,
 	);
 	return $form;
 	
@@ -401,6 +422,24 @@ function snowpilot_org_admin_access($item){
 	}else{
 		return FALSE;
 	}
+}
+
+function snowpilot_profile_language( $lang, $node ){
+	
+	
+  $snowpit_name_local = $node->title . '-' . date ('d-M', strtotime($node->field_date_time['und'][0]['value']) ).'.'.$format;
+
+	//snowpilot_snowpit_graph_header_write($node, $format='jpg',$lang);
+	//header('Content-Type: image/png');
+	//var_export( $snowpit_name_local );
+	//imagepng($img_bh);
+
+	header('Content-Type: image/png');
+
+	//imagepng($img_bh);
+	$img = snowpilot_snowpit_graph_header_write($node, 'png',$lang);
+  imagepng($img );
+	return ;
 }
 
 function snowpilot_node_blade_hardness_profile( $node ){
@@ -586,7 +625,7 @@ function snowpilot_node_delete($node){
 			
 			if (unlink (DRUPAL_ROOT.'/sites/default/files/xml/node-'. $node->nid .'.xml')) $message .= '<li>XML deleted</li>';
 			
-			$message .= '<p>The snowpit ID:' .$node->nid  .' , Serial: '. $serial .' has been deleted from the avscience database.';
+			$message .= t('<p>The snowpit ID: @nodeid, Serial: @serial has been deleted from the avscience database.', array( '@nodeid' => $node->nid , '@serial' => $serial ) );
 			
 			drupal_set_message( $message  );
 			watchdog( 'snowpilot' , $message  );
@@ -675,17 +714,17 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			// these are one-off text changes that don't seem to require their own function
 			$form['#submit'][] = 'snowpilot_snowpit_profile_node_form_submit';
 			$form['#validate'][] = 'snowpilot_snowpit_profile_node_form_validate';
-			$form['actions']['submit']['#value'] = 'Save and Preview';
-			$form['actions']['delete']['#value'] = 'Delete Snowpit'; 
+			$form['actions']['submit']['#value'] = t('Save and Preview');
+			$form['actions']['delete']['#value'] = t('Delete Snowpit'); 
 			$form['field_density_profile']['und']['add_more']['#value'] = t("Add More Densities");
 			$form['field_temp_collection']['und']['add_more']['#value'] = t("Add More Temperatures");
 			$form['title']['#maxlength'] = 22;
 			$form['title']['#description'] = t('Name must be 22 characters or less.');
-			$form['options']['sticky']['#title'] = 'LOCK Snowpit Profile to prevent editing';
+			$form['options']['sticky']['#title'] = t('LOCK Snowpit Profile to prevent editing');
 			$form['field_precipitation']['und']['#options']['_none'] = '' ;
 			// copy actions to new item
 			$form['actions2'] = $form['actions'];
-      $form['actions2']['submit']['#value'] = "Save Snowpit and Preview";
+      $form['actions2']['submit']['#value'] = t("Save Snowpit and Preview");
 			$form['actions2']['#weight'] = -100;			
 
 			if( !isset($node->nid) || isset($node->is_new) ){ // a new snowpit profile node, find $unit_prefs from $user
@@ -701,7 +740,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 								'#weight' => '5',
 								'und' =>array(
 									0 => array(
-										'markup' => array( '#markup' => '<div class = "delete_pit_wrapper"><a href = "/node/add/snowpit-profile" class = "" >Delete Snowpit</a> </div>',
+										'markup' => array( '#markup' => '<div class = "delete_pit_wrapper"><a href = "/node/add/snowpit-profile" class = "" >'. t('Delete Snowpit') .'</a> </div>',
 									  ),
 									),
 								),
@@ -727,36 +766,41 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		      '#markup' =>  snowpilot_modal_data() ),
 			  ),	
 		  );
-			/*	
-//		This attachs the leaflet for elevation lookup
-      $form['#attached']['js'][] = array( 
-				  'data' =>'https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js', 
-				  'type' => 'external' );
-			*/
 			$form['#attached']['js'][] = array(
 					'type' => 'file', 
 					'data' => drupal_get_path('module','snowpilot') . '/js/snowpilot_mapping_edit.js',
 					'scope' => 'footer',
 			);
 			
-			if ( isset($node->nid) && isset($form['field_latitude']['und'][0]['value']['#default_value']) && isset( $form['field_longitude']['und'][0]['value']['#default_value'])){
+			if ( isset($node->nid) && 
+				   !empty($form['field_latitude']['und'][0]['value']['#default_value']) && 
+			     !empty( $form['field_longitude']['und'][0]['value']['#default_value'])){
 				$latitude = $form['field_latitude']['und'][0]['value']['#default_value'];
 				$longitude = $form['field_longitude']['und'][0]['value']['#default_value'];
 				$zoom = 12;
 				$existing = "true";
 			}else{
-			  if ( isset ( $snowpit_unit_prefs['loaction_1'])){
-			     $default_location = taxonomy_term_load($snowpit_unit_prefs['loaction_1']);
-			  }elseif ( isset ( $snowpit_unit_prefs['loaction_0'])){
-			     $default_location = taxonomy_term_load($snowpit_unit_prefs['loaction_0']);
-			  }else{
-			     $default_location = taxonomy_term_load(1);
+			  if ( isset ( $snowpit_unit_prefs['field_loaction_1'])){
+			     $default_location = taxonomy_term_load($snowpit_unit_prefs['field_loaction_1']);
+					 if ( isset($default_location->field_lat_center['und'] ) && isset($default_location->field_lng_center['und'] ) ){
+	 				  $latitude = $default_location->field_lat_center['und'][0]['value'];
+	 				  $longitude = $default_location->field_lng_center['und'][0]['value'];
+	 				  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
+					 } 	 
+			  }
+				if ( !isset ( $latitude ) && isset ( $snowpit_unit_prefs['field_loaction_0'])){
+			     $default_location = taxonomy_term_load($snowpit_unit_prefs['field_loaction_0']);
+					 if ( isset($default_location->field_lat_center['und'] ) && isset($default_location->field_lng_center['und'] ) ){
+	 				  $latitude = $default_location->field_lat_center['und'][0]['value'];
+	 				  $longitude = $default_location->field_lng_center['und'][0]['value'];
+	 				  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
+					 } 	 
 			  // Montana is the default - default location if NONE other is given.
-			  } 
-				if ( isset ( $default_location->field_lat_center['und'][0]['value']) && isset ( $default_location->field_lng_center['und'][0]['value']) && isset( $default_location->field_zoom_level['und'][0]['value'])){
-				  $latitude = $default_location->field_lat_center['und'][0]['value'];
-				  $longitude = $default_location->field_lng_center['und'][0]['value'];
-				  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
+			  }
+				if ( !isset($latitude)) { 
+				  $latitude = '46.00';
+					$longitude = '-112.2';
+					$zoom = 7;
 				}
 				$existing = "false";
 	    }
@@ -777,13 +821,19 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 								 ), 'setting');
 			
 			// */
-			
+		  drupal_add_js(array('snowpilot' => array("translatable" => 
+						array( 'lgc_warning' => t("Reminder: You have not yet selected a layer of greatest concern"), 
+			             'lock_save_warning' => t('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?')
+			             /*  */) )
+								 ), 'setting');
+		
 			
 			
 			///////////////////////////////////////
 			$form['field_layer']['#prefix'] = '<div>';
 			$form['field_layer']['#suffix'] = '</div>';
-			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => 'Region' , '1' => '<none>' );
+			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => t('Region') , '1' => t('<none>') );
+
 			$form['field_display_full_profile']['#suffix'] = theme('advanced_help_topic', array(
 			  'module' => 'snowpilot',
 			  'topic' => 'display-full-pit',
@@ -816,11 +866,11 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		case 'user_login':
 		case 'user_login_block':
 			$form['name']['#description'] = ''; //t('Snowpilot username, or email address');
-			$form['pass']['#description'] ='';
+			$form['pass']['#description'] = '';
 //			drupal_set_message(var_export( $form, TRUE));
 			$form['links'] = array (
 			  '#weight' => 20,
-			  '#markup' => '<a href="/user/password" title="Request new password via e-mail.">Forgot Password?</a>', 
+			  '#markup' => '<a href="/user/password" title="Request new password via e-mail.">'. t('Forgot Password?'). '</a>', 
 			);
 			$form['actions']['#weight'] = 10;
 		break;
@@ -828,7 +878,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		// for the snowpits query page(s) : list, map and table format, this makes the "current user" field more relevant to the context
 			if( in_array($form['#id'] , array('views-exposed-form-snowpit-list-page', 'views-exposed-form-snowpit-list-page-2', 'views-exposed-form-snowpit-list-page-3'))){
 				//$form['field_loaction_tid']['#size'] = '3';
-				$form['uid_current']['#options'] = array( 'All' => 'All Snowpits', 1 => 'Just my snowpits');
+				$form['uid_current']['#options'] = array( 'All' => t('All Snowpits'), 1 => t('Just my snowpits'));
 				if ( $user->uid == 0 ){
 					$form['uid_current']['#access'] = FALSE;		
 				}
@@ -842,7 +892,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		 	  );
 			}
 			if ( isset($form['field_practice_pit_value']) ){
-				$form['field_practice_pit_value']['#options'] = array(  0 => 'Exclude Practice Pits' , 1 => 'Just Practice Pits' ,'All' => 'Include Practice Pits');
+				$form['field_practice_pit_value']['#options'] = array(  0 => t('Exclude Practice Pits') , 1 => t('Just Practice Pits') ,'All' => t('Include Practice Pits'));
 			
 			}
 			
@@ -853,7 +903,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			//
 			// Clean up the timezone list in a subsequent function, after_build
 			unset($form['field_snowpit_visibility']['und']['#options']['_none']);
-	
+			//dsm( $form['field_loaction']);
 		  if (isset($form['#user']->timezone)) {
 	      // edit timezone list
 	      $form['#after_build'][] = 'snowpilot_timezone_modify';
@@ -871,7 +921,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 					
 			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  ) {	//				then remove the ones from the 'default org' list that they 
 						
-						unset ( $form['field_org_ownership']['und']['#options'][$tid] );   //											are not a member of 
+						//unset ( $form['field_org_ownership']['und']['#options'][$tid] );   //											are not a member of 
 
 					}
 		    }
@@ -884,7 +934,10 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 				unset($form['field_org_admin_groups']);
 			}else{
 		    foreach ( $form['field_org_admin_groups']['und']['#options'] as $tid => $option ){
-			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  && $tid <> $snowpit_unit_prefs['field_professional_affiliation']  ) unset ( $form['field_org_admin_groups']['und']['#options'][$tid] );
+					if ( isset ($snowpit_unit_prefs['field_professional_affiliation'])){
+						
+			      if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  && $tid <> $snowpit_unit_prefs['field_professional_affiliation']  ) unset ( $form['field_org_admin_groups']['und']['#options'][$tid] );
+					}
 		    }
 				
 			}
@@ -1058,8 +1111,8 @@ function snowpilot_user_profile_form_submit($form, &$form_state){
 	    
 			
 			if ( !count ( $org_admins) && !in_array( $tid , array ('none', 108, 57, 59, 60, 62, 58, 61, 172) )){
-		    drupal_set_message('<h3>You have joined the group '. $user_wrapper->field_professional_affiliation->label().'</h3>
-					<p>If you would like to manage other users and snowpits within your group, please contact us at admin@snowpilot.org', 'warning');
+		    drupal_set_message('<h3>'.t('You have joined the group '). $user_wrapper->field_professional_affiliation->label().'</h3>'.
+					'<p>'. t('If you would like to manage other users and snowpits within your group, please contact us at admin@snowpilot.org'), 'warning');
 			}
 	  }
 		//}
@@ -1082,28 +1135,28 @@ function snowpilot_user_profile_form_validate(&$form, &$form_state){
 	
 	foreach ( $form_state['values']['field_professional_affiliation']['und'] as $n => $group ){
 		if ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '226' ){
-			form_set_error('field_professional_affiliation', 'Please choose a Ski Patrol, or create a new one.');
+			form_set_error('field_professional_affiliation', t('Please choose a Ski Patrol, or create a new one.'));
 		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '243' ){
-			form_set_error('field_professional_affiliation', 'Please choose an Avalanche Center, or create a new one.');
+			form_set_error('field_professional_affiliation', t('Please choose an Avalanche Center, or create a new one.'));
 		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '245' ){
-			form_set_error('field_professional_affiliation', 'Please choose an Education group, or create a new one.');
+			form_set_error('field_professional_affiliation', t('Please choose an Education group, or create a new one.'));
 		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '244' ){
-			form_set_error('field_professional_affiliation', 'Please choose a Ski or Snowmobile Guide Service, or create a new one.');
+			form_set_error('field_professional_affiliation', t('Please choose a Ski or Snowmobile Guide Service, or create a new one.'));
 		}elseif ($form_state['values']['field_professional_affiliation']['und'][$n]['tid'] == '246' ){
-			form_set_error('field_professional_affiliation', 'Please choose a Department of Transportation, or create a new one.');
+			form_set_error('field_professional_affiliation', t('Please choose a Department of Transportation, or create a new one.'));
 		}
 		$group_tids[] = $form_state['values']['field_professional_affiliation']['und'][$n]['tid'];
 	}
 	
 	if ( isset ( $form_state['values']['field_org_ownership']['und'][0]['tid'] ) && (!in_array($form_state['values']['field_org_ownership']['und'][0]['tid'] , $group_tids) ) ){
-		form_set_error('field_org_ownership', 'You must add yourself as a member of a group in order set that group as your default. 
-		<br />Either add yourself to the group which is now your default, or change your default to a group that you are still a member of.');
+		form_set_error('field_org_ownership', t('You must add yourself as a member of a group in order set that group as your default. 
+		<br />Either add yourself to the group which is now your default, or change your default to a group that you are still a member of.'));
 	}
 	if ( isset( $form['field_org_admin_groups'] ) ) {
 		
 		foreach ( $form['field_org_admin_groups']['und']['#value'] as  $admin_group ){
 			if ( !in_array($admin_group , $group_tids) ){
-				form_set_error( 'field_org_admin_groups', 'Must set this user as a member of this group. ');
+				form_set_error( 'field_org_admin_groups', t('Must set this user as a member of this group. '));
 			}
 		}
 		
@@ -1117,7 +1170,7 @@ function snowpilot_new_user_register_submit(){
 	$user_wrapper->roles->set(array('2', '4'));
 	$user_wrapper->save();
 	
-	drupal_set_message( 'Have questions or confused? Check out the <a href="/documentation">Getting Started Page</a>.', 'warning');
+	drupal_set_message( t('Have questions or confused? Check out the <a href="/documentation">Getting Started Page</a>.'), 'warning');
 	drupal_goto('user/'. $user->uid .'/edit', array( 'query' => array( 'destination' => 'node/5')));
 	
 }
@@ -1127,19 +1180,6 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 	//
 	// add the js to make lat and long negative if they should be.
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($form_state['node'],'node');  
-	
-  if ( $form['field_latitude_type']['und']['#default_value'][0] == 'S' )	{
-	 $form['#attached']['js'][] = array(
-	    'type' => 'file',
-	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_latitude.js',
-	  );
-	}
-  if ( $form['field_longitude_type']['und']['#default_value'][0] == 'W' ){
-	 $form['#attached']['js'][] = array(
-	    'type' => 'file',
-	    'data' => drupal_get_path('module','snowpilot') . '/js/negative_longitude.js',
-	  );
-	}
 
 		$form['#attached']['js'][] = array(
 			'type' => 'file',
@@ -1204,7 +1244,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			}		else { $surface_gt = ''; }	
 
 			if (  $key == '0' ){
-				$form['field_surface_grain_type']['#prefix'] = '<div class = "surface_snow_elements" ><a href = "#grain-types-surface-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >Surface grain type <span class ="grain-type-surface-display grain-types field-suffix" >'. $surface_gt  .'</span> </a> ';
+				$form['field_surface_grain_type']['#prefix'] = '<div class = "surface_snow_elements" ><a href = "#grain-types-surface-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >'. t('Surface grain type') .' <span class ="grain-type-surface-display grain-types field-suffix" >'. $surface_gt  .'</span> </a> ';
 			  $form['field_surface_grain_size']['#suffix'] = '</div>';
 			}
 			if ( is_numeric( $key ) && ( $layer_num <> $key )){ // this is a layer other than the current one ... give existing 
@@ -1223,7 +1263,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 				$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = '';
 		 		$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#field_suffix'] = 
 					'<a href = "#grain-types-secondary-modal" class = "modal-open " rel = "modal:open" id="modal-trigger" >
-								 Secondary grain type <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
+								'. t('Secondary grain type') .'<span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
 
 			}elseif ( is_numeric( $key ) && ( $layer_num == $key ) ){ // this IS the current layer, let's use button-like css and suffix
 				
@@ -1232,7 +1272,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			  	'#weight' => '5',
 			  	'und' => array ( 
 			  	  'markup' => array (
-			        '#markup' => '<a href = "#grain-types-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" ><b>Click</b> for Grain Type
+			        '#markup' => '<a href = "#grain-types-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >'. t('<b>Click</b> for Grain Type') .'
 							<span class ="grain-type-primary-display grain-types field-suffix" >'. $primary_gt  .'</span></a> ',
 						),
 				  ),	
@@ -1241,7 +1281,7 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 				$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#title'] = '';
 		 		$form['field_layer']['und'][$key]['field_use_multiple_grain_type']['und']['#field_suffix'] = 
 					'<a href = "#grain-types-secondary-modal" class = "modal-open button-like" rel = "modal:open" id="modal-trigger" >
-								 Secondary grain type <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
+								 '. t('Secondary grain type')  .' <span class ="grain-type-secondary-display grain-types" >'. $secondary_gt  .'</span> </a> ';
 			}
 
 		}
@@ -1330,7 +1370,7 @@ function snowpilot_login($js = NULL) {
 		//
     $output = array();
     $inplace = ctools_ajax_text_button(t('remain here'), 'snowpilot/nojs/login/inplace', t('Go to your account'));
-    $output[] = ctools_modal_command_display(t('Login Success'), '<div class="modal-message">Login successful. You will be redirected in a moment.</div>');
+    $output[] = ctools_modal_command_display(t('Login Success'), '<div class="modal-message">'. t('Login successful. You will be redirected in a moment') .'</div>');
 		
 		// Redirect to the user-prefs edit page if they are lacking one of the required ones.
 		if (!snowpilot_user_unit_prefs_check($user->uid,FALSE)){
@@ -1415,7 +1455,7 @@ function snowpilot_timezone_modify($form, &$form_state){
 }
 
 function snowpilot_user_register_after_build( $form, &$form_state){
-	$form['field_professional_affiliation']['und']['hierarchical_select']['dropbox_add']['#value'] = 'Add Affiliation';
+	$form['field_professional_affiliation']['und']['hierarchical_select']['dropbox_add']['#value'] = t('Add Affiliation');
 	return $form;
 }
 
@@ -1463,7 +1503,7 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 				unset ($form['field_snowpit_visibility']['und']['#options']['group']);
 			}else{		
 				$group_name = taxonomy_term_load($form['field_org_ownership']['und']['#default_value'][0])->name;
-			  $form['field_snowpit_visibility']['und']['#options']['group'] = 'Visible only by my group: '.$group_name;
+			  $form['field_snowpit_visibility']['und']['#options']['group'] = t('Visible only by my group: ').$group_name;
 				//dsm($form['field_snowpit_visibility']['und']['#options']);
 			}
     }else{ // we have an array of more than one organizations
@@ -1564,63 +1604,63 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 			    if ( $test['field_stability_test_score_ect']['und'][0]['value'] == ''  ) {
 			  		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_ect", "Please enter an ECT Score result.");
 			  	}elseif ( $test['field_stability_test_score_ect']['und'][0]['value'] <> 'ECTX' && $test['field_depth']['und'][0]['value'] == '') {
-			  	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for test result.");
+			  	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Please enter a depth value for test result."));
 			  	}
 				break;
 				case 'CT':
 		      if ( !isset( $test['field_stability_test_score_ct']['und'][0]['value']  ) || ($test['field_stability_test_score_ct']['und'][0]['value'] == '' ) ){
 					   	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_ct", "Please enter a CT test score result.");
 					}elseif( (!isset($test['field_depth']['und'][0]['value']) || $test['field_depth']['und'][0]['value'] == '') &&  $test['field_stability_test_score_ct']['und'][0]['value'] <> 'CTN' ){ 
-						form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , "Please enter a value for depth.");
+						form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , t("Please enter a value for depth."));
 					}elseif ( ($test['field_stability_test_score_ct']['und'][0]['value'] == 'CT') && !is_numeric( $test['field_ct_score']['und'][0]['value'] )){
-						form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_ct_score" , "Please enter an integer value for '# of taps'.");
+						form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_ct_score" , t("Please enter an integer value for # of taps."));
 				    
 	
 		      } // end "if" we have full CT test results
           break;
 					case 'DT':
 			      if ( !isset( $test['field_deep_tap_test_score']['und'][0]['value']  ) || ($test['field_deep_tap_test_score']['und'][0]['value'] == '' ) ){
-						   	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_deep_tap_test_score", "Please enter a Deep Tap test score result.");
+						   	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_deep_tap_test_score", t("Please enter a Deep Tap test score result."));
 						}elseif( (!isset($test['field_depth']['und'][0]['value']) || $test['field_depth']['und'][0]['value'] == '') ){ 
-							form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , "Please enter a value for depth.");
+							form_set_error("field_test][".LANGUAGE_NONE ."][". $key ."][field_depth" , t("Please enter a value for depth."));
 						}
 					break;
 					case 'RB':
 				    if ( $test['field_stability_test_score_rb']['und'][0]['value'] == ''  ) {
-				  		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_rb", "Please enter a Rutschblock test result.");
+				  		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_rb", t("Please enter a Rutschblock test result."));
 				  	}elseif ( $test['field_stability_test_score_rb']['und'][0]['value'] <> 'RB7' && $test['field_depth']['und'][0]['value'] == '') {
-				  	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Rutschblock test result.");
+				  	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Please enter a depth value for Rutschblock test result."));
 				  	}					
 					break;
 					case 'ST':
 			      if ( $test['field_stability_test_score_st']['und'][0]['value'] == ''  ) {
-			    		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_st", "Please enter a Shovel Shear test result.");
+			    		form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_st", t("Please enter a Shovel Shear test result."));
 			    	}elseif ( $test['field_stability_test_score_st']['und'][0]['value'] <> 'STN' && $test['field_depth']['und'][0]['value'] == '') {
-			  	    form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Shovel Shear test result.");
+			  	    form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Please enter a depth value for Shovel Shear test result."));
 			  	  }										
 					break;
 					case 'SB':
 			      if ( $test['field_stability_test_score_sb']['und'][0]['value'] == ''  ) {
-			  	  	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_sb", "Please enter a Stuffblock test result.");
+			  	  	form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_score_sb", t("Please enter a Stuffblock test result."));
 			     	}elseif ( $test['field_stability_test_score_sb']['und'][0]['value'] <> 'SBN' && $test['field_depth']['und'][0]['value'] == '') {
-			    	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Stuffblock test result.");
+			    	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Please enter a depth value for Stuffblock test result."));
 			    	}		
 					break;
 					case 'PST':
 				  	if ( !isset( $test['field_depth']['und'][0]['value'] ) || $test['field_depth']['und'][0]['value'] == ''  ){ 
-					    form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Please enter a depth value for Propagation Saw test result.");
+					    form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Please enter a depth value for Propagation Saw test result."));
 					  }
 					  if ( !isset ($test['field_data_code_pst']['und'][0]['value'])){
-						  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_data_code_pst", "Please enter a Data Code value for PST result.");
+						  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_data_code_pst", t("Please enter a Data Code value for PST result."));
 					  }
 					  if ( !isset ($test['field_length_of_saw_cut']['und'][0]['value']) || $test['field_length_of_saw_cut']['und'][0]['value'] == ''){
-						  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_saw_cut", "Please enter a Length of Saw Cut for PST result.");
+						  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_saw_cut", t("Please enter a Length of Saw Cut for PST result."));
 					  }
 						if (!isset( $test['field_length_of_isolated_col_pst']['und'][0]['value'] ) || $test['field_length_of_isolated_col_pst']['und'][0]['value'] == '' ){
-							form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_isolated_col_pst", "Please enter a Length of Isolated column for PST result.");
+							form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_isolated_col_pst", t("Please enter a Length of Isolated column for PST result."));
 						}
 						if ( isset( $test['field_length_of_isolated_col_pst']['und'][0]['value'] ) && isset($test['field_length_of_saw_cut']['und'][0]['value']) && ($test['field_length_of_saw_cut']['und'][0]['value'] > $test['field_length_of_isolated_col_pst']['und'][0]['value']) ){
-							form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_isolated_col_pst", "The Length of Saw Cut value should be less than the Length of Isolated Column");
+							form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_length_of_isolated_col_pst", t("The Length of Saw Cut value should be less than the Length of Isolated Column") );
 							
 						}
 					
@@ -1639,13 +1679,13 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 					|| ( $test['field_stability_test_type']['und'][0]['value'] == 'PST'  )
 						
 				  ) && ( $test['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']))){	
-					form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", "Test Result depth must be less than less than total snow height.");
+					form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Test Result depth must be less than less than total snow height."));
 		  	}
 				
 				
 				// this  section makes sure that Stability test type is set.
 	  }elseif ( is_numeric($key) && isset($test['field_depth']['und'][0]['value']) && $test['field_depth']['und'][0]['value'] <> ''){
-			form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_type", "Please enter a Stability Test Type.");
+			form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_stability_test_type", t("Please enter a Stability Test Type."));
 		} // end key is_numeric and test type is not null
 		
 	} // end foreach test result
@@ -1674,7 +1714,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 			&& isset($layer['field_bottom_depth']['und'][0]['value']) 
 			&& $layer['field_bottom_depth']['und'][0]['value'] <> ''
 			&& $layer['field_bottom_depth']['und'][0]['value'] >= $layer['field_height']['und'][0]['value']){
-	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be smaller than Top Depth.'));
+	        form_set_error("field_layer]['und'][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be smaller than Top Depth.'));
 		}else if (is_numeric($key) && $form_state['values']['field_depth_0_from']['und'][0]['value'] == 'top' 
 			&& isset($layer['field_bottom_depth']['und'][0]['value']) 
 			&& $layer['field_bottom_depth']['und'][0]['value'] <> ''
@@ -1689,7 +1729,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 		$result = _raw_max_pit_depth( $form_state['values'] );
 		if( is_numeric($key) ) { 
 		  if( $layer['field_bottom_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']) ){
-        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be less than ' . _raw_max_pit_depth( $form_state['values']) .', the total Height of Snowpack ( available on Core Info tab).'));
+        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be less than ') . _raw_max_pit_depth( $form_state['values']) . t(', the total Height of Snowpack ( available on Core Info tab).'));
 	  	}elseif ( $layer['field_height']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values']) ){
         form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_height", t('The value of the Top Depth field should be less than ' . _raw_max_pit_depth( $form_state['values']) .', the total Height of Snowpack ( available on Core Info tab).'));
 	  		
@@ -1751,7 +1791,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	// Serveside tests for Core Info tab information:
 	//
   if ( $form_state['values']['field_elevation_units']['und'][0]['value'] == 'm'   && ($form_state['values']['field_elevation']['und'][0]['value'] > 8000 )){
-    form_set_error("field_elevation", 'The elevation in meters must be less than 8000.');
+    form_set_error("field_elevation", t('The elevation in meters must be less than 8000.'));
 	}
 	
 	$form_state['values']['field_air_temp']['und'][0]['value'] = str_replace( ',' , '.' ,$form_state['values']['field_air_temp']['und'][0]['value']);
@@ -1852,7 +1892,7 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 	$x= 0;
 	while (isset($form['field_density_profile']['und'][$x])){
 		$next_layer = $x+1;
-		$form['field_density_profile']['und'][$x]['remove_button']['#value'] = "X Remove Density";
+		$form['field_density_profile']['und'][$x]['remove_button']['#value'] = t("X Remove Density");
 		if (isset($form['field_density_profile']['und'][$next_layer])){ $collapsed = ' collapsed'; 
 		
 		$form['field_density_profile']['und'][$x]['#prefix'] = "<div class='collapsible-container density_num_". $x ." '>".
@@ -1870,13 +1910,13 @@ function snowpilot_snowpit_set_density_titles(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs){
 	// this will be a fancy one, with compiled stab test output
-	$form['field_test']['und']['add_more']['#value'] = "Add Test";
+	$form['field_test']['und']['add_more']['#value'] = t("Add Test");
 	
 
 	$x= 0;
 	while (isset($form['field_test']['und'][$x])){
 		$next_layer = $x+1;
-		$form['field_test']['und'][$x]['remove_button']['#value'] = "X Remove Test";
+		$form['field_test']['und'][$x]['remove_button']['#value'] = t("X Remove Test");
 		//dsm($form['field_test']['und'][$x]);
 		if (isset($form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0]) && $form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0] <> ''){ 
 			$form_test_shorthand = stability_test_score_shorthand_form($form['field_test']['und'][$x]);
@@ -1886,14 +1926,14 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 				"Depth: ". $depth_final . " ". $snowpit_unit_prefs['field_depth_units'] :	'';
 			
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
-				"<h3 class='collapsible-handle test-title'>Stability Test " . $next_layer. ": ". $form_test_shorthand ." ".
+				"<h3 class='collapsible-handle test-title'>".t("Stability Test") . $next_layer. ": ". $form_test_shorthand ." ".
 							 $depth_val . "</h3>". '<div class="collapsible-content collapsed" >';
 			
 			
 			
 		}else { // this is a new, blank stability test form, so we leave it open
 			$form['field_test']['und'][$x]['#prefix'] = "<div class='collapsible-container stability_test_num_". $x ." '>".
-				"<h3 class='collapsible-handle test-title'>Add Stability Test Result</h3>". '<div class="collapsible-content" >';
+				"<h3 class='collapsible-handle test-title'>".t('Add Stability Test Result')."</h3>". '<div class="collapsible-content" >';
 			$form['field_test']['und'][$x]['#suffix'] ="</div> </div>";		 // don't put dsm here, it will break the "add another"  functionality with AJAX errors.
 	  }
 		//dsm($form['field_test']['und'][$x]);
@@ -1913,7 +1953,7 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 	$x= 0;
 	while (isset($form['field_temp_collection']['und'][$x])){
 		$next_layer = $x+1;
-		$form['field_temp_collection']['und'][$x]['remove_button']['#value'] = "X Remove Temp";
+		$form['field_temp_collection']['und'][$x]['remove_button']['#value'] = t("X Remove Temp");
 		if (isset($form['field_temp_collection']['und'][$next_layer])){ 	
 			$form['field_temp_collection']['und'][$x]['#prefix'] = "<div class='collapsible-container temp_num_". $x ." '>".
 			'<div class="collapsible-content collapsed" >';
@@ -1932,9 +1972,9 @@ function snowpilot_snowpit_set_temp_coll_titles(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	// Start with the overall title of the group
-	$form['field_layer']['und']['#title'] = "Layers"; // 
+	$form['field_layer']['und']['#title'] = t('Layers'); // 
 	// Add more button:
-	$form['field_layer']['und']['add_more']['#value'] = "Add Layer";
+	$form['field_layer']['und']['add_more']['#value'] = t("Add Layer");
 
 /*	$form['field_layer']['und']['clear_layers']= array(
 		'#type' => 'submit',
@@ -1951,7 +1991,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 	$layer_info = array();
 	while(isset($form['field_layer']['und'][$x] )){
 		// Set remove button text
-		$form['field_layer']['und'][$x]['remove_button']['#value'] = "Remove Layer";
+		$form['field_layer']['und'][$x]['remove_button']['#value'] = t("Remove Layer");
 		unset($form['field_layer']['und'][$x]['remove_button']);
 		$next_layer = $x+1 ; 
 		
@@ -1974,7 +2014,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 				$form['field_layer']['und'][$x]['field_bottom_depth']['und'][0]['value']['#default_value']. ' ' . $snowpit_unit_prefs['field_depth_units']  .  $this_hardness; 
 			
 		}
-		$this_layer_info = isset ( $layer_info[$x] ) ? $layer_info[$x] : "New Layer";
+		$this_layer_info = isset ( $layer_info[$x] ) ? $layer_info[$x] : t("New Layer");
 		$form['field_layer']['und'][$x]['#prefix'] ="<div class='collapsible-container layer_num_". $x ." '>"
 			."<h3 class='layer-title'>". $this_layer_info . "</h3>".
 				'<div class="'. $collapsed .'" >' ;
@@ -2001,7 +2041,7 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 		){
 			unset ($form['field_layer']['und'][$x+1]);
 			unset($form['field_layer']['und']['add_more']);
-			$form['field_layer']['und'][$x]['#suffix'] = $form['field_layer']['und'][$x]['#suffix'].'<h3 class ="snowpilot-snowpit-bottom">Bottom of Snowpack</h3>';
+			$form['field_layer']['und'][$x]['#suffix'] = $form['field_layer']['und'][$x]['#suffix'].'<h3 class ="snowpilot-snowpit-bottom">'.t('Bottom of Snowpack').'</h3>';
 		}
 		
 		//dsm($form['field_total_height_of_snowpack']['und'][0]['value']);
@@ -2011,7 +2051,6 @@ function snowpilot_snowpit_set_layer_titles(&$form, $snowpit_unit_prefs){
 }
 function field_clear_layers_submit($form, &$form_state){
 	watchdog('snowpilot' , 'clear layers functi is hit');
-	dsm($form);
 }
 
 /**
@@ -2198,6 +2237,7 @@ function snowpilot_field_widget_form_alter(&$element, &$form_state, $context) {
     $element['#attributes']['class'][] = 'myclass';
   }
 	if ($context['field']['type']  == 'datetime' ){
+		//dsm($form_state['build_info']['args']);
 		$location = $form_state['build_info']['args'][0]->field_loaction ;
 		//dsm($location['und'][0]['tid']);
 		if ( isset( $location['und'][0]['tid'] ) ){
@@ -3019,13 +3059,13 @@ function snowpilot_modal_data(){
 		}
 	}	
 	// this adds a 'none' option tothe grain types modal popups
-	$grain_type_groups[] = (object) array( 'tid'=> '_none' , 'description' => '_none', 'name' => 'None');
+	$grain_type_groups[] = (object) array( 'tid'=> '_none' , 'description' => '_none', 'name' => t('None'));
 	
 		foreach ( $grain_type_groups as $grain_type_parent ){
-			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.t($grain_type_parent->name). ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
 			foreach ( $grain_types_vocab as $grain_type_child ){
 				if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
-					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. t($grain_type_child->name) . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
 					
 				}
 			}
@@ -3045,10 +3085,10 @@ function snowpilot_modal_data(){
 	$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
 
 		foreach ( $grain_type_groups as $grain_type_parent ){
-			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.t($grain_type_parent->name). ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
 			foreach ( $grain_types_vocab as $grain_type_child ){
 				if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
-					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. t($grain_type_child->name) . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
 					
 				}
 			}
@@ -3069,10 +3109,10 @@ function snowpilot_modal_data(){
 	$markup .= '<div class = "grain-types-groups dropdown-content" id = "grain-types-groups">';
 
 		foreach ( $grain_type_groups as $grain_type_parent ){
-			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.$grain_type_parent->name. ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
+			$markup .= '<div class = "parent dropdown-item parent-'. $grain_type_parent->tid.' "><a href ="#" class = "parent tid-'. $grain_type_parent->tid .' '. $grain_type_parent->description . ' '. $grain_type_parent->name .'"><div class = "parent-name"> '.t($grain_type_parent->name). ' </div><div class ="parent-symbol grain-types">'._tid2snowsymbols($grain_type_parent->tid)."</div></a><div class = 'dropright-content'>";
 			foreach ( $grain_types_vocab as $grain_type_child ){
 				if ( $grain_type_child->parents[0] ==  $grain_type_parent->tid){
-					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. $grain_type_child->name . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
+					$markup .= '<a href ="#" class = "child tid-'. $grain_type_child->tid .' '. $grain_type_child->description . ' '. $grain_type_child->name .'"><div class ="child-name"> '. t($grain_type_child->name) . ' </div><div class = "child-symbol grain-types">'. _tid2snowsymbols($grain_type_child->tid)."</div></a>";
 					
 				}
 			}

@@ -1,0 +1,74 @@
+# LANGUAGE translation of PROJECT
+# Copyright (c) YEAR NAME <EMAIL@ADDRESS>
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2019-11-18 08:43-0700\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: node:type:article:description
+msgctxt "type:article:description"
+msgid ""
+"Use <em>articles</em> for time-sensitive content like news, press "
+"releases or blog posts."
+msgstr ""
+
+#: node:type:article:name
+msgctxt "type:article:name"
+msgid "Article"
+msgstr ""
+
+#: node:type:article:title_label
+msgctxt "type:article:title_label"
+msgid "Title"
+msgstr ""
+
+#: node:type:mass_contact:description
+msgctxt "type:mass_contact:description"
+msgid "Archived copies of mass email messages sent from this site."
+msgstr ""
+
+#: node:type:mass_contact:name
+msgctxt "type:mass_contact:name"
+msgid "Mass Contact message"
+msgstr ""
+
+#: node:type:mass_contact:title_label
+msgctxt "type:mass_contact:title_label"
+msgid "Subject"
+msgstr ""
+
+#: node:type:page:description
+msgctxt "type:page:description"
+msgid ""
+"Use <em>basic pages</em> for your static content, such as an 'About "
+"us' page."
+msgstr ""
+
+#: node:type:page:name
+msgctxt "type:page:name"
+msgid "Basic page"
+msgstr "Pagina Basica"
+
+#: node:type:page:title_label
+msgctxt "type:page:title_label"
+msgid "Title"
+msgstr "Titulo"
+
+#: node:type:snowpit_profile:name
+msgctxt "type:snowpit_profile:name"
+msgid "Snowpit Profile"
+msgstr "Perfil níveo"
+
+#: node:type:snowpit_profile:title_label
+msgctxt "type:snowpit_profile:title_label"
+msgid "Snowpit Name"
+msgstr "Nombre del perfil níveo"
+

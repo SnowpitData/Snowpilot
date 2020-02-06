@@ -117,7 +117,9 @@ function cg_max($cg){
 	$max = NULL;
 	$min = NULL;
 	foreach ($cg as $key => $test){
-		$min = $test->y_val > $min ? $test->y_val : $min;
+		if ( !empty ( $test->y_val )){
+		  $min = $test->y_val > $min ? $test->y_val : $min;
+	  }
 	}
 	$max = count($cg)*20 +$min;
 	
@@ -376,9 +378,8 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE, $ha
 			
 			
 	}else{  // hness IS set, a basic part of a layer  ; excess layers should be already stripped by _validate
-	$hness = $layer->field_hardness['und'][0]['value'];
-	if ( $layer->field_use_multiple_hardnesses['und'][0]['value'] == '1' &&
-		isset ($layer->field_hardness2['und'][0]['value'])){	
+		$hness = $layer->field_hardness['und'][0]['value'];
+		if ( isset ($layer->field_hardness2['und'][0]['value'])){	
 			$hness2 = $layer->field_hardness2['und'][0]['value'];
 			$points = array(_h2pix($hness, FALSE, $hardness_scale), $layer->y_val_top,  447 , $layer->y_val_top, 447, $layer->y_val, _h2pix($hness2, FALSE, $hardness_scale), $layer->y_val);
 			if ($filled) {
@@ -586,7 +587,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 }
 
 
-function _generate_specifics_string($node) {
+function _generate_specifics_string($node,$profile_lang = 'und') {
 	$string = '';
 	$included_fields = array( 'field_practice_pit', 'field_pit_dug_in_a_ski_area',  
 		'field_pit_is_representative_of_backcountry','field_adjacent_to_avy', 'field_near_avalanche', /* a list type field, rather than boolean */
@@ -605,17 +606,17 @@ function _generate_specifics_string($node) {
 				$item_full = field_info_instance('node', $field, 'snowpit_profile');
 				switch ($field){
 					case 'field_adjacent_to_avy':
-						$specifics[] = $item_full['label'].": ".$node->field_near_avalanche['und'][0]['value'];
+						$specifics[] = t($item_full['label'],array(), array( 'langcode' => $profile_lang)).": ".t($node->field_near_avalanche[$profile_lang][0]['value']);
 					break;
 					case 'field_near_avalanche':
 					break;
 					case'field_practice_pit':
 					if ($field_item['und'][0]['value'] ==='1'){ 
-					  $specifics[] = $item_full['label'];
+					  $specifics[] = t($item_full['label'],array(), array( 'langcode' => $profile_lang));
 					}
 					break;
 					default:
-						$specifics[] = $item_full['label'];
+						$specifics[] = t($item_full['label'],array(), array( 'langcode' => $profile_lang));
 					break;
 					
 				}
@@ -639,8 +640,12 @@ function snowpilot_tester_fields_update($stability){
 	return;
 }
 
-function snowpilot_snowpit_graph_header_write($node, $format='jpg'){	
+function snowpilot_snowpit_graph_header_write($node, $format='jpg',$profile_lang = NULL){	
 	// also add user account info to this:
+	
+	// The base node language
+  $profile_lang  =  $profile_lang ? $profile_lang : $node->language;
+	
 	$user_account = user_load($node->uid);
 	$snowpit_unit_prefs = snowpilot_unit_prefs_get($node, 'node');
 	$pit_depth = _snowpilot_find_pit_depth($node);
@@ -684,7 +689,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 
 // Label Y axis and draw horizontal lines
 
-      imagettftext($img, 11, 0, 14, 17, $black, $value_font, $node->title);
+      $titlepos = imagettftext($img, 11, 0, 14, 17, $black, $value_font, $node->title);
+			if ( $titlepos[2] > 192  ){ imagefilledpolygon ( $img , array(192,17, 192,0, $titlepos[2],0,$titlepos[2],17 ) , 4 , $white ) ;    }
 			// Location information
       if ( isset ($node->field_loaction['und'][0]['tid'])){
 				$term_obj_region = taxonomy_term_load($node->field_loaction['und'][0]['tid']);
@@ -694,11 +700,11 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					imagettftext($img, 11, 0, 14, 35, $black, $value_font, substr($term_obj_region->name , 0, 24 ));
 				}
 			}
-      $text_pos = imagettftext($img, 11, 0, 14, 71, $black, $label_font, 'Elevation: ');
+      $text_pos = imagettftext($img, 11, 0, 14, 71, $black, $label_font, t('Elevation',array(), array( 'langcode' => $profile_lang )).': ');
 			if (isset($node->field_elevation['und'])){
 				imagettftext($img, 11, 0, $text_pos[2], 71, $black, $value_font, $node->field_elevation['und'][0]['value'] .' '.$node->field_elevation_units['und'][0]['value']);
  	 		}
-      $text_pos = imagettftext($img, 11, 0, 14, 89, $black, $label_font, 'Aspect: ');
+      $text_pos = imagettftext($img, 11, 0, 14, 89, $black, $label_font, t('Aspect',array(), array( 'langcode' => $profile_lang )). ': ');
 			if (isset($node->field_aspect['und'])){
 				if ( isset ( $node->field_direction_format['und'] ) && ($node->field_direction_format['und'][0]['value'] == 'cardinal') /* cardnial type aspect */ ){
 					$aspect = field_view_field('node', $node, 'field_aspect_cardinal');
@@ -707,15 +713,15 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			  }
         imagettftext($img, 11, 0, $text_pos[2], 89 , $black, $value_font ,$aspect[0]['#markup']);
 			}
-			$text_pos = imagettftext($img, 11, 0, 14, 107, $black, $label_font, 'Specifics: ');
-			$specifics = _generate_specifics_string($node);
+			$text_pos = imagettftext($img, 11, 0, 14, 107, $black, $label_font, t('Specifics',array(), array( 'langcode' => $profile_lang ) ).': ');
+			$specifics = _generate_specifics_string($node,$profile_lang);
 			imagettftext($img, 9, 0, $text_pos[2], 107, $black, $value_font, $specifics );
 			// Observer
 			imagettftext($img, 11, 0, 193 , 17, $black,  $value_font, $user_account->field_first_name['und'][0]['value']. " ". $user_account->field_last_name['und'][0]['value']);
 			imagettftext($img, 11, 0, 193, 35, $black, $value_font, date(snowpilot_date_output_format($snowpit_unit_prefs['field_loaction_0']), 
 			strtotime($node->field_date_time['und'][0]['value']))); //Date / Time of observation
 			
-			$text_pos = imagettftext($img, 11, 0, 193, 53, $black, $label_font, "Co-ord: ");
+			$text_pos = imagettftext($img, 11, 0, 193, 53, $black, $label_font, t('Co-ord',array(), array( 'langcode' => $profile_lang )).': ');
 			if ($snowpit_unit_prefs['field_coordinate_type'] == 'lat_long'){
 				if (isset($node->field_latitude['und']) && isset($node->field_longitude['und'])){
 					imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, 
@@ -747,70 +753,69 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				
 			}
 			
-			$text_pos = imagettftext($img, 11, 0, 193, 71, $black, $label_font, "Slope Angle: ");
+			$text_pos = imagettftext($img, 11, 0, 193, 71, $black, $label_font, t('Slope Angle',array(), array( 'langcode' => $profile_lang )). ': ');
 			if (isset($node->field_slope_angle['und'])){
 				$slope_angle = field_view_field('node', $node, 'field_slope_angle');
 				imagettftext($img , 11, 0, $text_pos[2], 71, $black, $value_font, $slope_angle[0]['#markup'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 193, 89, $black, $label_font, "Wind Loading: ");
+			$text_pos = imagettftext($img, 11, 0, 193, 89, $black, $label_font, t('Wind Loading',array(), array( 'langcode' => $profile_lang )). ': ');
 			if (isset($node->field_wind_loading['und'])){
-				imagettftext($img, 11, 0, $text_pos[2], 89, $black, $value_font, $node->field_wind_loading['und'][0]['value'] );
+				imagettftext($img, 11, 0, $text_pos[2], 89, $black, $value_font, t($node->field_wind_loading['und'][0]['value'] ,array(), array( 'langcode' => $profile_lang ) ) );
 			}
-			$text_pos = imagettftext($img, 11, 0, 444, 17, $black, $label_font, "Stability: ");
+			$text_pos = imagettftext($img, 11, 0, 444, 17, $black, $label_font, t('Stability',array(), array( 'langcode' => $profile_lang )). ': ');
 			if(isset($node->field_stability_on_similar_slope['und'])){
 				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
 				//snowpilot_tester_fields_update($similar_stability);
 				imagettftext($img, 11, 0, $text_pos[2], 17, $black, $value_font, snowpilot_tester_fields_update($similar_stability) );
 			}
-			$text_pos  = imagettftext($img, 11, 0, 444, 35, $black, $label_font, "Air Temperature: ");
+			$text_pos  = imagettftext($img, 11, 0, 444, 35, $black, $label_font, t('Air Temperature',array(), array( 'langcode' => $profile_lang )). ': ');
 			if(isset($node->field_air_temp['und'])){
 				$air_temp = field_view_field('node', $node, 'field_air_temp');
 				$air_temp_value =  number_format($air_temp['#items'][0]['value'] , 1 , '.' , '')+0;
 			  imagettftext($img, 11,0, $text_pos[2], 35, $black, $value_font, $air_temp_value ."&#176;". $snowpit_unit_prefs['field_temp_units'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 444, 53, $black, $label_font, "Sky Cover: ");
+			$text_pos = imagettftext($img, 11, 0, 444, 53, $black, $label_font, t('Sky Cover',array(), array( 'langcode' => $profile_lang )). ': ');
 			if (isset($node->field_sky_cover['und'])){
 				$sky_cover = field_view_field('node', $node, 'field_sky_cover'); 
 			imagettftext($img, 11, 0, $text_pos[2], 53, $black, $value_font, $sky_cover['#items'][0]['value'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 444, 71, $black, $label_font, "Precipitation: " );
+			$text_pos = imagettftext($img, 11, 0, 444, 71, $black, $label_font, t('Precipitation',array(), array( 'langcode' => $profile_lang )). ': ' );
 			if ( isset($node->field_precipitation['und'])){
 				$precipitation = field_view_field('node', $node, 'field_precipitation');
 			  imagettftext($img, 11, 0, $text_pos[2] , 71, $black, $value_font, $precipitation['#items'][0]['value'] );
 			}
-			$text_pos = imagettftext($img, 11, 0, 444, 89, $black, $label_font, "Wind: ");
+			$text_pos = imagettftext($img, 11, 0, 444, 89, $black, $label_font, t('Wind',array(), array( 'langcode' => $profile_lang )). ': ');
 			if (isset($node->field_wind_direction['und'][0]['value'])){
-				$text_pos = imagettftext($img, 11 , 0, $text_pos[2]+4, 89, $black , $value_font, snowpilot_cardinal_wind_dir($node->field_wind_direction['und'][0]['value'] ));			
+				$text_pos = imagettftext($img, 11 , 0, $text_pos[2]+4, 89, $black , $value_font, t(snowpilot_cardinal_wind_dir($node->field_wind_direction['und'][0]['value'] ), array(), array( 'langcode' => $profile_lang ) ) );			
 			}
 			if (isset($node->field_wind_speed['und'][0]['value'])){
 				$wind_speed = field_view_field('node', $node, 'field_wind_speed');
-				 imagettftext($img, 11 , 0, $text_pos[2], 89, $black , $value_font, " ".$wind_speed[0]['#markup']);
+				
+				 imagettftext($img, 11 , 0, $text_pos[2], 89, $black , $value_font, " ".t ($wind_speed[0]['#markup'],array(), array( 'langcode' => $profile_lang ) ) );
 			}
 			
-			imagettftext( $img, 11, 0 , 700, 17, $black, $label_font, 'Layer Notes:');
+			imagettftext( $img, 11, 0 , 700, 17, $black, $label_font, t('Layer Notes',array(), array( 'langcode' => $profile_lang )).':');
 			//imageline( $img , 680, 24, 959,24, $black);
 
 	
 			$comment_count = 0;
 			$textpos = array();
 			if ( isset( $node->field_total_height_of_snowpack['und'][0]['value'])  ){ 
-				$pretextpos = imagettftext($img, 11 , 0, 625, 17, $black, $label_font, 'HS:');
+				$pretextpos = imagettftext($img, 11 , 0, 625, 17, $black, $label_font, t('HS:',array(), array( 'langcode' => $profile_lang )));
 				imagettftext($img, 11 , 0, $pretextpos[2] , 17, $black, $value_font,  $node->field_total_height_of_snowpack['und'][0]['value'] )  ;
 				
 				$comment_count += 1;
 			}
-			if ( isset( $node->field_surface_penetration['und'] )  
-				&& ( isset($node->field_boot_penetration_depth['und']) )
+			if ( ( isset($node->field_boot_penetration_depth['und']) )
 			  && (  $node->field_boot_penetration_depth['und'][0]['value'] != '' )){	
-					$finalpos = imagettftext($img,11, 0, 625, 17+$comment_count* 18, $black, $label_font , 'PF:' );
+					$finalpos = imagettftext($img,11, 0, 625, 17+$comment_count* 18, $black, $label_font , t('PF:',array(), array( 'langcode' => $profile_lang )) );
 					imagettftext($img,11, 0, $finalpos[2], 17+$comment_count* 18, $black, $value_font , $node->field_boot_penetration_depth['und'][0]['value']  );
 					
 					$comment_count += 1;
 			}
-			if(isset( $node->field_surface_penetration['und'] )  
-			    && isset($node->field_ski_penetration['und'][0]['value']) 
+			if( isset($node->field_ski_penetration['und'][0]['value']) 
 			    &&  (  $node->field_ski_penetration['und'][0]['value'] != '' ) ){
-				    $finalpos = imagettftext($img,11, 0, 625, 17+$comment_count* 18, $black, $label_font , 'PS:' );
+				    $finalpos = imagettftext($img,11, 0, 625, 17+$comment_count* 18, $black, $label_font , t('PS:',array(), array( 'langcode' => $profile_lang )) );
 				    imagettftext($img, 11, 0, $finalpos[2]+2, 17+$comment_count* 18, $black, $value_font, $node->field_ski_penetration['und'][0]['value'] );
 				  	$comment_count += 1;
 			}
@@ -856,25 +861,6 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 							$factor = $test->y_position - $original_depth;
 							imageline($img, $arrowline['xstart']+1, $arrowline['ystart'] , $stab_test_start+17, $test->y_position, $black); //angled arrow to stability test 
 		
-							
-							// Deprecated method of writing in little arrow lines
-					/*		imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) - .4) +1 , $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) - .4), $black );
-							imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) - .32) +1 , $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) - .32), $black );
-							
-							
-							imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) + .4)  +1, $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) + .4), $black );
-							imageline($img, $arrowline['xstart'], $arrowline['ystart'], $arrowline['xstart']+8* cos( - atan( $factor/ 16) + .32)  +1, $arrowline['ystart'] - 8*sin( -atan( $factor/ 16) + .32), $black );
-					*/	
-					/*  Other deprecated what of writing arrows
-			imagettftext_cr($img, 7, 0-$arrowline['tilt'], $arrowline['xstart'] + 3.2 * abs(cos( (atan($factor/16) )) *  cos( (atan($factor/16) )) * cos( (atan($factor/16) ))), $arrowline['ystart'], $black, $value_font, '&#x25c4;');
-			//imagettftext($img, 7, 0-$arrowline['tilt'], $arrowline['xstart'] - abs(( sin (atan($factor/16) )) * ( sin (atan($factor/16) )) *( sin (atan($factor/16) ))) * 3 , $arrowline['ystart']- ((sin(atan($factor/16) )) * sin(atan($factor/16) ) * sin(atan($factor/16) )      )*6 +4 ,$black, $value_font, '&#x25c4;');  // the little arrow that points to where the test result is at
-
-			$test_pos = imagettftext($img, 8, 0, $stab_test_start + 19, $test->y_position+5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
-			if ( count($test->field_stability_comments) ){
-				imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,$test->field_stability_comments['und'][0]['safe_value'] );
-			}
-					
-					*/
 							//dsm(cos( (atan($factor/16) ) )); 
 							$offset = atan( $factor/ 16) < 0 ? 0 : atan( $factor/ 16) ;
 							imagettftext_cr($img, 6, 0 -$arrowline['tilt'], $arrowline['xstart']  -2.5* (1- cos( (atan($factor/16) )) )  + $offset+2, $arrowline['ystart'], $black, $value_font, '&#x25c4;');
@@ -884,7 +870,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	
 							$test_pos = imagettftext($img, 8, 0, $stab_test_start + 19, $test->y_position+5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
 							if ( count($test->field_stability_comments) ){
-								imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,$test->field_stability_comments['und'][0]['safe_value'] );
+								imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,check_markup($test->field_stability_comments['und'][0]['value'] , 'filtered_html') );
 							}
 						}
 					}
@@ -961,7 +947,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 						$font_size = ( $grain_type_image == '&#xe028;&#xe007;' ) ? 9 : 12;
 						$grain_image_pos = imagettftext($img, $font_size, 0, 520 , ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +5, $black, $snowsymbols_font, $grain_type_image);
 						$nextpos = $grain_image_pos[2];
-						if (  ($layer->field_grain_primary_rimed['und'][0]['value'])) {
+						if (  !empty($layer->field_grain_primary_rimed['und'][0]['value'])) {
 							$little_r_pos = imagettftext($img, 8, 0, $grain_image_pos[2] -1, ($layer->y_val_xlate - $layer->y_val_top_xlate)/2 + $layer->y_val_top_xlate +7, $black, $label_font, 'r' );
 						  $nextpos = $little_r_pos[2];
 						}
@@ -1045,20 +1031,20 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					  if  ( !$conflict  ) {
 							$layer->y_val_text = $layer_y_val_text ;
 							$layer_place_pos = imagettftext($img, 9, 0, $stab_test_start +5, $layer_y_val_text +5, $black, $label_font, $layer_top .'-'. $layer_bottom .$snowpit_unit_prefs['field_depth_units'].': ');
-							imagettftext($img, 9, 0, $layer_place_pos[2] , $layer_y_val_text +5, $black, $value_font, $layer->field_comments['und'][0]['safe_value']); 
+							imagettftext($img, 9, 0, $layer_place_pos[2] , $layer_y_val_text +5, $black, $value_font, check_markup($layer->field_comments['und'][0]['value'], 'filtered_html')); 
 						}
 												
 						if ( $comment_counter <5 ){
 
 						  $textpos2 = imagettftext($img, 9, 0, 682, $comment_counter*13 + 35, $black, $label_font,
 							$layer_top.'-'.$layer_bottom. $snowpit_unit_prefs['field_depth_units'].': ');
-							imagettftext( $img, 9, 0, $textpos2[2]+1, $comment_counter*13 + 35, $black, $value_font,  $layer->field_comments['und'][0]['safe_value']);
+							imagettftext( $img, 9, 0, $textpos2[2]+1, $comment_counter*13 + 35, $black, $value_font,  check_markup($layer->field_comments['und'][0]['value'], 'filtered_html'));
 					  }else{
 							if( $comment_counter == 5 ) { 
-								$xtra_specifics .= '. Additional Layer Comments: ';
-						    imagettftext($img, 7, 0, 685, $comment_counter*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
+								$xtra_specifics .= '. '.t('Additional Layer Comments',array(), array( 'langcode' => $profile_lang )).': ';
+						    imagettftext($img, 7, 0, 685, $comment_counter*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below",array(), array( 'langcode' => $profile_lang )) . ' ]');
 							}
-							$xtra_specifics .= $layer_bottom.'-'.$layer_top. $snowpit_unit_prefs['field_depth_units'].': '.$layer->field_comments['und'][0]['safe_value'].'; ';
+							$xtra_specifics .= $layer_bottom.'-'.$layer_top. $snowpit_unit_prefs['field_depth_units'].': '.check_markup($layer->field_comments['und'][0]['value'], 'filtered_html').'; ';
 					  }
 					  $comment_counter++;
 				  }
@@ -1087,15 +1073,15 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 							
 						  $textpos3 = imagettftext($img, 9, 0, 682, $comment_counter*13 + 35, $black, $label_font,
 							   $layer_top.'-'.$layer_bottom. $snowpit_unit_prefs['field_depth_units'].':');
-							imagettftext( $img, 9, 0, $textpos3[2]+1, $comment_counter*13 + 35, $black, $value_font,  " Problematic layer");
+							imagettftext( $img, 9, 0, $textpos3[2]+1, $comment_counter*13 + 35, $black, $value_font,  t("Problematic layer" ,array(), array( 'langcode' => $profile_lang )));
 							
 							
 						}else{
 							if( $comment_counter == 5 ) { 
 								$xtra_specifics .= '. Additional Layer Comments: ';
-						    imagettftext($img, 7, 0, 685, $comment_counter*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below") . ' ]');
+						    imagettftext($img, 7, 0, 685, $comment_counter*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below",array(), array( 'langcode' => $profile_lang )) . ' ]');
 							}
-							$xtra_specifics .= $layer_bottom.'-'.$layer_top.": " . t("Problematic layer") . '; ';
+							$xtra_specifics .= $layer_bottom.'-'.$layer_top.": " . t("Problematic layer",array(), array( 'langcode' => $profile_lang )) . '; ';
 						}
 						
 						$comment_counter++;
@@ -1232,7 +1218,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			
 			//
 			
-	imagettftext($img, 10, 0 , $stab_test_start +20, 122, $black ,$label_font, "Stability tests & Layer comments");
+	imagettftext($img, 10, 0 , $stab_test_start +20, 122, $black ,$label_font, t("Stability tests & Layer comments",array(), array( 'langcode' => $profile_lang )));
 			
 	imagettftext($img , 10, 0, $stab_test_start -26, 118, $black, $label_font, "&#x3c1;"); // Rho symbol for density
 	imagettftext($img, 10, 0 , $stab_test_start -32,135, $black, $label_font , _density_unit_fix($snowpit_unit_prefs['field_density_units']) );
@@ -1278,10 +1264,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 		imageline($img, 447, 739, 447, 741,$black);
 	}
 	
-	imagettftext($img, 10, 0 , 554, 122, $black ,$label_font, t("Crystal"));
-	imagettftext($img, 10, 0 , 516,137, $black, $label_font , t("Form"));
-	imagettftext($img, 10, 0 , 580,137, $black, $label_font , t("Size"));
-	imagettftext($img, 10, 0 , 616,137, $black, $label_font , t("Moisture"));
+	imagettftext($img, 10, 0 , 554, 122, $black ,$label_font, t("Crystal",array(), array( 'langcode' => $profile_lang )));
+	imagettftext($img, 10, 0 , 516,137, $black, $label_font , t("Form",array(), array( 'langcode' => $profile_lang )));
+	imagettftext($img, 10, 0 , 580,137, $black, $label_font , t("Size",array(), array( 'langcode' => $profile_lang )));
+	imagettftext($img, 10, 0 , 616,137, $black, $label_font , t("Moisture",array(), array( 'langcode' => $profile_lang )));
 	
 	
 	// write out the small image before laying the watermark
@@ -1293,8 +1279,8 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	imagedestroy($sp_watermark); 	
 	
 	// writing the pit notes now that we have any extra layer or stability test notes that didn't fit
-	$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, 'Notes: ');
-	$final_notes_string = (isset($node->body['und'][0]) && $node->body['und'][0]['safe_value'] != '' )  ? $node->body['und'][0]['safe_value'] . $xtra_specifics : $xtra_specifics;
+	$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, t('Notes',array(), array( 'langcode' => $profile_lang )) .': ');
+	$final_notes_string = (isset($node->body['und'][0]) && $node->body['und'][0]['value'] != '' )  ? check_markup($node->body['und'][0]['value'], 'filtered_html') . $xtra_specifics : $xtra_specifics;
 	if ( $final_notes_string <> '' ){ 
 		$notes_lines = _output_formatted_notes($final_notes_string, $value_font);
     if ( count($notes_lines) > 3 ){
@@ -1309,12 +1295,21 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	}	
 
 	// Output the jpg and png image
-	$fileroot = DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . substr($node->nid, 0, -3 ). '/graph/graph-' .$node->nid;
+	$thousands = !empty(substr($node->nid, 0, -3 )) ? substr($node->nid, 0, -3 ) : '0' ;
 	
-	imagejpeg($img, $fileroot. '.jpg',100);
-	imagepng($img, $fileroot. '.png');
 	
-	snowpilot_imagepdf($fileroot);
+	$fileroot = DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . $thousands . '/graph/graph-' .$node->nid;
+	$profiles_thousands = DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . $thousands;
+	if ( $profile_lang == $node->language)	{
+		$variable_dir = 'public://snowpit-profiles/'.$thousands . '/graph';
+		if (file_prepare_directory( $variable_dir, FILE_CREATE_DIRECTORY )){
+			imagejpeg($img, $fileroot. '.jpg',100);
+			imagepng($img, $fileroot. '.png');
+			snowpilot_imagepdf($fileroot);
+		}else{
+			drupal_set_message ( "A directory '/sites/default/files/snowpit-profiles/$thousands/graph' could not be created. Please contact the administrator.");
+		}
+	}
 // Destroy GD image
 //imagedestroy($img);
 if ($format == 'jpg') {
@@ -1326,31 +1321,45 @@ if ($format == 'jpg') {
 function snowpilot_snowpit_crop_layers_write($img,$nid){
 	$new_img = imagecreatetruecolor(466,613);
 	$result = imagecopy($new_img, $img, 0,0, 14,140,466,613 );
-	
-	imagepng($new_img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . substr($nid, 0, -3 ). '/layers/layers-'.$nid. '.png');	
+	$thousands = !empty(substr($nid, 0, -3 )) ? substr($nid, 0, -3 ) : '0' ;
+	$variable_dir = 'public://snowpit-profiles/'.$thousands . '/layers';
+	if ( file_prepare_directory( $variable_dir, FILE_CREATE_DIRECTORY ) ){
+	  imagepng($new_img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . $thousands. '/layers/layers-'.$nid. '.png');	
+  }else {
+		drupal_set_message ( "A directory '/sites/default/files/snowpit-profiles/$thousands/layers' could not be created. Please contact the administrator.", WARNING);
+	}
+	return;
 }
 
 function snowpilot_imagepdf($fileroot){
+	
+	$nid = substr($fileroot,strpos($fileroot,'graph/graph-')+12 );
+	$thousands = !empty(substr($nid, 0, -3 )) ? substr($nid, 0, -3 ) : '0' ;
+	$variable_dir = 'public://snowpit-profiles/'.$thousands . '/pdf';
+	if ( !file_exists($fileroot.'.png')
+	     || !file_prepare_directory( $variable_dir , FILE_CREATE_DIRECTORY )        ){ 
+		drupal_set_message ( "A directory '/sites/default/files/snowpit-profiles/$thousands/pdf' could not be created, or a source file did not exist. Please contact the administrator.");
+		return;
+	}
 	include_once(DRUPAL_ROOT.'/sites/all/libraries/fpdf181/fpdf.php');
 	$Size = getimagesize($fileroot.'.png');
-	$nid = substr($fileroot,strpos($fileroot,'graph/graph-')+12 );
-		
+	
 	if ( $Size[1] == 840 ){
 		$pdf = new FPDF();
 		$pdf->AddPage('L');
 		$pdf->Image($fileroot.'.png', 0,0,0,205);
-		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($nid, 0, -3 ) .'/pdf/pdf-'.$nid.'.pdf' ,'F');
+		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. $thousands .'/pdf/pdf-'.$nid.'.pdf' ,'F');
 	}elseif ( $Size[1] < 994 ){
 		$pdf = new FPDF();
 		$pdf->AddPage('L','Letter');
 		$pdf->Image($fileroot.'.png', 0,0,0, 215.9);
-		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($nid, 0, -3 ) .'/pdf/pdf-'.$nid.'.pdf' ,'F');
+		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. $thousands .'/pdf/pdf-'.$nid.'.pdf' ,'F');
 	}else{
 		
 		$pdf = new FPDF();
 		$pdf->AddPage('P','Letter');
 		$pdf->Image($fileroot.'.png', 0,0,215.9, 0);
-		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. substr($nid, 0, -3 ) .'/pdf/pdf-'.$nid.'.pdf' ,'F');
+		$pdf->Output(DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/'. $thousands .'/pdf/pdf-'.$nid.'.pdf' ,'F');
 		
 	}
 	return ;

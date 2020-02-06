@@ -87,7 +87,8 @@
       }
       
       // Add the label for temperature profile 
-      SnowProfile.temperatureGroup.add(SnowProfile.drawing.text('Temperature')
+      SnowProfile.temperatureGroup.add(
+				SnowProfile.drawing.text(Drupal.settings.sp_liveprofile.translatable.temperature)
       .font({
         size: 18,
         style: 'bold',
@@ -114,7 +115,7 @@
         y;
 
       // Add a Depth label on the left side of the diagram
-       var depthText = SnowProfile.drawing.text("Depth ")
+       var depthText = SnowProfile.drawing.text(Drupal.settings.sp_liveprofile.translatable.depth)
         .addClass("snow_profile_depth")
         .font({
           family: 'sans-serif',
@@ -279,7 +280,7 @@
       }
 
       // Add 'Hand Hardness' label at bottom
-      SnowProfile.hardnessGroup.add(SnowProfile.drawing.text('Hand Hardness')
+      SnowProfile.hardnessGroup.add(SnowProfile.drawing.text(Drupal.settings.sp_liveprofile.translatable.hand_hardness)
         .addClass("snow_profile_hardness")
         .font({
           size: 18,
@@ -310,7 +311,7 @@
       }));
 
       // Add the label to the Grain Shape column
-      SnowProfile.gridGroup.add(SnowProfile.drawing.text('Grain\nType')
+      SnowProfile.gridGroup.add(SnowProfile.drawing.text(Drupal.settings.sp_liveprofile.translatable.grain_type)
       .font({
         size: 14,
         leading: 1.1,
@@ -321,7 +322,7 @@
       .move(SnowProfile.Cfg.FEAT_DESCR_LEFT, 10));
 
       // Add the label to the Grain Size column
-      SnowProfile.gridGroup.add(SnowProfile.drawing.text('Size\n(mm)')
+      SnowProfile.gridGroup.add(SnowProfile.drawing.text(Drupal.settings.sp_liveprofile.translatable.grain_size)
       .font({
         size: 14,
         leading: 1.1,
@@ -333,7 +334,7 @@
         10));
 
       // Add the label to the Comment column - Changed to Stability Tests for SnowPilot
-      var commentHeading = SnowProfile.drawing.text('Stability\nTests')
+      var commentHeading = SnowProfile.drawing.text(Drupal.settings.sp_liveprofile.translatable.stability_tests)
         .font({
           size: 14,
           leading: 1.1,

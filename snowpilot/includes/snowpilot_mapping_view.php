@@ -5,22 +5,21 @@ $longitude = ''; $latitude = '';
 
 $zoom = '11';
 
-if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && isset( $node->field_east['und'][0]['value'] ) 
-&& isset( $node->field_north['und'][0]['value'] ) && isset ( $node->field_utm_zone['und'][0]['value'] )){
+if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && !empty($node->field_east['und'][0]['value'])  
+  && !empty( $node->field_north['und'][0]['value'] ) && !empty ( $node->field_utm_zone['und'][0]['value'] ))   {
 	
 	$latlong = Toll( $node->field_north['und'][0]['value'] , $node->field_east['und'][0]['value'], $node->field_utm_zone['und'][0]['value'] );
 	
 	$latitude = $latlong['lat'];
 	$longitude = $latlong['lon'];
-}elseif ( isset ( $node->field_latitude['und'][0]['value'] ) && isset( $node->field_longitude['und'][0]['value']) ){ // if the user set the gmap location ( lat long ) on an older snowpit, this will still work. 
+}elseif ( !empty ( $node->field_latitude['und'][0]['value'] ) && !empty( $node->field_longitude['und'][0]['value']) ){ // if the user set the gmap location ( lat long ) on an older snowpit, this will still work. 
 		$latitude = $node->field_latitude['und'][0]['value'];
 		$longitude = $node->field_longitude['und'][0]['value'];
 	
 }
+
+if ( !empty($latitude) && !empty ( $longitude) ){
 ?>
-
-
-
 <div id="map" style= "height: 450px; width: 600px;"></div>
     <script>
 			var gnfacmap = L.map('map').setView([<?php echo $latitude; ?>, <?php  echo $longitude; ?>], <?php  echo $zoom; ?>);
@@ -39,4 +38,7 @@ if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && isset( $node-
       var marker = L.marker([<?php echo $latitude; ?>, <?php  echo $longitude; ?>]).addTo(gnfacmap);
 
     </script>
-
+<?php
+}
+	
+?>

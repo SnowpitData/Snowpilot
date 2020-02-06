@@ -6,9 +6,7 @@
 	var existing = Drupal.settings.snowpilot.marker.existing;
 	
 	var snowpilotmap = L.map('snowpilot-map').setView([latitude, longitude], zoom);
-	setTimeout(function () {
 	    snowpilotmap.invalidateSize();
-	}, 100);
 	var BaseMap = L.tileLayer(basemap, {
 	    attribution: attribution ,
 	    maxZoom: 18

@@ -1,0 +1,65 @@
+# LANGUAGE translation of PROJECT
+# Copyright (c) YEAR NAME <EMAIL@ADDRESS>
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2020-01-29 11:05-0700\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: taxonomy:term:108:name
+msgctxt "term:108:name"
+msgid "Educators"
+msgstr ""
+
+
+#: taxonomy:term:172:name
+msgctxt "term:172:name"
+msgid "Industrial"
+msgstr ""
+
+#: taxonomy:term:59:name
+msgctxt "term:59:name"
+msgid "Avalanche Center"
+msgstr ""
+
+#: taxonomy:term:60:name
+msgctxt "term:60:name"
+msgid "University Research"
+msgstr ""
+
+#: taxonomy:term:61:name
+msgctxt "term:61:name"
+msgid "State/Provincial Dept. of Transportation"
+msgstr ""
+
+#: taxonomy:vocabulary:5:name
+msgctxt "vocabulary:5:name"
+msgid "Professional Affiliation"
+msgstr ""
+
+#: taxonomy:term:62:name
+msgctxt "term:62:name"
+msgid "Ski/Snowmobile Guide Service"
+msgstr ""
+
+#: taxonomy:term:57:name
+msgctxt "term:57:name"
+msgid "Unaffiliated / Individual"
+msgstr ""
+
+#: taxonomy:term:58:name
+msgctxt "term:58:name"
+msgid "Ski Patrol"
+msgstr ""
+
+#: taxonomy:term:427:name
+msgctxt "term:427:name"
+msgid "Search and Rescue"
+msgstr ""
