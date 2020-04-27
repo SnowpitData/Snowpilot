@@ -252,7 +252,8 @@
 			
 			/////////////////////////////
 			// hide the Measurement Unit Prefs fieldset
-			$('#snowpit-profile-node-form fieldset.group-measurement-prefs').hide();
+			
+			//$('#snowpit-profile-node-form fieldset.group-measurement-prefs').hide();
 			
 			// save button at top of 'view' page
 			$('button#save-button', context).click(function(e) {

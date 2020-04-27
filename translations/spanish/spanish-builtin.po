@@ -4603,7 +4603,7 @@ msgstr "Carga por viento"
 
 #: /
 msgid "Aspect"
-msgstr "Exposición de la pendiente"
+msgstr "Exposición"
 
 #: /
 msgid "Specifics"
@@ -4664,6 +4664,10 @@ msgstr "Notas"
 #: /
 msgid "Save, Lock, and Download Snowpit"
 msgstr "Guardar, bloquear y descargar Perfil níveo"
+
+#: /
+msgid "Download Snowpit"
+msgstr "Descargar Perfil níveo"
 
 #: /
 msgid ""
@@ -13155,6 +13159,10 @@ msgstr "Prueba de dureza manual (cohesión)"
 msgid "Depth"
 msgstr "Profundidad"
 
+#: /
+msgid "Pit dug in a Ski Area"
+msgstr "Fosa cavada en un estación de esquí"
+
 
 #: /node/add/snowpit-profile
 msgid "Precipitation Particles"
@@ -13343,4 +13351,13 @@ msgstr "Partículas de hielo picadas"
 #: /node/add/snowpit-profile
 msgid "None"
 msgstr "Ninguno"
+
+#: /node/add/snowpit-profile
+msgid "Reminder: You have not yet selected a layer of greatest concern"
+msgstr "Recordatorio: aún no ha seleccionado una capa de mayor preocupación"
+
+#: /node/add/snowpit-profile
+msgid "You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?"
+msgstr "Está a punto de guardar su snowpit terminado en la base de datos de Snowpilot AvScience, después de lo cual ya no podrá realizar cambios. ¿Seguir?"
+
 

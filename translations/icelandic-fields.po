@@ -1902,11 +1902,6 @@ msgctxt "field_pit_is_representative_of_b:snowpit_profile:label"
 msgid "Pit is representative of backcountry"
 msgstr "Snowpit er fulltrúi backcountry"
 
-#: field:field_poor_pit_location:snowpit_profile:description
-msgctxt "field_poor_pit_location:snowpit_profile:description"
-msgid "Nope, really, a very poor pit location; spanish test."
-msgstr "No, Verdad,a muy pobrecito ubicaccion de pit."
-
 #: field:field_poor_pit_location:snowpit_profile:label
 msgctxt "field_poor_pit_location:snowpit_profile:label"
 msgid "Poor pit location"
@@ -1914,8 +1909,8 @@ msgstr "Léleg hola staðsetning"
 
 #: field:field_practice_pit:snowpit_profile:description
 msgctxt "field_practice_pit:snowpit_profile:description"
-msgid "This pit is not real. Check this if you are testing Snowpilot."
-msgstr "Þessi gryfja er ekki raunveruleg. Athugaðu hvort þú ert að prófa Snowpilot."
+msgid "Check this if you are testing SnowPilot, or using it as part of a group class."
+msgstr "athugaðu þetta ef þú ert að nota snowpilot sem hluta af bekknum"
 
 #: field:field_practice_pit:snowpit_profile:label
 msgctxt "field_practice_pit:snowpit_profile:label"
@@ -2371,4 +2366,3 @@ msgstr "Vindstyrkur vindar"
 msgctxt "field_wind_speed:snowpit_profile:label"
 msgid "Wind Speed"
 msgstr "Vindhraði"
-

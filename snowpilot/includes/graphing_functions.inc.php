@@ -590,7 +590,7 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 function _generate_specifics_string($node,$profile_lang = 'und') {
 	$string = '';
 	$included_fields = array( 'field_practice_pit', 'field_pit_dug_in_a_ski_area',  
-		'field_pit_is_representative_of_backcountry','field_adjacent_to_avy', 'field_near_avalanche', /* a list type field, rather than boolean */
+		'field_pit_is_representative_of_b','field_adjacent_to_avy', 'field_near_avalanche', /* a list type field, rather than boolean */
 	  'field_collapsing_widespread', 'field_collapsing_localized', 'field_cracking', 'field_recent_activity_on_similar', 'field_recent_activity_on_differe',
 		'field_instability_rapidly_rising' , 'field_ski_tracks_on_slope', 'field_we_skiied_slope', 'field_snowmobile_tracks_on_slope', 'field_we_snowmobiled_slope','field_poor_pit_location' ); // etc
 	
@@ -870,7 +870,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	
 							$test_pos = imagettftext($img, 8, 0, $stab_test_start + 19, $test->y_position+5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
 							if ( count($test->field_stability_comments) ){
-								imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,check_markup($test->field_stability_comments['und'][0]['value'] , 'filtered_html') );
+								imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,$test->field_stability_comments['und'][0]['value']) ;
 							}
 						}
 					}
@@ -1031,20 +1031,20 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 					  if  ( !$conflict  ) {
 							$layer->y_val_text = $layer_y_val_text ;
 							$layer_place_pos = imagettftext($img, 9, 0, $stab_test_start +5, $layer_y_val_text +5, $black, $label_font, $layer_top .'-'. $layer_bottom .$snowpit_unit_prefs['field_depth_units'].': ');
-							imagettftext($img, 9, 0, $layer_place_pos[2] , $layer_y_val_text +5, $black, $value_font, check_markup($layer->field_comments['und'][0]['value'], 'filtered_html')); 
+							imagettftext($img, 9, 0, $layer_place_pos[2] , $layer_y_val_text +5, $black, $value_font, $layer->field_comments['und'][0]['value']); 
 						}
 												
 						if ( $comment_counter <5 ){
 
 						  $textpos2 = imagettftext($img, 9, 0, 682, $comment_counter*13 + 35, $black, $label_font,
 							$layer_top.'-'.$layer_bottom. $snowpit_unit_prefs['field_depth_units'].': ');
-							imagettftext( $img, 9, 0, $textpos2[2]+1, $comment_counter*13 + 35, $black, $value_font,  check_markup($layer->field_comments['und'][0]['value'], 'filtered_html'));
+							imagettftext( $img, 9, 0, $textpos2[2]+1, $comment_counter*13 + 35, $black, $value_font,  $layer->field_comments['und'][0]['value']);
 					  }else{
 							if( $comment_counter == 5 ) { 
 								$xtra_specifics .= '. '.t('Additional Layer Comments',array(), array( 'langcode' => $profile_lang )).': ';
 						    imagettftext($img, 7, 0, 685, $comment_counter*13 + 31, $red_layer, $label_font, '[ '. t("More Layer Comments below",array(), array( 'langcode' => $profile_lang )) . ' ]');
 							}
-							$xtra_specifics .= $layer_bottom.'-'.$layer_top. $snowpit_unit_prefs['field_depth_units'].': '.check_markup($layer->field_comments['und'][0]['value'], 'filtered_html').'; ';
+							$xtra_specifics .= $layer_bottom.'-'.$layer_top. $snowpit_unit_prefs['field_depth_units'].': '.$layer->field_comments['und'][0]['value'].'; ';
 					  }
 					  $comment_counter++;
 				  }
@@ -1280,7 +1280,7 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 	
 	// writing the pit notes now that we have any extra layer or stability test notes that didn't fit
 	$textpos = imagettftext($img, 11, 0, 14,779, $black, $label_font, t('Notes',array(), array( 'langcode' => $profile_lang )) .': ');
-	$final_notes_string = (isset($node->body['und'][0]) && $node->body['und'][0]['value'] != '' )  ? check_markup($node->body['und'][0]['value'], 'filtered_html') . $xtra_specifics : $xtra_specifics;
+	$final_notes_string = (isset($node->body['und'][0]) && $node->body['und'][0]['value'] != '' )  ? $node->body['und'][0]['value'] . $xtra_specifics : $xtra_specifics;
 	if ( $final_notes_string <> '' ){ 
 		$notes_lines = _output_formatted_notes($final_notes_string, $value_font);
     if ( count($notes_lines) > 3 ){

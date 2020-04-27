@@ -2,10 +2,18 @@
 include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
 use \ForceUTF8\Encoding;
 
-function populate_shear_tests_table($SERIAL){
-	include_once(DRUPAL_ROOT.'/sites/default/db_settings.php');
-	
-	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
+function populate_shear_tests_table_app_final($SERIAL){
+
+	$final_db = array(
+	  'host' => '127.0.0.1', 
+	  'database' => 'jimurl_snowpilot_app_final',
+	  'username' => 'jimurl_snowpilot', 
+	  'password' => '!Jj5xUh&6DGP', 
+	  'driver' => 'mysql',
+	);
+
+
+	Database::addConnectionInfo('final_avscience_db', 'default', $final_db );// $avsci_db_info
 	
 	
 	$result_code = array('continue'=> TRUE, 'message' => 'default message tests');
@@ -15,13 +23,14 @@ function populate_shear_tests_table($SERIAL){
 
 		//var_dump($link);
 		//consultation:
-	  db_set_active('avscience_db');
+	  db_set_active('final_avscience_db');
 				$query = "SELECT SERIAL,PIT_XML
 					        FROM `PIT_TABLE`   
-				          WHERE SERIAL = ".$SERIAL;
+				          WHERE SERIAL = ".$SERIAL or die("Error in the consult.." . mysqli_error($link));
 
 				$result = db_query( $query);
 			  db_set_active();
+			
 		//display information:
 		$shear_test_attributes = array('code', 'dateString','comments', 'sdepth', 
 		'depthUnits',  'quality', 'ecScore', 'numberOfTaps', 'ctScore', 'score', 's','releaseType',
@@ -29,7 +38,7 @@ function populate_shear_tests_table($SERIAL){
 
 	
 		while($row = $result->fetch() ) {
-			dsm($row);
+
 			$doc = new DOMDocument();
 		
 			$corrected_encoding = Encoding::toUTF8($row->PIT_XML);
@@ -68,7 +77,7 @@ function populate_shear_tests_table($SERIAL){
 						
 						
 					}
-				  db_set_active('avscience_db');
+				  db_set_active('final_avscience_db');
 				
 					$query3 = "INSERT INTO shear_tests SET ". implode(', ', $values_list );
           $result3 = db_query($query3);

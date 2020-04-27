@@ -504,14 +504,7 @@ function snowpilot_node_snowpit_download($node, $format = 'jpg'){
 			$node_wrapper->save();
 			watchdog('snowpilot', "Snowpit $node->nid set to LOCKED.");
 			// and save it to the avscience db
-			if ( $serial = snowpilot_node_avscience_save_pit($node)) {
-				$image_result_code = populate_snowpit_image($serial);
-				$layers_result_code = populate_layers_table($serial);
-				$tests_result_code = populate_shear_tests_table($serial);		
-				watchdog('snowpilot', "Snowpit $node->nid sucessfully saved to avscience db.");
-			}else{
-				watchdog('snowpilot', "Snowpit $node->nid NOT  saved to avscience db.");
-			}
+			snowpilot_avscience_save_snowpit($node);
 		//
 		}
 	}
@@ -685,10 +678,15 @@ function snowpilot_avscience_pit_write($node){
 
 function snowpilot_user_login(&$edit, $account){
 	snowpilot_user_unit_prefs_check($account->uid, FALSE);
+	snowpilot_language_reminder();
+	
 	return;
 }
 
 function snowpilot_init(){
+	
+	
+	
 	drupal_add_css('https://unpkg.com/leaflet@1.4.0/dist/leaflet.css', 'external');
 	drupal_add_css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css', 'external');
 	drupal_add_css('sites/all/modules/snowpilot/css/MarkerCluster.Default.css');
@@ -699,6 +697,29 @@ function snowpilot_init(){
 	$ret_val = drupal_add_js('https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js', 'external');
 	
 	return($ret_val);
+}
+
+function snowpilot_language_reminder(){
+	$languages = language_list() ;
+
+	$sp_langs = locale_language_list();
+
+	$result_from_browser = locale_language_from_browser($languages);
+
+	global $user;
+	$result_from_user = $user->language;
+
+	if ( $user->uid <>0 && 
+	      $result_from_browser <> $result_from_user &&
+	       in_array( $result_from_browser , array_keys($sp_langs) ) ){
+	drupal_set_message('<h2>SnowPilot is now multilingual!</h2><br />It appears that you are accessing the SnowPilot website from a browser that normally uses: <b>'. t($sp_langs [ $result_from_browser ], array() ,array( 'langcode' => $result_from_browser )). '</b><br />'.
+	                         'However, your default language is: <b>'. t($sp_langs[ $result_from_user ], array() ,array( 'langcode' => $result_from_user )).'</b>'.
+														'<p>You may set your default language on your <b><a href = "/snowpilot/user/edit">User Preferences Page</a></b>'.
+														'<p><a href = "/help/snowpilot/registering">Read more about user preferences and your default language.</a>'
+	 );
+
+	}
+	return;
 }
 function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	// fields that will need to have the suffix changed according to the users prefs. 
@@ -1606,6 +1627,9 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 			  	}elseif ( $test['field_stability_test_score_ect']['und'][0]['value'] <> 'ECTX' && $test['field_depth']['und'][0]['value'] == '') {
 			  	  form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Please enter a depth value for test result."));
 			  	}
+					if ( in_array($test['field_stability_test_score_ect']['und'][0]['value'], array( 'ECTN', 'ECTP') ) && empty($test['field_ec_score']['und'][0]['value'])  ){
+						form_set_error("field_test][". LANGUAGE_NONE."][" . $key . "][field_ec_score", t("Please enter a value for ECT score."));
+					}
 				break;
 				case 'CT':
 		      if ( !isset( $test['field_stability_test_score_ct']['und'][0]['value']  ) || ($test['field_stability_test_score_ct']['und'][0]['value'] == '' ) ){
@@ -2652,12 +2676,30 @@ function snowpilot_user_has_role() {
 function snowpilot_graph_field_trunc(&$img,$string,$x_limit){
 	
 }
+//
+//
+//
+function snowpilot_avscience_save_snowpit($node){
+	if ( $serial = snowpilot_node_avscience_save_pit($node)) {
+		$image_result_code = populate_snowpit_image($serial);
+		$layers_result_code = populate_layers_table($serial);
+		$tests_result_code = populate_shear_tests_table($serial);		
+		watchdog('snowpilot', "Snowpit $node->nid sucessfully saved to avscience db.");
+	}else{
+		watchdog('snowpilot', "Snowpit $node->nid NOT  saved to avscience db.");
+	}
+	return;
+}
+
+
 
 /*
+//
 //  This function submits to the avscience database  based on the node information passed to it. should be compliant with the snowpilot datamodel.
 //
-//
 */
+
+
 function snowpilot_node_avscience_save_pit($node){
 
 	
@@ -2709,8 +2751,6 @@ function snowpilot_node_avscience_save_pit($node){
 			if ( isset($node->field_near_avalanche['und'][0]['value']) ){
 				$values_list[] = " aviLoc = '". $node->field_near_avalanche['und'][0]['value'] ."' " ;
 			}
-			
-		
 		}
 	
 		// incline
@@ -2805,11 +2845,19 @@ function snowpilot_node_avscience_save_pit($node){
 		  $values_list[] = " WINDLOAD = '".  $node->field_wind_loading['und'][0]['value'] ."' ";
 		}
 		//
-		//  heightof Snowpack
+		//  height of Snowpack, calculated HoS
 		//
 		if (isset ( $node->field_total_height_of_snowpack['und'][0]['value'])){
 			$values_list[] =  " heightOfSnowpack = '" . $node->field_total_height_of_snowpack['und'][0]['value'] . "' ";
-		}
+			$values_list[] = " calculatedHoS = '" . $node->field_total_height_of_snowpack['und'][0]['value'] . "' ";
+ 		}elseif ( $node->field_depth_0_from['und'][0]['value'] == 'bottom'  ){
+			$max = 0 ;
+  		foreach($all_layers as $x => $layer){					
+	  		$max = ($layer->field_height['und'][0]['value'] > $max) ? $layer->field_height['und'][0]['value'] : $max ;
+  			$max = ($layer->field_bottom_depth['und'][0]['value'] > $max) ? $layer->field_bottom_depth['und'][0]['value'] : $max;
+  		}	
+			if ($max > 0 ) $values_list[] = " calculatedHoS = '" . $max . "' ";			
+ 		}
 		//
 		//  Precipitation
 		//
@@ -2910,7 +2958,7 @@ function snowpilot_node_avscience_save_pit($node){
 		}
 		//
 		// Name
-		$values_list[] = " PIT_NAME = '" . str_replace( "'" , "\'", $node->title) . "' ";
+		$values_list[] = " PIT_NAME = '" . str_replace( array("'", '"') , array("\'",'\"'), $node->title) . "' ";
 	
 		//	
     //		Node _ID
@@ -2929,6 +2977,8 @@ function snowpilot_node_avscience_save_pit($node){
 		$values_list[] = " elvUnits = '". $unit_prefs['elvUnits'] ."' ";
 		$values_list[] = " tempUnits = '". $unit_prefs['tempUnits'] ."' ";
 		$values_list[] = " depthUnits = '". $unit_prefs['depthUnits'] ."' ";
+		if ( !empty($node->field_a_priori_eval['und'][0]['value']) ){$values_list[] = " stabilityBefore = '". $node->field_a_priori_eval['und'][0]['value'] ."' ";}
+		if ( !empty($node->field_stability_on_similar_slope['und'][0]['value'])){$values_list[] = " stabilityAfter = '". $node->field_stability_on_similar_slope['und'][0]['value'] ."' ";}
 		
 		$insert_query = "INSERT INTO PIT_TABLE SET ".implode(',', $values_list);
 	  db_set_active('avscience_db');

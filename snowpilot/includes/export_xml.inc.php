@@ -573,7 +573,7 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 		
 				//
 				// fractureCharacter
-				$test_character = $snowpilot_xmldoc->createAttribute('character');
+				$test_character = $snowpilot_xmldoc->createAttribute('fractureCharacter');
 				$test_character->value =  ($unit_prefs['fractureCat'] == 'fracture_character') && isset($shear_test->field_fracture_character['und'][0]['value']) ? $shear_test->field_fracture_character['und'][0]['value'] : '' ;
 				$snowpilot_ShearTest->appendChild($test_character);
 				//
@@ -855,6 +855,10 @@ function snowpilot_node_write_caaml($node){
 		$ids = array();
 		foreach ($node->field_layer['und'] as $lay ){ $ids[] = $lay['value']; }
 		$all_layers = field_collection_item_load_multiple($ids);
+		//
+		// Insert flip layers for bottom-up here.
+		//
+		
 		$stratProfile = $snowpilot_caaml->createElement('stratProfile');
 		
 		foreach ( $all_layers as $x=>$layer){
@@ -1000,12 +1004,6 @@ function snowpilot_node_write_caaml($node){
 						  	$depthTop->setAttribute('uom' , $unit_prefs['field_depth_units']);
 					  	  $failedOn->appendChild($Layer);
 				  			$Results = $snowpilot_caaml->createElement('Results');
-			  				if ( isset( $shear_test->field_fracture_character['und'] )){  // this might not be caaml v6.0 compliant
-							  	$Results->appendChild($snowpilot_caaml->createElement('fractureCharacter', $shear_test->field_fracture_character['und'][0]['value']  ));
-						  	}
-					   		if ( isset( $shear_test->field_shear_quality['und'] )){
-								  $Results->appendChild($snowpilot_caaml->createElement('fractureQuality', $shear_test->field_shear_quality['und'][0]['value']  ));
-							  }
 								if ( isset( $shear_test->field_ec_score['und'] )){
 									$Results->appendChild($snowpilot_caaml->createElement('testScore', $shear_test->field_stability_test_score_ect['und'][0]['value'].$shear_test->field_ec_score['und'][0]['value']  ));
 								}else{

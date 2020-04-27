@@ -135,7 +135,11 @@ form .field-multiple-table td {
     /*padding-left: 10px;*/
 }
 
-#main-menu ul.links li.menu-514{
+#main-menu ul.links li.menu-514,
+#main-menu ul.links li.menu-1535,
+#main-menu ul.links li.menu-1537,
+#main-menu ul.links li.menu-1536
+{
 	float: right;
 	margin-right: 100px;
 	padding-right: 0px;
@@ -1308,6 +1312,12 @@ body.page-node-add-snowpit-profile nav#secondary-menu{
 	margin-left: 16px;
 }
 
+.profile_language_switcher {
+    background-color: #f2f2f2;
+    margin-top: 2.5em;
+    padding: 15px 6px;
+}
+
 body.page-node-edit.node-type-snowpit-profile header.header,
 body.page-node-add-snowpit-profile header.header{
 	height: 55px;
@@ -1358,6 +1368,11 @@ a.help-link {
 	margin: 0.5rem 1.0rem ;
 	background: rgba(255,255,255,0.8);
 	padding: 3px;
+}
+
+article .field.field-name-field-images .field-items .field-item {
+    display: inline-block;
+		padding: 3px;
 }
 
 

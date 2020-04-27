@@ -667,6 +667,10 @@ msgid "Save, Lock, and Download Snowpit"
 msgstr "Vista, læsa og hlaða niður snjóbrettin"
 
 #: /
+msgid "Download Snowpit"
+msgstr "hlaða niður snjóbrettin"
+
+#: /
 msgid "Elevation"
 msgstr "Hækkun"
 
@@ -733,3 +737,51 @@ msgstr "Sjálfgefið tungumál þessa reiknings fyrir tölvupóst og ákjósanle
 #: /
 msgid "Language"
 msgstr "Tungumál"
+
+#: /
+msgid "Temperature"
+msgstr "Hitastig"
+
+#: /
+msgid "Hand Hardness"
+msgstr "Hörku"
+
+#: /
+msgid "Depth"
+msgstr "Dýpt"
+
+#: /
+msgid "Grain\n"
+"Type"
+msgstr "korngerð"
+
+#: /
+msgid "Size\n"
+"(mm)"
+msgstr "kornstærð\n"
+"(mm)"
+
+#: /
+msgid "Stability\n"
+"Tests"
+msgstr "Stöðugleikapróf"
+
+msgid "Practice Pit"
+msgstr "Æfðu snjóbrettið"
+
+#: /
+msgid "Reminder: You have not yet selected a layer of greatest concern"
+msgstr "Áminning: Þú hefur ekki enn valið lag af mestu áhyggjum"
+
+#: /
+msgid "Pit dug in a Ski Area"
+msgstr "Snjóbrettið grafið á skíðasvæði"
+
+msgid "Pit is representative of backcountry"
+msgstr "Snowpit er fulltrúi backcountry"
+
+msgid "Poor pit location"
+msgstr "Léleg hola staðsetning"
+
+msgid "Recent activity on different slopes"
+msgstr "Färska laviner på annorlunda sluttningar"

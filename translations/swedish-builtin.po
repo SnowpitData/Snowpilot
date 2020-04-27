@@ -1222,3 +1222,16 @@ msgstr "‹ tidigare"
 #: /snowpits/query?field_date_time_value%5Bvalue%5D&field_org_ownership_tid&field_practice_pit_value=0&field_professional_affiliation_tid&language=is&page=116%2C0%2C5&uid_current=All
 msgid "last »"
 msgstr "sista »"
+
+#: /
+msgid "Pit dug in a Ski Area"
+msgstr "Snöprofil grävd i skidområde"
+
+msgid "Pit is representative of backcountry"
+msgstr ""
+
+msgid "Poor pit location"
+msgstr "Dåligt vald plats för snöprofil"
+
+msgid "Recent activity on different slopes"
+msgstr "Färska laviner på annorlunda sluttningar"

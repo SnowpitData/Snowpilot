@@ -1,6 +1,9 @@
 <?php
 include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
 use \ForceUTF8\Encoding;
+include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
+
 
 function snowpilot_avscience_populate_pit_fields($SERIAL){
 	$precip_labels = array( 'Snow < 0.5 cm/hr', 'None', 'NIL' ,'Snow   5 cm/hr', 'Snow - 5 cm/hr', 'Snow - 2 cm/hr', 'Snow   2 cm/hr' ,
@@ -20,24 +23,20 @@ function snowpilot_avscience_populate_pit_fields($SERIAL){
 	if ( $SERIAL == '' || !is_numeric( $SERIAL) || is_null( $SERIAL) ) {
     $result_code = array( 'continue' => TRUE, 'message'=> $SERIAL.' No serial given.');
 	}else{
-	$link = mysqli_connect("localhost","jimurl","dRkV5iWqM3a54e5Z","jimurl_snowpilot_avscience") ;
-
-	//var_dump($link);
-	//consultation:
 
 	$query = "SELECT SERIAL,PIT_XML, OBS_DATE, OBS_DATETIME
 	FROM `PIT_TABLE` 
 	WHERE SERIAL = ".$SERIAL;
 
 	//execute the query.
+  db_set_active('avscience_db');
+	$result = db_query($query)  or die("Error in the consult.." . mysqli_error($link));
 
-	$result = mysqli_query($link, $query)  or die("Error in the consult.." . mysqli_error($link));
-
-	//d
+  db_set_active();	
 		$pit_attributes = array('skiAreaPit', 'aviPit', 'bcPit', 'aviLoc', 'skiBoot','heightOfSnowpack', 'calculatedHoS', 'crownObs' ,'measureFrom', 'surfacePen', 'pitNotes','prof', 'iLayerNumber','windspeed', 'sky', 'precip', 'iDepth' , 'nid' );
 
 
-	while($row = mysqli_fetch_array($result)) {
+	 while ( $row = $result->fetch() ) {
 	
 			$doc = new DOMDocument();
 			//var_dump($doc);
