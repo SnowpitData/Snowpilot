@@ -847,7 +847,19 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			             'lock_save_warning' => t('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?')
 			             /*  */) )
 								 ), 'setting');
-		
+		  
+		 $tree = taxonomy_get_tree(taxonomy_vocabulary_machine_name_load('geographical_location')->vid);
+
+		 foreach ( $tree as $term ){
+
+		   $term_details = taxonomy_term_load($term->tid);
+		   $tid = "range_".$term->tid;
+		   //dsm($term);
+			 if ( isset($term_details->field_lat_center['und'][0]['value']) ){
+				 $zoom = $term_details->field_zoom_level['und'][0]['value'] + 1;
+		       drupal_add_js ( array( 'snowpilot'=> array('mapranges'=> array ("$tid" => array ( 'latitude' => $term_details->field_lat_center['und'][0]['value'] ,'longitude' => $term_details->field_lng_center['und'][0]['value'], 'zoom' => $zoom ) ) )  ), 'setting'   );
+		     }
+		 }
 			
 			
 			///////////////////////////////////////
