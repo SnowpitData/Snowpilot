@@ -1112,12 +1112,10 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 		
 			// Temperature Profile:
 			// If we have temp profile readings,then we'll make the tick marks
-			
 			if ( isset($node->field_temp_collection['und'])){
 				$ids = array();
 				foreach ($node->field_temp_collection['und'] as $temp ){ $ids[] = $temp['value']; }
 				$all_temps = field_collection_item_load_multiple($ids);
-
 				uasort($all_temps, 'depth_val');
 				$min_temp = ($snowpit_unit_prefs['field_temp_units'] == 'F') ? 22 : -8 ;
 				$min_temp = _temp_profile_find_min_temp($all_temps, $min_temp) - 2 ;
@@ -1145,8 +1143,9 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 				// draw points, and line, different $cx calculations for F or C
 				$prev_x=0; $prev_y = 0; 
 				foreach($all_temps as $x=> $temp){
-					$cx =  ($snowpit_unit_prefs['field_temp_units'] == 'C') ?  447 + $pixels_per_degree * ($temp->field_temp_temp['und'][0]['value']) :
-					447 - $pixels_per_degree * (32 - $temp->field_temp_temp['und'][0]['value']);
+					$temp_numerical = floatval($temp->field_temp_temp['und'][0]['value']);
+					$cx =  ($snowpit_unit_prefs['field_temp_units'] == 'C') ?  447 + $pixels_per_degree * ($temp_numerical) :
+					447 - $pixels_per_degree * (32 - $temp_numerical);
 					if( $cx >= 14 && $cx <= 447 ){
 						// draw point
 						imagefilledellipse($img, $cx, snowpit_graph_pixel_depth($temp->field_depth['und'][0]['value'], $pit_depth, $snowpit_unit_prefs['field_depth_0_from'] , $global_max, $pit_min), 6, 6, $red_layer );

@@ -5,21 +5,23 @@
 	var zoom = Drupal.settings.snowpilot.marker.zoom;
 	var existing = Drupal.settings.snowpilot.marker.existing;
 	
-	var snowpilotmap = L.map('snowpilot-map').setView([latitude, longitude], zoom);
-	    snowpilotmap.invalidateSize();
-	var BaseMap = L.tileLayer(basemap, {
+	var snowpilotmap = L.map('snowpilot-map');
+	var BaseMap = L.tileLayer( basemap , {
 	    attribution: attribution ,
 	    maxZoom: 18
 	});
+  
 
 	
    // Add baselayers and overlays to groups
    var baseLayers = {
        "Mapbox" : BaseMap,
    };
+   snowpilotmap.setView([latitude, longitude], zoom);
 
    BaseMap.addTo(snowpilotmap);
-
+   snowpilotmap.invalidateSize();
+	 
 	var marker = L.marker([latitude, longitude], {draggable:'true'} );
 	  if ( existing == 'true'){
 		  marker.addTo(snowpilotmap);
@@ -40,7 +42,7 @@ function updatePosition(lat, lng ){
 
 	marker.setLatLng([lat,lng]);
 	snowpilotmap.panTo([lat,lng]);
-
+  checkLatLongSigns(lat, lng);
 	fetch_elevation(lat, lng);
 }
 
@@ -65,7 +67,11 @@ function updatePositionlatlong(){
 		marker.addTo(snowpilotmap);
 	  snowpilotmap.panTo([lat,lng]);
 		fetch_elevation(lat, lng);
+		
 	}
+	
+	
+
 }
 
 setTimeout(function () {
@@ -143,7 +149,7 @@ function updatePositionUtm(){
 		console.log('updatepositionUTM: '+ lat_long_string + ' decimal: '+ lat_pos_decimal + '  ' + long_pos_decimal);
 		lat.value = lat_pos_decimal;
 		lon.value = long_pos_decimal;
-		updatePosition(lat_pos_decimal,long_pos_decimal );
+		updatePosition(lat_pos_decimal,long_pos_decimal );		
 	
 	}
 }
@@ -187,6 +193,27 @@ function updatePositionMgrs(){
 }
 
 function panMapFromRange(){
+	
+	var coords = fetchSelectedRange();
+	
+	if ( coords ){
+	  snowpilotmap.setView([coords.latitude,coords.longitude], coords.zoom);
+  }
+}
+
+function checkLatLongSigns(lat, long){
+	var coords = fetchSelectedRange();
+	if ( !(coords.latitude-10 < lat) || !(coords.latitude+10 > lat) ){	
+		alert ( Drupal.settings.snowpilot.translatable.lat_mismatch1 + coords.name +Drupal.settings.snowpilot.translatable.lat_mismatch2 + coords.latitude +Drupal.settings.snowpilot.translatable.lat_mismatch3+lat + Drupal.settings.snowpilot.translatable.lat_mismatch4);
+	}
+	if ( !(coords.longitude-10 < long) || !(coords.longitude+10 > long) ){	
+		alert ( Drupal.settings.snowpilot.translatable.long_mismatch1 + coords.name + Drupal.settings.snowpilot.translatable.long_mismatch2 + coords.longitude + Drupal.settings.snowpilot.translatable.long_mismatch3+long + Drupal.settings.snowpilot.translatable.long_mismatch4);
+	}
+  //snowpilotmap.invalidateSize();
+	
+}
+
+function fetchSelectedRange(){
 	var elems = document.getElementsByTagName("select");
 	var matches = [];
 	for (var i=0, m=elems.length; i<m; i++) {
@@ -194,13 +221,20 @@ function panMapFromRange(){
 	        matches.push(elems[i]);
 	    }
 	}
-	var tid = matches[0].value;
-	var coords = Drupal.settings.snowpilot.mapranges['range_'+tid];
-	if ( coords ){
-	  console.log(Drupal.settings.snowpilot.mapranges['range_'+tid]);
-	  snowpilotmap.panTo([coords.latitude,coords.longitude]);
-	  snowpilotmap.setZoom(coords.zoom);
-  }
+  //if (matches.length > 1){
+	  var tid = matches[0].value;
+/*  }else{
+		matches2 = [];
+		for (var i=0, m=elems.length; i<m; i++) {
+		    if (elems[i].id && elems[i].id.indexOf("edit-field-loaction-und-hierarchical-select-selects-0") != -1) {
+		        matches2.push(elems[i]);
+		    }
+		}
+		if (matches2.length > 0){
+		  var tid = matches2[0].value;
+		}
+  }*/
+	return Drupal.settings.snowpilot.mapranges['range_'+tid];
 }
 
 

@@ -844,8 +844,16 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			// */
 		  drupal_add_js(array('snowpilot' => array("translatable" => 
 						array( 'lgc_warning' => t("Reminder: You have not yet selected a layer of greatest concern"), 
-			             'lock_save_warning' => t('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?')
-			             /*  */) )
+			             'lock_save_warning' => t('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?'),
+			             'lat_mismatch1' => t('Latitude mismatch: your selected range/region: '),
+								   'lat_mismatch2' => t(' has a latitude of: '),
+									 'lat_mismatch3' => t(' Your selected latitude is: '),
+									 'lat_mismatch4' => t(', which is a long distance away. Check that the sign is correct: S. Heimsphere uses (-) , N. Hemisphere uses positive, or none (+)'),
+			             'long_mismatch1' => t('Longitude mismatch: your selected range/region: '),
+								   'long_mismatch2' => t(' has a longitude of: '),
+									 'long_mismatch3' => t(' Your selected longitude is: '),
+									 'long_mismatch4' => t(', which is a long distance away. Check that the sign is correct: Western Heimsphere uses negative (-) , Eastern Hemisphere uses positive, or none (+)'),
+								 ) )
 								 ), 'setting');
 		  
 		 $tree = taxonomy_get_tree(taxonomy_vocabulary_machine_name_load('geographical_location')->vid);
@@ -854,10 +862,10 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 
 		   $term_details = taxonomy_term_load($term->tid);
 		   $tid = "range_".$term->tid;
-		   //dsm($term);
+		   //dsm($term_details);
 			 if ( isset($term_details->field_lat_center['und'][0]['value']) ){
 				 $zoom = $term_details->field_zoom_level['und'][0]['value'] + 1;
-		       drupal_add_js ( array( 'snowpilot'=> array('mapranges'=> array ("$tid" => array ( 'latitude' => $term_details->field_lat_center['und'][0]['value'] ,'longitude' => $term_details->field_lng_center['und'][0]['value'], 'zoom' => $zoom ) ) )  ), 'setting'   );
+		       drupal_add_js ( array( 'snowpilot'=> array('mapranges'=> array ("$tid" => array ( 'latitude' => $term_details->field_lat_center['und'][0]['value'] ,'longitude' => $term_details->field_lng_center['und'][0]['value'], 'zoom' => $zoom , 'name' =>$term_details->name ) ) )  ), 'setting'   );
 		     }
 		 }
 			
@@ -1836,7 +1844,7 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	if ( substr($form_state['values']['field_date_time']['und'][0]['value'], -8, 8) == '00:00:00' ){
 		form_set_error('field_date_time', t('Please enter a valid time for when the snowpit was dug.'));
 	}
-	if ( strtotime($form_state['values']['field_date_time']['und'][0]['value']) > time() ){
+	if ( strtotime($form_state['values']['field_date_time']['und'][0]['value']) > time() + 60*60*24){
 		form_set_error('field_date_time', t('Please enter a valid date for when the snowpit was dug. Future date was entered.'));
 	}
 	//dsm( taxonomy_get_children($form_state['values']['field_loaction']['und'][0]['tid']) );

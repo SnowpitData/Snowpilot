@@ -361,11 +361,6 @@
       self.setLayerOutline();
       
       // SnowPilot form updates:
-      // Use multiple hardnesses checkbox
-      if(!($('div.layer_num_' + i + ' input[id*="-use-multiple-hardnesses-"]').checked)){
-        $('div.layer_num_' + i + ' input[id*="-use-multiple-hardnesses-"]').attr("checked",true);
-        $('div.layer_num_' + i + ' select[id*="-hardness2-"]').parent().parent().show();
-      }
       $('div.layer_num_' + i + ' select[id*="-hardness2-"]').val(featObj.hardness2());
 
       // Lay out the features

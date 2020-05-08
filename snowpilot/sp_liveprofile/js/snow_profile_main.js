@@ -47,7 +47,8 @@
       // Set up hardness values for first layer 
       SnowProfile.snowLayers[0].handleTouchState(true, false);
       SnowProfile.snowLayers[0].features().hardness($("[id^=edit-field-layer-und-0-field-hardness-und]").val());
-      if ($("[id^=edit-field-layer-und-0-field-use-multiple-hardnesses-und]").is(":checked")) {
+			
+      if ($("[id^=edit-field-layer-und-0-field-hardness2-und]").val() != '_none' ) {
           SnowProfile.snowLayers[0].slopeHandleTouchState(true);
           SnowProfile.snowLayers[0].features().hardness2($("[id^=edit-field-layer-und-0-field-hardness2-und]").val());
         }
@@ -64,10 +65,13 @@
         SnowProfile.snowLayers[i].handleTouchState(true, false);
         // Set up hardness values
         SnowProfile.snowLayers[i].features().hardness($("[id^=edit-field-layer-und-" + i + "-field-hardness-und]").val());
-        if ($("[id^=edit-field-layer-und-" + i + "-field-use-multiple-hardnesses-und]").is(":checked")) {
+        if ($("[id^=edit-field-layer-und-" + i + "-field-hardness2-und]").val() != '_none' ) {
           SnowProfile.snowLayers[i].slopeHandleTouchState(true);
           SnowProfile.snowLayers[i].features().hardness2($("[id^=edit-field-layer-und-" + i + "-field-hardness2-und]").val());
         }
+        if ($("[id^=edit-field-layer-und-" + i + "-field-hardness2-und]").val() == '_none' ) {
+          SnowProfile.snowLayers[i].slopeHandleTouchState(false);
+				}
         // Draw Layer
         SnowProfile.snowLayers[i].draw();
         SnowProfile.snowLayers[i-1].draw();

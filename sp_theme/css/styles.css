@@ -1153,6 +1153,12 @@ fieldset.group-stability .fieldset_wrapper{
 	background-color: #fff;
 	width: 630px;
 	height: 370px;
+
+}
+
+.map-text{
+	font-size: 3em;
+	padding: 2em;
 	
 }
 
