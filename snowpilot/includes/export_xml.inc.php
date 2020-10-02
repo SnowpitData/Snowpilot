@@ -6,7 +6,8 @@
 //  $regenerate_pit will rebuild the xml pit from drupal data even if it already exists
 */
 function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_pit = FALSE ){
-	$xml_filename = '/sites/default/files/snowpit-xml/node-'.$node->nid.'.xml';
+	$thousands = !empty(substr($node->nid, 0, -3 )) ? substr($node->nid, 0, -3 ) : '0' ;
+	$xml_filename = '/sites/default/files/snowpit-xml/'. $thousands .'/node-'.$node->nid.'.xml';
 	if ( !file_exists(DRUPAL_ROOT. $xml_filename) || $regenerate_pit ){
 		watchdog('snowpilot', "Snowpit $node->nid xml does not exist or will be regenerated.");
 		$snowpilot_xmldoc = new DOMDocument('1.0', 'UTF-8');
@@ -500,6 +501,33 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 			//
 			$counter++;
 		}
+		
+		$ids = array();
+		if ( isset( $node->field_blade_hardness['und'] ) ){
+		  foreach ($node->field_blade_hardness['und'] as $bhg_meas ){ $ids[] = $bhg_meas['value']; }
+		  $bhg_vals = field_collection_item_load_multiple($ids);
+	  }
+		if ( count($bhg_vals) ){
+			foreach ( $bhg_vals as $bhg_item ){
+				$snowpilot_BHGTest = $snowpilot_xmldoc->createElement("Blade_Hardness_Result");
+				/// BHG VALUE, in Newtons
+				$bhg_code = $snowpilot_xmldoc->createAttribute('bhg_value');
+				$bhg_code->value = $bhg_item->field_bhg_newtons['und'][0]['value'];
+				$snowpilot_BHGTest->appendChild($bhg_code);
+				/// Depth
+				$bhg_depth = $snowpilot_xmldoc->createAttribute('bhg_depth');
+				$bhg_depth->value = $bhg_item->field_depth['und'][0]['value'];
+				$snowpilot_BHGTest->appendChild($bhg_depth);
+				// Units, 
+				$bhg_units = $snowpilot_xmldoc->createAttribute('depthUnits');
+				$bhg_units->value = $unit_prefs['field_depth_units'];
+				$snowpilot_BHGTest->appendChild($bhg_units);
+				$snowpilot_PitCore->appendChild($snowpilot_BHGTest);
+				
+			}
+			
+		}
+		
 		$ids = array();
 		if ( isset( $node->field_test['und'] ) ){
 		  foreach ($node->field_test['und'] as $test ){ $ids[] = $test['value']; }
@@ -662,11 +690,17 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 		//
 		//  Only save the file to the public filesystem if it is a public pit
 		//
-	  if ( $node->field_snowpit_visibility['und'][0]['value'] == 'public' ){	
-		  $xml_filehandle = fopen(DRUPAL_ROOT.$xml_filename, 'w');
-		  $value = fwrite($xml_filehandle, $final_xml );
-		  fclose($xml_filehandle);
-		  watchdog('snowpilot', "Snowpit $node->nid fwrite results: ". $value);
+	  if ( $node->field_snowpit_visibility['und'][0]['value'] == 'public' ){				
+			$variable_dir = 'public://snowpit-xml/'.$thousands ;
+			if (file_prepare_directory( $variable_dir, FILE_CREATE_DIRECTORY )){
+			  $xml_filehandle = fopen(DRUPAL_ROOT.$xml_filename, 'w');
+			  $value = fwrite($xml_filehandle, $final_xml );
+			  fclose($xml_filehandle);
+			
+		    watchdog('snowpilot', "Snowpit $node->nid xml fwrite results: ". $value);
+			}else{
+				watchdog('snowpilot', "xml directory $variable_dir could not be created");
+			}
 	  }
 		return $final_xml;
 	}else{		

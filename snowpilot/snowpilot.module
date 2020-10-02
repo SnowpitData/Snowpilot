@@ -195,6 +195,23 @@ function snowpilot_organizations($tid ){
 	return $result;
 }
 
+function snowpilot_taxonomy_term_insert(&$term){
+	
+	$params = array();
+	$language = 'en';
+  dsm($term);
+	if ( $term->vid == 5){
+		global $user;
+		dsm($user);
+		$params['term'] = $term;
+		$params['user'] = $user;
+	  if (drupal_mail('snowpilot', 'new_group', 'jimurl@montanaice.com,dchabot@neomailbox.net', $language, $params)) {
+			watchdog('snowpilot', "Email sent, New SnowPilot group created: ". $term->name);
+	  }
+	}
+	
+}
+
 function snowpilot_add_affiliation_form($form, &$form_state){
 	global $user;
 	$org_admin_user = entity_metadata_wrapper('user', $user);
@@ -311,10 +328,29 @@ function snowpilot_remove_affiliation_form_submit($form, &$form_state){
 }
 
 function snowpilot_mail( $key, &$message, $params){
-	$org_admin_user = $params['org_admin_user'];
-	$user_wrapper = $params['user_wrapper'];
+	
 	switch ($key){
+		case 'new_region':
+	    if (isset($params['subject'])) {
+	      $message['subject'] = $params['subject'];
+	    } else {
+	    	$message['subject'] = 'New Region Added: '.$term->name;
+			}
+			$message['body'][] = 'New Region Added, check it out at https://snowpilot.org/taxonomy/term/'.$term->tid. " by the user: <a href = 'https://snowpilot.org/organization-users/all?uid=".$the_user->name. "'> ".$the_user->name."</a>";
+		break;
+		case 'new_group':
+		  $term = $params['term'];
+			$the_user = $params['user'];
+	    if (isset($params['subject'])) {
+	      $message['subject'] = $params['subject'];
+	    } else {
+	    	$message['subject'] = 'New Group Added: '.$term->name;
+			}
+			$message['body'][] = 'New Group Added, check it out at https://snowpilot.org/taxonomy/term/'.$term->tid. " by the user: <a href = 'https://snowpilot.org/organization-users/all?uid=".$the_user->name. "'> ".$the_user->name."</a>";
+		break;
 		case 'confirm':
+		  $org_admin_user = $params['org_admin_user'];
+		  $user_wrapper = $params['user_wrapper'];
 	    if (isset($params['subject'])) {
 	      $message['subject'] = $params['subject'];
 	    } else {
@@ -1965,7 +2001,7 @@ function snowpilot_snowpit_set_stability_test_titles(&$form, $snowpit_unit_prefs
 		if (isset($form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0]) && $form['field_test']['und'][$x]['field_stability_test_type']['und']['#default_value'][0] <> ''){ 
 			$form_test_shorthand = stability_test_score_shorthand_form($form['field_test']['und'][$x]);
 			
-			$depth_final = $form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value']+0 ; 
+			$depth_final = intval($form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'])+0 ; 
 			$depth_val =( $form['field_test']['und'][$x]['field_depth']['und'][0]['value']['#default_value'] <> '') ? 
 				"Depth: ". $depth_final . " ". $snowpit_unit_prefs['field_depth_units'] :	'';
 			
@@ -2282,10 +2318,13 @@ function snowpilot_field_widget_form_alter(&$element, &$form_state, $context) {
   }
 	if ($context['field']['type']  == 'datetime' ){
 		//dsm($form_state['build_info']['args']);
-		$location = $form_state['build_info']['args'][0]->field_loaction ;
+		
 		//dsm($location['und'][0]['tid']);
-		if ( isset( $location['und'][0]['tid'] ) ){
-      $form_state['field']['field_date_time']['und']['instance']['widget']['settings']['input_format'] = snowpilot_date_output_format($location['und'][0]['tid']);
+		if ( !empty($form_state['build_info']['args'][0]->field_loaction)  ){
+			$location = $form_state['build_info']['args'][0]->field_loaction;
+			if ( isset( $location['und'][0]['tid'] )){
+        $form_state['field']['field_date_time']['und']['instance']['widget']['settings']['input_format'] = snowpilot_date_output_format($location['und'][0]['tid']);
+		  }
 		}else{
 			$account = user_load( $form_state['build_info']['args'][0]->uid );
 			$snowpilot_user_prefs = snowpilot_unit_prefs_get($account);

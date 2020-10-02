@@ -5,6 +5,8 @@
 	var zoom = Drupal.settings.snowpilot.marker.zoom;
 	var existing = Drupal.settings.snowpilot.marker.existing;
 	
+
+	
 	var snowpilotmap = L.map('snowpilot-map');
 	var BaseMap = L.tileLayer( basemap , {
 	    attribution: attribution ,
@@ -20,21 +22,31 @@
    snowpilotmap.setView([latitude, longitude], zoom);
 
    BaseMap.addTo(snowpilotmap);
-   snowpilotmap.invalidateSize();
 	 
 	var marker = L.marker([latitude, longitude], {draggable:'true'} );
-	  if ( existing == 'true'){
-		  marker.addTo(snowpilotmap);
-	  }
-		 marker.on('dragend', function (e) {
-		   getCoords(marker.getLatLng().lat, marker.getLatLng().lng);
-		 });
-		 snowpilotmap.on('click', function (e) {
-		   marker.addTo(snowpilotmap);
-		   marker.setLatLng(e.latlng);
-		   getCoords(marker.getLatLng().lat, marker.getLatLng().lng);
-		 });
-		 
+  if ( existing == 'true'){
+	  marker.addTo(snowpilotmap);
+  }
+	marker.on('dragend', function (e) {
+	  getCoords(marker.getLatLng().lat, marker.getLatLng().lng);
+	});
+  snowpilotmap.on('click', function (e) {
+     marker.addTo(snowpilotmap);
+     marker.setLatLng(e.latlng);
+     getCoords(marker.getLatLng().lat, marker.getLatLng().lng);
+  });
+	//document.getElementById('snowpilot-map').setAttribute("style","width:637px;");
+	//document.getElementById('snowpilot-map').style.width='637px';
+	
+	//document.getElementById('snowpilot-map').setAttribute("style","height:370px;");
+	//document.getElementById('snowpilot-map').style.height='370px';
+  snowpilotmap.on('load', invalidateMap);
+
+function invalidateMap() {
+	setTimeout(function () {
+	  snowpilotmap.invalidateSize();
+	}, 500);
+};	 
 
 function updatePosition(lat, lng ){	
 

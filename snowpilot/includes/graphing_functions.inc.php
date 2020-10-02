@@ -115,33 +115,31 @@ function snowpilot_collision_check_down($layerx, $layery){
 
 function cg_max($cg){
 	$max = NULL;
-	$min = NULL;
+	//$min = NULL;
 	foreach ($cg as $key => $test){
-		if ( !empty ( $test->y_val )){
-		  $min = $test->y_val > $min ? $test->y_val : $min;
+		if ( !empty ( $test->y_position )){
+		  $max = $test->y_position > $max ? $test->y_position : $max;
 	  }
 	}
-	$max = count($cg)*20 +$min;
-	
 	return $max;
-	
 } 
 
 
 function st_collision_check_down($test_x, $test_y, &$cg = array(), $measure_from = 'bottom'){
+
 	if (  isset ( $test_x->collision_flag) && $test_x->collision_flag == TRUE && $test_y->y_position <= cg_max($cg) ){
 		$test_y->collision_flag = TRUE;
-		$cg[] = $test_x;
+		$cg[] = $test_y;
 		return TRUE;
 			
 	}elseif ( ($test_x->y_position+20 >= $test_y->y_position))  { // better
 		$test_y->collision_flag = TRUE;
 		$test_x->collision_flag = TRUE;
-		$cg[] = $test_x; $cg[] = $test_y;
+		if ( !in_array( $test_x , $cg)){$cg[] = $test_x; } 
+		if ( !in_array( $test_y , $cg)){$cg[] = $test_y; } 
 		return TRUE;
 	}
 	return FALSE;
-	
 }
 //
 // _strip_dupe_tests - this function strips out the 
@@ -369,7 +367,7 @@ function snowpilot_draw_layer_polygon(&$img, $layer, $color, $filled = TRUE, $ha
 			$pink_problem = imagecolorallocate($img,254, 240, 240);
 			$dark_pink = imagecolorallocate($img, 142, 47, 11); //#8c2e0b , the border for warning messages
 			$black = imagecolorallocate($img,0,0,0);
-			$value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
+			$value_font = DRUPAL_ROOT.'/sites/all/libraries/fonts/Arial Bold.ttf';
 			
 			$points = array(15, $layer->y_val_top,  447 , $layer->y_val_top, 447, $layer->y_val, 15, $layer->y_val);
 			imagefilledpolygon($img, $points, 4, $pink_problem) ;
@@ -556,32 +554,43 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 			} // end of "yes, this could be a repeated test" processing
 		}	// end of looping through test-comparision
 	 		
-	} // end of looping through test results in general
-	// now we begin to set the y_position
-	
-	$st_cg = array();
+	} // end of pre-looping through test results- remove dumplicates and multiples.
   $simple_test_results = _strip_dupe_tests($test_results);
-	$no_result_iter = 0;
+	
+	// now we begin to set the y_position
+	$st_cg = array();
 	// loop through it again to set the y_position to correct height
 	foreach ( $simple_test_results as $x => $test){		
-	  if ( ($measure_from == 'top' && $test->field_depth['und'][0]['value'] <> $pit_depth) ||
-		     ($measure_from == 'bottom' && $test->field_depth['und'][0]['value'] <> $pit_min) )
-	  { 
-  	  if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
-  		  $test->collision_flag = TRUE;	
-		    $test->y_position = $simple_test_results[$x - 1]->y_position +20 ;
-		  }else{
-        if ( count ($st_cg)){
-  	      $st_cg = array();
-				}else{ // this is a singluar item, write straight across
-	        $test->y_position = snowpit_graph_pixel_depth( $test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min ) ;
-        }
-			}
-		}else{ 
-		  $test->y_position =  snowpit_graph_pixel_depth( $test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min ) - 17 * $no_result_iter-8;
-		  $no_result_iter++;
-		}
+
+	  if($x <> 0 && st_collision_check_down($simple_test_results[$x - 1], $test, $st_cg )  ){ 
+		  $test->collision_flag = TRUE;	
+	    $test->y_position = $simple_test_results[$x - 1]->y_position +20 ;
+	  }else{
+      if ( count ($st_cg)){
+	      $st_cg = array();
+			}else{ // this is a singluar item, write straight across
+        $test->y_position = snowpit_graph_pixel_depth( $test->field_depth['und'][0]['value'], $pit_depth, $measure_from,$global_max, $pit_min ) ;
+      }
+		}		
+		$last_test_pos = $test->y_position;
 	}
+	// IF our final no-results and close-to-ground results etc are pushed below the bottom of the graph, we need to move the last CG up.
+	// Note that TODO: this does not cover the case where the CG is pushed up into a previous CG, overlapping is possible, but would be rare.
+	
+	//dsm($last_test_pos);
+	if ( $last_test_pos > 750){
+		$slide_up_val = intval ($last_test_pos) - 742;
+		if ( count ($st_cg) ){ // collision group slide up
+			foreach ( $st_cg as $cg_test_result ) { 
+				if ( !empty($cg_test_result->y_position)){
+			    $cg_test_result->y_position = $cg_test_result->y_position - $slide_up_val;
+				}
+			}		  
+		}else{  // single test item, slide up
+			$test->y_position = $test->y_position - $slide_up_val;
+			
+		}
+  }
 	$test_results = $simple_test_results;
 	return $simple_test_results;
 }
@@ -678,13 +687,14 @@ $purple_layer = imagecolorallocate($img, 154, 153, 213);
 $red_layer = imagecolorallocate($img, 178, 36, 35);
 $blue_outline = imagecolorallocate($img, 15, 8, 166);
 $pink_problem = imagecolorallocate($img,254, 240, 240);
+$dkgray = imagecolorallocate($img, 115,115,115);
 
 // Set background color to white
 imagefill($img, 0, 0, $white);
 
-$label_font = '/sites/all/libraries/fonts/Arial.ttf';
-$value_font = '/sites/all/libraries/fonts/Arial Bold.ttf';
-$snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
+$label_font = DRUPAL_ROOT.'/sites/all/libraries/fonts/Arial.ttf';
+$value_font = DRUPAL_ROOT.'/sites/all/libraries/fonts/Arial Bold.ttf';
+$snowsymbols_font = DRUPAL_ROOT.'/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 
 
 // Label Y axis and draw horizontal lines
@@ -859,15 +869,42 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 							
 							$arrowline = arrowline_imageline($img, $stab_test_start, $original_depth ,  $test->y_position);
 							$factor = $test->y_position - $original_depth;
-							imageline($img, $arrowline['xstart']+1, $arrowline['ystart'] , $stab_test_start+17, $test->y_position, $black); //angled arrow to stability test 
+														
+							$hypotenuse =sqrt( 17*17 + ( $original_depth - $test->y_position)*( $original_depth - $test->y_position) );
+							$theta =      asin( 17 / $hypotenuse )  ;
+							
+							//dsm( $hypotenuse . " and ". $theta * 180 / 3.1415 . " and :".(sin( $theta  ))) ; //* abs( $test->y_position - $line_yval_start ) );
+							$hype2 = $hypotenuse * sqrt(sin( $theta  )) ;
+							
+							$final_xval = ( sin( $theta    ) * $hype2  );
+							$final_yval = cos($theta )* $hype2 ;
+							//dsm( $final_xval. " ".$final_yval. " ". $hype2 );
+							
+							//main arrow line
+							$sign = ($original_depth - $test->y_position >0) ? 1 : -1;
+							imageline($img,  724 - $final_xval, $test->y_position + $sign * $final_yval , $stab_test_start+17, $test->y_position, $black); //angled line to stability test 
+							// arrowtip #1 ...
+							
+							$radius = 8 ;
+							$zeta = 20 * (3.1415 /180)  ;
+							$xoffb1 = sin( $theta - $zeta ) * $radius ; 
+							$yoffb1 = cos( $theta - $zeta ) * $radius ;
+							//imageline(  $img,  724 - $final_xval, $test->y_position + $final_yval, 724 - $final_xval + $xoffb1, $test->y_position + $final_yval -$yoffb1, $black  );
+							$xoffshaft =  sin( $theta  ) * 6 ; 
+							$yoffshaft =  cos( $theta  ) * 6 ; 
+							
+							// arrowtip # 2  :
+							$xoffb2 = sin( $theta + $zeta ) * $radius ; 
+							$yoffb2 = cos( $theta + $zeta ) * $radius ;
+							//imageline(  $img,  724 - $final_xval, $test->y_position + $final_yval, 724 - $final_xval + $xoffb2, $test->y_position + $final_yval -$yoffb2, $black  );
+							
+							imagefilledpolygon( $img,  array(
+								724 - $final_xval, $test->y_position + $sign * $final_yval,
+							  724 - $final_xval + $xoffb1, $test->y_position + $sign * ($final_yval -$yoffb1),
+								724 - $final_xval + $xoffshaft, $test->y_position + $sign * ($final_yval - $yoffshaft),
+					    	724 - $final_xval + $xoffb2, $test->y_position + $sign * ($final_yval -$yoffb2),
+							 ), 4, $dkgray   );
 		
-							//dsm(cos( (atan($factor/16) ) )); 
-							$offset = atan( $factor/ 16) < 0 ? 0 : atan( $factor/ 16) ;
-							imagettftext_cr($img, 6, 0 -$arrowline['tilt'], $arrowline['xstart']  -2.5* (1- cos( (atan($factor/16) )) )  + $offset+2, $arrowline['ystart'], $black, $value_font, '&#x25c4;');
-							
-							
-							//imagettftext($img, 7, 0-$arrowline['tilt'], $arrowline['xstart'] - abs(( sin (atan($factor/16) )) * ( sin (atan($factor/16) )) *( sin (atan($factor/16) ))) * 3 , $arrowline['ystart']- ((sin(atan($factor/16) )) * sin(atan($factor/16) ) * sin(atan($factor/16) )      )*6 +4 ,$black, $value_font, '&#x25c4;');  // the little arrow that points to where the test result is at
-	
 							$test_pos = imagettftext($img, 8, 0, $stab_test_start + 19, $test->y_position+5,$black, $label_font, stability_test_score_shorthand($test, $snowpit_unit_prefs) );
 							if ( count($test->field_stability_comments) ){
 								imagettftext($img, 9, 0, $test_pos[2] +5 , $test->y_position+5 , $black, $value_font,$test->field_stability_comments['und'][0]['value']) ;
@@ -1179,26 +1216,26 @@ $snowsymbols_font ='/sites/all/libraries/fonts/SnowSymbolsIACS.ttf';
 			}
 			$y_val_final = round(snowpit_graph_pixel_depth($pit_depth, $pit_depth, $snowpit_unit_prefs['field_depth_0_from'], $global_max, $pit_min));
 			// final HoS at top or bottom
-			if ( $shrunken_pit && $snowpit_unit_prefs['field_depth_0_from'] == 'top'){
-			  imagettftext($img, 10, 0, 456,  756 , $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
-			  imageline($img, 440, 751, 447, 751, $black);
-				imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_depth, 1) );
-			  imagettftext($img, 10, 0, 456,  162 , $black, $label_font, '0' );
-			}elseif ( $shrunken_pit ){
-			  imagettftext($img, 10, 0, 456,  $y_val_final+5 , $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
-			  imageline($img, 440, $y_val_final , 447, $y_val_final, $black);
-				imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_min, 1) );
-				// Also need a '0' at the bottom of the pit since we never looped all the way down there
-			  imagettftext($img, 10, 0, 456,  751+5 , $black, $label_font, '0' );
-			  imageline($img, 440, 751, 447, 751, $black);
+				if ( $shrunken_pit && $snowpit_unit_prefs['field_depth_0_from'] == 'top'){
+				  imagettftext($img, 10, 0, 456,  756 , $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
+				  imageline($img, 440, 751, 447, 751, $black);
+					imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_depth, 1) );
+				  imagettftext($img, 10, 0, 456,  162 , $black, $label_font, '0' );
+				}elseif ( $shrunken_pit ){
+				  imagettftext($img, 10, 0, 456,  $y_val_final+5 , $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
+				  imageline($img, 440, $y_val_final , 447, $y_val_final, $black);
+					imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_min, 1) );
+					// Also need a '0' at the bottom of the pit since we never looped all the way down there
+				  imagettftext($img, 10, 0, 456,  751+5 , $black, $label_font, '0' );
+				  imageline($img, 440, 751, 447, 751, $black);
 				
-			}else{
-			  imagettftext($img, 10, 0, 456, $y_val_final+5, $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
-			  imageline($img, 440, $y_val_final, 447, $y_val_final, $black);
-				$zero_pixel_val = $snowpit_unit_prefs['field_depth_0_from'] == 'top' ? 162 : 756 ;
-			  imagettftext($img, 10, 0, 456, $zero_pixel_val, $black, $label_font, '0' );
+				}else{
+				  imagettftext($img, 10, 0, 456, $y_val_final+5, $black, $label_font, $pit_depth );
+				  imageline($img, 440, $y_val_final, 447, $y_val_final, $black);
+					$zero_pixel_val = $snowpit_unit_prefs['field_depth_0_from'] == 'top' ? 162 : 756 ;
+				  imagettftext($img, 10, 0, 456, $zero_pixel_val, $black, $label_font, '0' );
 				
- 			}
+	 			}
 			
 		
 			// Now we make the 5cm tick marks
@@ -1325,7 +1362,7 @@ function snowpilot_snowpit_crop_layers_write($img,$nid){
 	if ( file_prepare_directory( $variable_dir, FILE_CREATE_DIRECTORY ) ){
 	  imagepng($new_img, DRUPAL_ROOT.'/sites/default/files/snowpit-profiles/' . $thousands. '/layers/layers-'.$nid. '.png');	
   }else {
-		drupal_set_message ( "A directory '/sites/default/files/snowpit-profiles/$thousands/layers' could not be created. Please contact the administrator.", WARNING);
+		drupal_set_message ( "A directory '/sites/default/files/snowpit-profiles/$thousands/layers' could not be created. Please contact the administrator.", 'warning');
 	}
 	return;
 }
@@ -1337,7 +1374,7 @@ function snowpilot_imagepdf($fileroot){
 	$variable_dir = 'public://snowpit-profiles/'.$thousands . '/pdf';
 	if ( !file_exists($fileroot.'.png')
 	     || !file_prepare_directory( $variable_dir , FILE_CREATE_DIRECTORY )        ){ 
-		drupal_set_message ( "A directory '/sites/default/files/snowpit-profiles/$thousands/pdf' could not be created, or a source file did not exist. Please contact the administrator.");
+		drupal_set_message ( "A directory '/sites/default/files/snowpit-profiles/$thousands/pdf' could not be created, or a source file did not exist. Please contact the administrator.", 'warning');
 		return;
 	}
 	include_once(DRUPAL_ROOT.'/sites/all/libraries/fpdf181/fpdf.php');

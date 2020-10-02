@@ -218,7 +218,7 @@ function snowpilot_user_unit_prefs_check($uid,$redirect_to_user_edit = TRUE){
 	);
 	 $missing_keys = array();
 	foreach($drupal_keys_required as $key){
-		if (isset( $account->$key) && is_array($account->$key) &&count($account->$key ) == 0 ){
+		if (isset( $account->$key) && is_array($account->$key) && count($account->$key ) == 0 ){
 			$field = field_info_field($key);
 			$field_instance = field_info_instance('node', $key, 'snowpit_profile');
 			$missing_keys[] = $field_instance['label'];	
