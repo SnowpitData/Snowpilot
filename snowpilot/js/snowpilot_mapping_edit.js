@@ -54,7 +54,8 @@ function updatePosition(lat, lng ){
 
 	marker.setLatLng([lat,lng]);
 	snowpilotmap.panTo([lat,lng]);
-  checkLatLongSigns(lat, lng);
+  
+	checkLatLongSigns(lat, lng);
 	fetch_elevation(lat, lng);
 }
 
@@ -79,11 +80,10 @@ function updatePositionlatlong(){
 		marker.addTo(snowpilotmap);
 	  snowpilotmap.panTo([lat,lng]);
 		fetch_elevation(lat, lng);
+		checkLatLongSigns(lat, lng);
 		
 	}
-	
-	
-
+  console.log ( lat + ' '+ lng );
 }
 
 setTimeout(function () {
@@ -116,14 +116,12 @@ function getCoords(lat, lng) {
 	var mgrs_easting = document.getElementById('edit-field-mgrs-easting-und-0-value');
 	var mgrs_northing = document.getElementById('edit-field-mgrs-northing-und-0-value');
 	var zone_id = document.getElementById('edit-field-utm-zone-und');
-	console.log(mgrs_pos['zone']);
 	
 	mgrs_pos_grid_id = mgrs_pos['e100k']+mgrs_pos['n100k'];
 	var zone = '0' + mgrs_pos['zone'];
 	zone_band  = zone.slice(-2) + mgrs_pos['band'];
 	mgrs_pos_easting = mgrs_pos['easting'].toFixed();
 	mgrs_pos_northing = mgrs_pos['northing'].toFixed();
-	console.log(zone_band);
 	
 	zone_id.value = zone_band;
 	mgrs_grid_id.value = mgrs_pos_grid_id;
@@ -215,10 +213,11 @@ function panMapFromRange(){
 
 function checkLatLongSigns(lat, long){
 	var coords = fetchSelectedRange();
-	if ( !(coords.latitude-10 < lat) || !(coords.latitude+10 > lat) ){	
+	if ( Math.abs(coords.latitude - lat  ) > 10  ){	
+		console.log ( coords.latitude-10 + "  " + lat );
 		alert ( Drupal.settings.snowpilot.translatable.lat_mismatch1 + coords.name +Drupal.settings.snowpilot.translatable.lat_mismatch2 + coords.latitude +Drupal.settings.snowpilot.translatable.lat_mismatch3+lat + Drupal.settings.snowpilot.translatable.lat_mismatch4);
 	}
-	if ( !(coords.longitude-10 < long) || !(coords.longitude+10 > long) ){	
+	if ( Math.abs(coords.longitude - long) > 10 ){	
 		alert ( Drupal.settings.snowpilot.translatable.long_mismatch1 + coords.name + Drupal.settings.snowpilot.translatable.long_mismatch2 + coords.longitude + Drupal.settings.snowpilot.translatable.long_mismatch3+long + Drupal.settings.snowpilot.translatable.long_mismatch4);
 	}
   //snowpilotmap.invalidateSize();

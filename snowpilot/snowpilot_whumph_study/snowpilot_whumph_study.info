@@ -1,0 +1,9 @@
+name = Snowpilot Whumph Study
+description = A SnowPilot submodule to facilitate studying snowpits next to whumphs.
+core = 7.x
+
+;files[] = snowpilot_whumph_study.module
+
+version = "7.x-0.01"
+core = "7.x"
+project = "snowpilot"

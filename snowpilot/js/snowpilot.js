@@ -210,13 +210,13 @@
         // Save and Preview listeners for LGC warning
         $('#edit-submit').mousedown(function (event) {
           if(layerTabSelected && lgcWarningRequired) {
-            alert("Reminder:  You have not yet selected a layer of greatest concern");
+            alert(Drupal.settings.snowpilot.translatable.lgc_warning);
             lgcWarningRequired = false;
           }
         });
         $('#edit-submit--2').mousedown(function (event) {
           if(layerTabSelected && lgcWarningRequired) {
-            alert("Reminder:  You have not yet selected a layer of greatest concern");
+            alert(Drupal.settings.snowpilot.translatable.lgc_warning);
             lgcWarningRequired = false;
           }
         });
@@ -224,19 +224,25 @@
 				
 			//////////////////////////////////////
 			// Hide live Profile initially, and on clicking "Core Info" tab (...-button-0 a ), but show on clicking all other tabs
+
+
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-0.selected' ).each( function() {
 				$('#edit-field-graph-canvas', context).hide();
-				
+	      console.log('core info is selected tab!'); 
 			});		
 			
+	    setTimeout(function() {
+	        $('ul.horizontal-tabs-list li.selected a' ).trigger('click');
+	    },10);		
+			
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-1 a' ).click( function() {
-				$('#edit-field-graph-canvas', context).show();
-				 
+				$('#edit-field-graph-canvas', context).show();	
 			});
+			
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-2 a' ).click( function() {
-				$('#edit-field-graph-canvas', context).show();
-				
+				$('#edit-field-graph-canvas', context).show();	
 			});
+			
 			$('ul.horizontal-tabs-list li.horizontal-tab-button-3 a' ).click( function() {
 				$('#edit-field-graph-canvas', context).show();
 				
@@ -253,7 +259,7 @@
 			/////////////////////////////
 			// hide the Measurement Unit Prefs fieldset
 			
-			//$('#snowpit-profile-node-form fieldset.group-measurement-prefs').hide();
+			$('.node-snowpit_profile-form fieldset.group-measurement-prefs').hide();
 			
 			// save button at top of 'view' page
 			$('button#save-button', context).click(function(e) {

@@ -1,0 +1,39 @@
+From b17802cfe6e4737c379fd335aecd3bfec3b17813 Mon Sep 17 00:00:00 2001
+From: Alex Sassmannshausen <alex@komputilo.eu>
+Date: Thu, 16 Jan 2020 11:06:54 +0100
+Subject: [PATCH] Fix issue 3084935.
+
+---
+ includes/common.inc            | 2 +-
+ includes/request-sanitizer.inc | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/includes/common.inc b/includes/common.inc
+index d370bb8f2b..4822255481 100644
+--- a/includes/common.inc
++++ b/includes/common.inc
+@@ -6653,7 +6653,7 @@ function element_children(&$elements, $sort = FALSE) {
+   $children = array();
+   $sortable = FALSE;
+   foreach ($elements as $key => $value) {
+-    if ($key === '' || $key[0] !== '#') {
++    if (!is_string($key) || $key === '' || $key[0] !== '#') {
+       $children[$key] = $value;
+       if (is_array($value) && isset($value['#weight'])) {
+         $sortable = TRUE;
+diff --git a/includes/request-sanitizer.inc b/includes/request-sanitizer.inc
+index 7214436b8a..74df9ef62f 100644
+--- a/includes/request-sanitizer.inc
++++ b/includes/request-sanitizer.inc
+@@ -99,7 +99,7 @@ class DrupalRequestSanitizer {
+   protected static function stripDangerousValues($input, array $whitelist, array &$sanitized_keys) {
+     if (is_array($input)) {
+       foreach ($input as $key => $value) {
+-        if ($key !== '' && $key[0] === '#' && !in_array($key, $whitelist, TRUE)) {
++        if (is_string($key) && $key !== '' && $key[0] === '#' && !in_array($key, $whitelist, TRUE)) {
+           unset($input[$key]);
+           $sanitized_keys[] = $key;
+         }
+-- 
+2.23.0
+

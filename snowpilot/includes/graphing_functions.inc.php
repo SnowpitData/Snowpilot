@@ -606,7 +606,7 @@ function _generate_specifics_string($node,$profile_lang = 'und') {
 		$specifics = array();
 	
 	// then we loop through the array and add them each to the string.
-	foreach($included_fields as $key => $field){
+	foreach($included_fields as $field){
 		
 		if (isset( $node->$field) ){
 			
@@ -615,11 +615,11 @@ function _generate_specifics_string($node,$profile_lang = 'und') {
 				$item_full = field_info_instance('node', $field, 'snowpit_profile');
 				switch ($field){
 					case 'field_adjacent_to_avy':
-						$specifics[] = t($item_full['label'],array(), array( 'langcode' => $profile_lang)).": ".t($node->field_near_avalanche[$profile_lang][0]['value']);
+						$specifics[] = t($item_full['label'],array(), array( 'langcode' => $profile_lang)).": ".t($node->field_near_avalanche[und][0]['value'] , array(),  array ( 'langcode' => $profile_lang ));
 					break;
 					case 'field_near_avalanche':
 					break;
-					case'field_practice_pit':
+					case 'field_practice_pit':
 					if ($field_item['und'][0]['value'] ==='1'){ 
 					  $specifics[] = t($item_full['label'],array(), array( 'langcode' => $profile_lang));
 					}
@@ -1221,7 +1221,7 @@ $snowsymbols_font = DRUPAL_ROOT.'/sites/all/libraries/fonts/SnowSymbolsIACS.ttf'
 				  imageline($img, 440, 751, 447, 751, $black);
 					imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_depth, 1) );
 				  imagettftext($img, 10, 0, 456,  162 , $black, $label_font, '0' );
-				}elseif ( $shrunken_pit ){
+				}elseif ( $shrunken_pit ){ // shrunken pit, measure from top 
 				  imagettftext($img, 10, 0, 456,  $y_val_final+5 , $black, $label_font, $node->field_total_height_of_snowpack['und'][0]['value'] );
 				  imageline($img, 440, $y_val_final , 447, $y_val_final, $black);
 					imagettftext($img, 10, 0, 456, $global_max+5, $black, $label_font, round($pit_min, 1) );
@@ -1229,7 +1229,7 @@ $snowsymbols_font = DRUPAL_ROOT.'/sites/all/libraries/fonts/SnowSymbolsIACS.ttf'
 				  imagettftext($img, 10, 0, 456,  751+5 , $black, $label_font, '0' );
 				  imageline($img, 440, 751, 447, 751, $black);
 				
-				}else{
+				}else{ // Not shrunken pit, any measure dir
 				  imagettftext($img, 10, 0, 456, $y_val_final+5, $black, $label_font, $pit_depth );
 				  imageline($img, 440, $y_val_final, 447, $y_val_final, $black);
 					$zero_pixel_val = $snowpit_unit_prefs['field_depth_0_from'] == 'top' ? 162 : 756 ;
@@ -1293,10 +1293,10 @@ $snowsymbols_font = DRUPAL_ROOT.'/sites/all/libraries/fonts/SnowSymbolsIACS.ttf'
 	imageline($img, 617,140, 617, 751, $black  ); //beginning of crystal moisture column
 	
 	if ( $shrunken_pit ){ // this inserts the zigazag line at the bottom of a shrunken pit
-		imagefilledrectangle($img, 446, 736, 710, 741, $white  );
-	  imagettftext($img, 10, 0 , 447, 738, $black, $snowsymbols_font, 'YYYYY');
-	  imagettftext($img, 10, 0 , 447, 743, $black, $snowsymbols_font, 'YYYYY');
-		imagefilledrectangle($img, 708, 729, 719, 745, $white  );
+		imagefilledrectangle($img, 446, 735, 710, 740, $white  );
+	  imagettftext($img, 11.3, 0 , 447, 738, $black, $snowsymbols_font, 'YYYYY');
+	  imagettftext($img, 11.3, 0 , 447, 743, $black, $snowsymbols_font, 'YYYYY');
+		imagefilledrectangle($img, 708, 729, 745, 745, $white  );
 		imageline($img, 447, 739, 447, 741,$black);
 	}
 	

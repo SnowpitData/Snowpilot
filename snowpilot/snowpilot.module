@@ -100,6 +100,14 @@ function snowpilot_menu(){
 		'access arguments' => array(1),
 		'type' => MENU_CALLBACK,		
 	);
+	$items['snowpilot/snowpit-xml'] = array(
+		'title' => t('Submit Snowpit xml'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('snowpilot_snowpit_xml_form'),
+		'access callback' => 'snowpilot_user_has_role',
+		'access arguments' => array ( 'administrator' ),
+		'type' => MENU_CALLBACK,		
+	);
 	
 	return $items;
 }
@@ -199,10 +207,8 @@ function snowpilot_taxonomy_term_insert(&$term){
 	
 	$params = array();
 	$language = 'en';
-  dsm($term);
 	if ( $term->vid == 5){
 		global $user;
-		dsm($user);
 		$params['term'] = $term;
 		$params['user'] = $user;
 	  if (drupal_mail('snowpilot', 'new_group', 'jimurl@montanaice.com,dchabot@neomailbox.net', $language, $params)) {
@@ -210,6 +216,60 @@ function snowpilot_taxonomy_term_insert(&$term){
 	  }
 	}
 	
+}
+
+function snowpilot_snowpit_xml_form($form, &$form_state){
+	$form['snowpilot_snowpit_xml'] = array (
+	  '#type' => 'textarea', 
+		'#title' => t('Submit raw Snowpilot xml format here'),
+		'#description' => t('Include  <  SnowpitXML tags >'),
+		'#rows' => 30,
+		'#cols' => 45,
+		'#resizable' => FALSE,
+		'#format' => 'plain_text',
+		'#weight' => 10, 
+  );
+	$form['#validate'][] = 'snowpilot_snowpit_xml_form_validate';
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit XML'),
+		'#weight' => '5',
+	);
+	return $form;
+	
+	
+}
+
+function snowpilot_snowpit_xml_form_validate($form, &$form_state){
+	
+	$xml_body = $form['snowpilot_snowpit_xml']['#value'];
+	//dsm($xml_body);
+	//$xml_doc = new SimpleXMLElement($xml_body);
+	
+	
+	return;
+}
+
+function snowpilot_snowpit_xml_form_submit($form, &$form_state){
+	global $user;
+	$xml_body = $form['snowpilot_snowpit_xml']['#value'];
+	$_SESSION['snowpit_xml'] = $xml_body;
+	$form_state['redirect'] = 'node/add/snowpit-profile';
+
+
+	
+	//$entity = entity_create('node', $values);
+//$form_state2 = array();
+//$form = entity_ui_get_form('node', $entity, 'add', $form_state2);
+
+/// dsm($form);
+	// The entity is now created, but we have not yet simplified use of it.
+	// Now create an entity_metadata_wrapper around the new node entity
+	// to make getting and setting values easier
+	//$ewrapper = entity_metadata_wrapper('node', $entity);		
+
+
+	return $xml_body;
 }
 
 function snowpilot_add_affiliation_form($form, &$form_state){
@@ -727,8 +787,6 @@ function snowpilot_init(){
 	drupal_add_css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css', 'external');
 	drupal_add_css('sites/all/modules/snowpilot/css/MarkerCluster.Default.css');
 	
-	
-	drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
 	drupal_add_js('https://unpkg.com/leaflet@1.4.0/dist/leaflet.js', 'external');
 	$ret_val = drupal_add_js('https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js', 'external');
 	
@@ -764,6 +822,7 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	global $user;
 	switch($form_id ){
 		case 'snowpit_profile_node_form':
+
 		$node = $form_state['node'];
     if ($node->type == 'snowpit_profile'){ // this might be rendundant for the switch/case above.
 
@@ -783,35 +842,30 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$form['actions2'] = $form['actions'];
       $form['actions2']['submit']['#value'] = t("Save Snowpit and Preview");
 			$form['actions2']['#weight'] = -100;			
-
+      $snowpit_unit_prefs = snowpilot_fetch_prefs($node);
 			if( !isset($node->nid) || isset($node->is_new) ){ // a new snowpit profile node, find $unit_prefs from $user
-				if ( snowpilot_user_unit_prefs_check($user->uid)){ // this check function verifies that we have a full set of unit preferences, etc, setup for this user. It redirects to the user /edit page if one or more are lacking
-					// set the unit prefs on the snowpit node form.
-					$account = user_load($user->uid);
-					$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
-			
 					snowpilot_snopit_prof_unit_prefs_set($form, $snowpit_unit_prefs);	
 					// Put a fake "delete" link above the rest of the items
-						$form['actions2']['pre_delete'] 	= array( 
-								'#type' => 'container',
-								'#weight' => '5',
-								'und' =>array(
-									0 => array(
-										'markup' => array( '#markup' => '<div class = "delete_pit_wrapper"><a href = "/node/add/snowpit-profile" class = "" >'. t('Delete Snowpit') .'</a> </div>',
-									  ),
-									),
+					$form['actions2']['pre_delete'] 	= array( 
+							'#type' => 'container',
+							'#weight' => '5',
+							'und' =>array(
+								0 => array(
+									'markup' => array( '#markup' => '<div class = "delete_pit_wrapper"><a href = "/node/add/snowpit-profile" class = "" >'. t('Delete Snowpit') .'</a> </div>',
+								  ),
 								),
-		
-							);
-							$form['field_date_time']['und'][0]['#default_value']['value'] = date('Y-m-d 00:00:00');
-				}
-				
-			}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
-				$account = user_load($node->uid);
-				$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
-				$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
+							),
 	
+						);
+					$form['field_date_time']['und'][0]['#default_value']['value'] = date('Y-m-d 00:00:00');	
 			}
+			/// if this node is from a xml submission, we use the prefs from there and overwrite the preferences from the user.
+			if ( isset( $_SESSION['snowpit_xml'])){
+				
+				snowpilot_split_snowpit_xml($form, $form_state, $snowpit_unit_prefs,  $_SESSION['snowpit_xml']);
+			
+			}
+			
 			// Done wiwth new / or / existing pit logic, now we do things to all pits
 			$form['#after_build'][] = 'snowpilot_snowpit_profile_after_build';
 				
@@ -823,99 +877,9 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 		      '#markup' =>  snowpilot_modal_data() ),
 			  ),	
 		  );
-			$form['#attached']['js'][] = array(
-					'type' => 'file', 
-					'data' => drupal_get_path('module','snowpilot') . '/js/snowpilot_mapping_edit.js',
-					'scope' => 'footer',
-			);
-			
-			if ( isset($node->nid) && 
-				   !empty($form['field_latitude']['und'][0]['value']['#default_value']) && 
-			     !empty( $form['field_longitude']['und'][0]['value']['#default_value'])){
-				$latitude = $form['field_latitude']['und'][0]['value']['#default_value'];
-				$longitude = $form['field_longitude']['und'][0]['value']['#default_value'];
-				$zoom = 12;
-				$existing = "true";
-			}else{
-			  if ( isset ( $snowpit_unit_prefs['field_loaction_1'])){
-			     $default_location = taxonomy_term_load($snowpit_unit_prefs['field_loaction_1']);
-					 if ( isset($default_location->field_lat_center['und'] ) && isset($default_location->field_lng_center['und'] ) ){
-	 				  $latitude = $default_location->field_lat_center['und'][0]['value'];
-	 				  $longitude = $default_location->field_lng_center['und'][0]['value'];
-	 				  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
-					 } 	 
-			  }
-				if ( !isset ( $latitude ) && isset ( $snowpit_unit_prefs['field_loaction_0'])){
-			     $default_location = taxonomy_term_load($snowpit_unit_prefs['field_loaction_0']);
-					 if ( isset($default_location->field_lat_center['und'] ) && isset($default_location->field_lng_center['und'] ) ){
-	 				  $latitude = $default_location->field_lat_center['und'][0]['value'];
-	 				  $longitude = $default_location->field_lng_center['und'][0]['value'];
-	 				  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
-					 } 	 
-			  // Montana is the default - default location if NONE other is given.
-			  }
-				if ( !isset($latitude)) { 
-				  $latitude = '46.00';
-					$longitude = '-112.2';
-					$zoom = 7;
-				}
-				$existing = "false";
-	    }
-			if (  $snowpit_unit_prefs['field_elevation_units'] == 'ft') {
-				$attribution = '<a href="https://www.doi.gov">U.S. Department of the Interior</a> | <a href="https://www.usgs.gov">U.S. Geological Survey</a> | <a href="https://www.usgs.gov/laws/policies_notices.html">Policies</a>';
-				$base_map = 'https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}';
-			}else{
-				$attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
-				$base_map = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-			}
-		  drupal_add_js(array('snowpilot' => array("marker" => 
-						array( "latitude" => "$latitude", 
-			             "longitude" => "$longitude", 
-									 "zoom" => "$zoom", 
-									 "basemap" => $base_map,
-									 "attribution" => "$attribution", 
-									 "existing" => "$existing"))
-								 ), 'setting');
-			
-			// */
-		  drupal_add_js(array('snowpilot' => array("translatable" => 
-						array( 'lgc_warning' => t("Reminder: You have not yet selected a layer of greatest concern"), 
-			             'lock_save_warning' => t('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?'),
-			             'lat_mismatch1' => t('Latitude mismatch: your selected range/region: '),
-								   'lat_mismatch2' => t(' has a latitude of: '),
-									 'lat_mismatch3' => t(' Your selected latitude is: '),
-									 'lat_mismatch4' => t(', which is a long distance away. Check that the sign is correct: S. Heimsphere uses (-) , N. Hemisphere uses positive, or none (+)'),
-			             'long_mismatch1' => t('Longitude mismatch: your selected range/region: '),
-								   'long_mismatch2' => t(' has a longitude of: '),
-									 'long_mismatch3' => t(' Your selected longitude is: '),
-									 'long_mismatch4' => t(', which is a long distance away. Check that the sign is correct: Western Heimsphere uses negative (-) , Eastern Hemisphere uses positive, or none (+)'),
-								 ) )
-								 ), 'setting');
-		  
-		 $tree = taxonomy_get_tree(taxonomy_vocabulary_machine_name_load('geographical_location')->vid);
 
-		 foreach ( $tree as $term ){
-
-		   $term_details = taxonomy_term_load($term->tid);
-		   $tid = "range_".$term->tid;
-		   //dsm($term_details);
-			 if ( isset($term_details->field_lat_center['und'][0]['value']) ){
-				 $zoom = $term_details->field_zoom_level['und'][0]['value'] + 1;
-		       drupal_add_js ( array( 'snowpilot'=> array('mapranges'=> array ("$tid" => array ( 'latitude' => $term_details->field_lat_center['und'][0]['value'] ,'longitude' => $term_details->field_lng_center['und'][0]['value'], 'zoom' => $zoom , 'name' =>$term_details->name ) ) )  ), 'setting'   );
-		     }
-		 }
 			
-			
-			///////////////////////////////////////
-			$form['field_layer']['#prefix'] = '<div>';
-			$form['field_layer']['#suffix'] = '</div>';
-			$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => t('Region') , '1' => t('<none>') );
-
-			$form['field_display_full_profile']['#suffix'] = theme('advanced_help_topic', array(
-			  'module' => 'snowpilot',
-			  'topic' => 'display-full-pit',
-			));
-						
+				
 			snowpilot_snopit_prof_set_suffices($form, $snowpit_unit_prefs);
 			
 			
@@ -1060,6 +1024,57 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 	return $form;
 }
 
+function snowpilot_split_snowpit_xml(&$form, &$form_state, $snowpit_unit_prefs, $xml_body){
+	$xml_doc = new SimpleXMLElement($xml_body);
+	
+	dsm($xml_doc);
+		foreach ($xml_doc[0]->attributes() as $key => $attri){
+  	  switch ($key)  {
+  	  	case 'activities':
+				
+				break;
+				case 'iLayerNumber' :
+				
+				break;
+				case 'iDepth' :
+				
+				break;
+				case 'stability':
+				
+				break;
+				case 'bld' :
+				
+				break;
+				case 'aviPit' :
+				
+				break;
+				case 'aviLoc' :
+				
+				break;
+				case 'incline':
+				
+				break;
+				case 'winDir':
+				
+				break;
+				case 'skiAreaPit':
+				
+				break;
+				case 'bcPit':
+				
+				break;
+				
+					
+				
+				
+  	  }
+	  }
+	
+	
+	
+	return; 
+}
+
 //
 //  Begin customizations for 'add another' more than one!
 //
@@ -1144,9 +1159,30 @@ function snowpilot_field_add_more_submit($form, &$form_state)
 }
 
 //
-//  endo of 'Add more' than one item at a time
+//  end of 'Add more' than one item at a time
 //
-//
+
+
+//  Function TO flip 'bottom-to-top' type pits to bottom-up type
+function snowpilot_flip_layers(&$all_layers, $snowpit_unit_prefs,$profile_depth){
+	//dsm($snowpit_unit_prefs['field_depth_0_from']);
+	$scale_factor = ($snowpit_unit_prefs['field_depth_units'] =='cm') ? 1 : 2.54;
+	
+	if ( $snowpit_unit_prefs['field_depth_0_from'] == 'bottom') {
+
+		foreach ( $all_layers as $layer){
+			$layer->top = ($profile_depth - $layer->field_height['und'][0]['value']) * $scale_factor ;
+      $layer->bottom = ($profile_depth - $layer->field_bottom_depth['und'][0]['value']) * $scale_factor  ;
+		}
+	}else {
+		foreach ( $all_layers as $layer){
+			$layer->top = $layer->field_height['und'][0]['value'] * $scale_factor ;
+      $layer->bottom = $layer->field_bottom_depth['und'][0]['value'] * $scale_factor ;
+		}
+		
+	}
+	return $all_layers;
+}
 
 
 function snowpilot_user_profile_form_submit($form, &$form_state){
@@ -1252,11 +1288,129 @@ function snowpilot_new_user_register_submit(){
 	
 }
 
+function snowpilot_fetch_prefs($node){
+	if( !isset($node->nid) || isset($node->is_new) ){ // a new snowpit profile node, find $unit_prefs from $user
+		global $user;
+		if ( snowpilot_user_unit_prefs_check($user->uid)){ // this check function verifies that we have a full set of unit preferences, etc, setup for this user. It redirects to the user /edit page if one or more are lacking
+			$account = user_load($user->uid);
+			$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
+		}
+		
+	}else{ // not a new node, but an edited one, so load the unit prefs from the existing $node. The array_merge ensures that values not set on the node ( e.g. first name or professional afilliation), ARE still available in the $unit_prefs. preference  values in the node will overwrite those in the user
+		$account = user_load($node->uid);
+		$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
+		$snowpit_unit_prefs = array_merge( $snowpit_unit_prefs, snowpilot_unit_prefs_get($node, 'node'));  
+	}
+  return $snowpit_unit_prefs;
+}
+
 function snowpilot_snowpit_profile_after_build($form, &$form_state){
   drupal_add_library('system', 'ui.accordion');
+	//drupal_add_js('sites/all/modules/snowpilot/js/snowpilot.js');
+	$form['#attached']['js'][] = array(
+			'type' => 'file', 
+			'data' => drupal_get_path('module','snowpilot') . '/js/snowpilot.js',
+	);
+	/// Moved from _form_alter
+	$form['#attached']['js'][] = array(
+			'type' => 'file', 
+			'data' => drupal_get_path('module','snowpilot') . '/js/snowpilot_mapping_edit.js',
+			'scope' => 'footer',
+	);
+	$node = $form_state['node'];
+	$snowpit_unit_prefs = snowpilot_fetch_prefs($node);
+	
+	if ( isset($node->nid) && 
+		   !empty($form['field_latitude']['und'][0]['value']['#default_value']) && 
+	     !empty( $form['field_longitude']['und'][0]['value']['#default_value'])){
+		$latitude = $form['field_latitude']['und'][0]['value']['#default_value'];
+		$longitude = $form['field_longitude']['und'][0]['value']['#default_value'];
+		$zoom = 12;
+		$existing = "true";
+	}else{
+	  if ( isset ( $snowpit_unit_prefs['field_loaction_1'])){
+	     $default_location = taxonomy_term_load($snowpit_unit_prefs['field_loaction_1']);
+			 if ( isset($default_location->field_lat_center['und'] ) && isset($default_location->field_lng_center['und'] ) ){
+			  $latitude = $default_location->field_lat_center['und'][0]['value'];
+			  $longitude = $default_location->field_lng_center['und'][0]['value'];
+			  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
+			 } 	 
+	  }
+		if ( !isset ( $latitude ) && isset ( $snowpit_unit_prefs['field_loaction_0'])){
+	     $default_location = taxonomy_term_load($snowpit_unit_prefs['field_loaction_0']);
+			 if ( isset($default_location->field_lat_center['und'] ) && isset($default_location->field_lng_center['und'] ) ){
+			  $latitude = $default_location->field_lat_center['und'][0]['value'];
+			  $longitude = $default_location->field_lng_center['und'][0]['value'];
+			  $zoom = $default_location->field_zoom_level['und'][0]['value']+1;
+			 } 	 
+	  // Montana is the default - default location if NONE other is given.
+	  }
+		if ( !isset($latitude)) { 
+		  $latitude = '46.00';
+			$longitude = '-112.2';
+			$zoom = 7;
+		}
+		$existing = "false";
+  }
+	if (  $snowpit_unit_prefs['field_elevation_units'] == 'ft') {
+		$attribution = '<a href="https://www.doi.gov">U.S. Department of the Interior</a> | <a href="https://www.usgs.gov">U.S. Geological Survey</a> | <a href="https://www.usgs.gov/laws/policies_notices.html">Policies</a>';
+		$base_map = 'https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}';
+	}else{
+		$attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+		$base_map = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+	}
+  drupal_add_js(array('snowpilot' => array("marker" => 
+				array( "latitude" => "$latitude", 
+	             "longitude" => "$longitude", 
+							 "zoom" => "$zoom", 
+							 "basemap" => $base_map,
+							 "attribution" => "$attribution", 
+							 "existing" => "$existing"))
+						 ), 'setting');
+	
+	// */
+  drupal_add_js(array('snowpilot' => array("translatable" => 
+				array( 'lgc_warning' => t("Reminder: You have not yet selected a layer of greatest concern"), 
+	             'lock_save_warning' => t('You are about to save your finished snowpit to the snowpilot AvScience database, after which you will no longer be able to make changes. Continue?'),
+	             'lat_mismatch1' => t('Latitude mismatch: your selected range/region: '),
+						   'lat_mismatch2' => t(' has a latitude of: '),
+							 'lat_mismatch3' => t(' Your selected latitude is: '),
+							 'lat_mismatch4' => t(', which is a long distance away. Check that the sign is correct: S. Heimsphere uses (-) , N. Hemisphere uses positive, or none (+)'),
+	             'long_mismatch1' => t('Longitude mismatch: your selected range/region: '),
+						   'long_mismatch2' => t(' has a longitude of: '),
+							 'long_mismatch3' => t(' Your selected longitude is: '),
+							 'long_mismatch4' => t(', which is a long distance away. Check that the sign is correct: Western Heimsphere uses negative (-) , Eastern Hemisphere uses positive, or none (+)'),
+						 ) )
+						 ), 'setting');
+  
+ $tree = taxonomy_get_tree(taxonomy_vocabulary_machine_name_load('geographical_location')->vid);
+
+ foreach ( $tree as $term ){
+
+   $term_details = taxonomy_term_load($term->tid);
+   $tid = "range_".$term->tid;
+   //dsm($term_details);
+	 if ( isset($term_details->field_lat_center['und'][0]['value']) ){
+		 $zoom = $term_details->field_zoom_level['und'][0]['value'] + 1;
+       drupal_add_js ( array( 'snowpilot'=> array('mapranges'=> array ("$tid" => array ( 'latitude' => $term_details->field_lat_center['und'][0]['value'] ,'longitude' => $term_details->field_lng_center['und'][0]['value'], 'zoom' => $zoom , 'name' =>$term_details->name ) ) )  ), 'setting'   );
+     }
+ }
+	
+	
+	///////////////////////////////////////
+	$form['field_layer']['#prefix'] = '<div>';
+	$form['field_layer']['#suffix'] = '</div>';
+	$form['field_loaction']['und']['#config']['level_labels']['labels'] = array( 0 => t('Region') , '1' => t('<none>') );
+
+	$form['field_display_full_profile']['#suffix'] = theme('advanced_help_topic', array(
+	  'module' => 'snowpilot',
+	  'topic' => 'display-full-pit',
+	));
+	
 	//
-	// add the js to make lat and long negative if they should be.
-	$snowpit_unit_prefs = snowpilot_unit_prefs_get($form_state['node'],'node');  
+	// End of newly moved from form_alter
+	//
+
 
 		$form['#attached']['js'][] = array(
 			'type' => 'file',
@@ -1602,15 +1756,12 @@ function snowpilot_set_visibility_field_options(&$form, $snowpit_unit_prefs){
 
 function snowpilot_snowpit_set_tester_fields(&$form, $account = NULL){
 	
-	if ( !(user_has_role( 8, $account ))){ /// role 8 is False Stability Test 2017
+	/// this is legacy from False Stability Test 2017
+	/// the A Priori field is set on several hundred snowpits, so we don't want to remove it; we just hide it. Likewise for Fair STable/ Fair Unstable designations
     $form['field_a_priori_eval']['#access'] = FALSE ;
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_unstable']);
 		unset($form['field_stability_on_similar_slope']['und']['#options']['fair_stable']);
-	}else{
-		unset($form['field_stability_on_similar_slope']['und']['#options']['fair']);
-		$form['field_stability_on_similar_slope']['und']['#title'] = 'AFTER doing stability tests';
-		
-	}	
+		/// Role #11 is blade hardness guage testers
 	if ( !user_has_role( '11', $account )){
 		unset($form['field_blade_hardness']);
 	}
@@ -1789,18 +1940,20 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 		}
 			
 		// Poor mans layer integrity check: make sure that each field_bottom_depth is below field_height, depending on measure_from
-			
+		if (is_numeric($key) && $form_state['values']['field_depth_0_from']['und'][0]['value'] == 'top' 
+			&& isset($layer['field_bottom_depth']['und'][0]['value']) 
+			&& $layer['field_bottom_depth']['und'][0]['value'] <> ''
+		  &&	$layer['field_bottom_depth']['und'][0]['value'] <= $layer['field_height']['und'][0]['value'] ){
+       form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be greater than Top Depth.'));
+		}
+				
 		if (is_numeric($key) && $form_state['values']['field_depth_0_from']['und'][0]['value'] <> 'top'
 			&& isset($layer['field_bottom_depth']['und'][0]['value']) 
 			&& $layer['field_bottom_depth']['und'][0]['value'] <> ''
 			&& $layer['field_bottom_depth']['und'][0]['value'] >= $layer['field_height']['und'][0]['value']){
-	        form_set_error("field_layer]['und'][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be smaller than Top Depth.'));
-		}else if (is_numeric($key) && $form_state['values']['field_depth_0_from']['und'][0]['value'] == 'top' 
-			&& isset($layer['field_bottom_depth']['und'][0]['value']) 
-			&& $layer['field_bottom_depth']['und'][0]['value'] <> ''
-		  &&	$layer['field_bottom_depth']['und'][0]['value'] <= $layer['field_height']['und'][0]['value'] ){
-	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be greater than Top Depth.'));
+	        form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('The value of the Bottom Depth field should be smaller than Top Depth.'));
 		}
+
 		if (is_numeric($key) &&  $form_state['clicked_button']['#name'] == 'field_layer_add_more' && (!isset($layer['field_bottom_depth']['und'][0]['value']) || $layer['field_bottom_depth']['und'][0]['value'] == '' )){
 			form_set_error("field_layer][". LANGUAGE_NONE."][" . $key . "][field_bottom_depth", t('Please enter a value for bottom depth (if there are no further layers, you may leave this blank).'));
 		}
@@ -1822,7 +1975,10 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 	foreach($form_state['values']['field_temp_collection']['und'] as $key=>$temp_item){
 		// We want to validate using decimal, not commas, for temp collection items
 		if ( is_numeric($key)) {
+			if ( (!isset ($temp_item['field_depth']['und'][0]['value']) || $temp_item['field_depth']['und'][0]['value'] == '' ) && $temp_item['field_temp_temp']['und'][0]['value'] <> ''  ){
+				form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_depth", t('Please enter the depth value for the corresponding temperature value.'));
 				
+			}
 	  	if (strpos(  $temp_item['field_depth']['und'][0]['value'], ',' ) ){
         $temp_item['field_depth']['und'][0]['value'] = str_replace( ',' , '.' , $temp_item['field_depth']['und'][0]['value'] );
 	  	}
@@ -1830,18 +1986,16 @@ function snowpilot_snowpit_profile_node_form_validate($form,&$form_state){
 				$temp_item['field_temp_temp']['und'][0]['value'] = str_replace( ',' , '.' , $temp_item['field_temp_temp']['und'][0]['value'] ); 
 			}
 
-	  	if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' && is_numeric($key)){
+	  	if ( $form_state['values']['field_temp_units']['und'][0]['value'] == 'C' ){
 	  		if ( isset( $temp_item['field_temp_temp'] ) && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) && 
 				$temp_item['field_temp_temp']['und'][0]['value'] > 0  ){ 
 		  		form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack measurement should be 0&deg; C or less.'));
 	  		}
-		  }elseif ( is_numeric($key)  
-	  		&& isset ( $temp_item['field_temp_temp']['und'][0]['value'] )
-	  	  && is_numeric( $temp_item['field_temp_temp']['und'][0]['value'] ) 
-	  	  && $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
+		  }elseif ( isset ( $temp_item['field_temp_temp']['und'][0]['value'] )
+  			&& $temp_item['field_temp_temp']['und'][0]['value'] > 32 ) {
 		  	form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_temp_temp", t('A snowpack temperature measurement should be 32&deg; F or less.'));
 	  	}
-	  	if ( is_numeric($key) &&  isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric( $temp_item['field_depth']['und'][0]['value'] ) && 
+	  	if ( isset ($temp_item['field_depth']['und'][0]['value']) && is_numeric( $temp_item['field_depth']['und'][0]['value'] ) && 
 			$temp_item['field_depth']['und'][0]['value'] > _raw_max_pit_depth( $form_state['values'] ) ) {	
 	  		form_set_error("field_temp_collection][". LANGUAGE_NONE."][" . $key . "][field_depth", t("Temp Measurement Depth must be less than less than total snow height. [<a href ='/error_page#depth'>why am I getting this error</a>]"));
 	  	}
@@ -3036,9 +3190,9 @@ function snowpilot_node_avscience_save_pit($node){
 		$values_list[] = " elvUnits = '". $unit_prefs['elvUnits'] ."' ";
 		$values_list[] = " tempUnits = '". $unit_prefs['tempUnits'] ."' ";
 		$values_list[] = " depthUnits = '". $unit_prefs['depthUnits'] ."' ";
-		if ( !empty($node->field_a_priori_eval['und'][0]['value']) ){$values_list[] = " stabilityBefore = '". $node->field_a_priori_eval['und'][0]['value'] ."' ";}
-		if ( !empty($node->field_stability_on_similar_slope['und'][0]['value'])){$values_list[] = " stabilityAfter = '". $node->field_stability_on_similar_slope['und'][0]['value'] ."' ";}
+		if ( !empty($node->field_stability_on_similar_slope['und'][0]['value'])){ $values_list[] = " stabilityAfter = '". $node->field_stability_on_similar_slope['und'][0]['value'] ."' ";}
 		
+		drupal_alter( 'avscience_data', $values_list, $node );
 		$insert_query = "INSERT INTO PIT_TABLE SET ".implode(',', $values_list);
 	  db_set_active('avscience_db');
 		$insert_results = db_query($insert_query);

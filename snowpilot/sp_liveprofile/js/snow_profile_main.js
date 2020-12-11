@@ -166,6 +166,7 @@
   SnowProfile.snowpackHeightSet = false;
   
   $(document).ready(function() {
+		console.log('doc is ready!');
     if(!isInitialized) 
     {
       SnowProfile.main();

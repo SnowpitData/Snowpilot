@@ -2,51 +2,7 @@
 function sp_liveprofile_init(){
 	define('LIBRARY_PATH' , 'sites/all/libraries/jquery/vendor/');
 	define('SP_LIVEPROFILE_LIBRARY' , 'sites/all/modules/snowpilot/sp_liveprofile/js/');
-	$node = menu_get_object();
-	// only include the js files need on snowprofile node/xx/edit pages:
-	if ((!empty($node) && $node->type == 'snowpit_profile' && arg(2) == 'edit') ||
-			( arg(0) == 'node' && arg(1) =='add' && arg(2) == 'snowpit-profile')  ){
-		// we need to use body OnLoad to start the live graph dealy
-	drupal_add_js(LIBRARY_PATH.'rgbcolor.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'StackBlur.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'canvg.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'svg.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'svg.draggable.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'svg.easing.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'svg_todataurl.js', 'file' );
-	//
-	//  Jquery.js and jquery.ui.cor.min.js are both loaded via the core system module
-	//
-	//drupal_add_js(LIBRARY_PATH.'jquery.ui.widget.min.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'jquery.ui.mouse.min.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'jquery.ui.button.min.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'jquery.ui.dialog.min.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'jquery.ui.draggable.min.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'jquery.ui.position.min.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'jquery.ui.resizable.min.js', 'file' );
-	drupal_add_js(LIBRARY_PATH.'opentip-jquery.js', 'file' );
-	//drupal_add_js(LIBRARY_PATH.'', 'file' );
-  
-  drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_config.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_std.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_button.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_popup.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_feat.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_layer.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_grid.js', 'file' );
-	drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_main.js', 'file' );
 
-	drupal_add_css(LIBRARY_PATH.'jquery.ui.theme.css', 'file');
-	drupal_add_css(LIBRARY_PATH.'jquery.ui.core.css', 'file');
-	drupal_add_css(LIBRARY_PATH.'jquery.ui.button.css', 'file');
-	drupal_add_css(LIBRARY_PATH.'jquery.ui.dialog.css', 'file');
-	drupal_add_css(LIBRARY_PATH.'jquery.ui.resizeable.css', 'file');
-	drupal_add_css(LIBRARY_PATH.'jquery.ui.dialog.css', 'file');
-	drupal_add_css(LIBRARY_PATH.'opentip.css', 'file');
-			
-	}
-	
 }
 
 function sp_liveprofile_form_alter(&$form, &$form_state, $form_id){
@@ -54,23 +10,78 @@ function sp_liveprofile_form_alter(&$form, &$form_state, $form_id){
 	switch ( $form_id ){
 		
 		case 'snowpit_profile_node_form':
-	  drupal_add_js( array('sp_liveprofile' => array("translatable" => 
-					array( "depth" => t("Depth"), 
-								 "temperature" => t("Temperature"), 
-								 "grain_type" => t('Grain
-Type'),
-								 "grain_size" => t('Size
-(mm)'),
-								 "stability_tests" => t('Stability
-Tests'), 
-								 "hand_hardness" => t('Hand Hardness') )
-									 ) ), 'setting');
+
 	
+		  $form['#after_build'][] = 'sp_liveprofile_snowpit_profile_after_build';
 
 		break;
 	}
 	
 	
-return;
+return $form;
+}
+
+function  sp_liveprofile_snowpit_profile_after_build($form, &$form_state ){
+		  drupal_add_js( array('sp_liveprofile' => array("translatable" => 
+						array( "depth" => t("Depth"), 
+									 "temperature" => t("Temperature"), 
+									 "grain_type" => t('Grain
+	Type'),
+									 "grain_size" => t('Size
+	(mm)'),
+									 "stability_tests" => t('Stability
+	Tests'), 
+									 "hand_hardness" => t('Hand Hardness') 
+							) )
+							), 'setting' );
+		
+							$node = menu_get_object();
+							// only include the js files need on snowprofile node/xx/edit pages:
+							if ((!empty($node) && $node->type == 'snowpit_profile' && arg(2) == 'edit') ||
+									( arg(0) == 'node' && arg(1) =='add' && arg(2) == 'snowpit-profile')  ){
+								// we need to use body OnLoad to start the live graph dealy
+							drupal_add_js(LIBRARY_PATH.'rgbcolor.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'StackBlur.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'canvg.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'svg.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'svg.draggable.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'svg.easing.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'svg_todataurl.js', 'file' );
+							//
+							//  Jquery.js and jquery.ui.cor.min.js are both loaded via the core system module
+							//
+							//drupal_add_js(LIBRARY_PATH.'jquery.ui.widget.min.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'jquery.ui.mouse.min.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'jquery.ui.button.min.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'jquery.ui.dialog.min.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'jquery.ui.draggable.min.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'jquery.ui.position.min.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'jquery.ui.resizable.min.js', 'file' );
+							drupal_add_js(LIBRARY_PATH.'opentip-jquery.js', 'file' );
+							//drupal_add_js(LIBRARY_PATH.'', 'file' );
+  
+						  drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_config.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_std.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_button.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_popup.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_feat.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_layer.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_grid.js', 'file' );
+							drupal_add_js(SP_LIVEPROFILE_LIBRARY.'snow_profile_main.js', 'file' );
+
+							drupal_add_css(LIBRARY_PATH.'jquery.ui.theme.css', 'file');
+							drupal_add_css(LIBRARY_PATH.'jquery.ui.core.css', 'file');
+							drupal_add_css(LIBRARY_PATH.'jquery.ui.button.css', 'file');
+							drupal_add_css(LIBRARY_PATH.'jquery.ui.dialog.css', 'file');
+							drupal_add_css(LIBRARY_PATH.'jquery.ui.resizeable.css', 'file');
+							drupal_add_css(LIBRARY_PATH.'jquery.ui.dialog.css', 'file');
+							drupal_add_css(LIBRARY_PATH.'opentip.css', 'file');
+			
+							}
+			return $form;
+	
+	
+	
 }
 

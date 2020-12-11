@@ -1,0 +1,39 @@
+<?php
+
+function snowpilot_whumph_study_form_alter(&$form, &$form_state, $form_id){
+	if ( $form_id == 'snowpit_profile_node_form'){
+		global $user;
+		$account = user_load($user->uid);
+		if ( !user_has_role( '12', $account )){
+			unset($form['#fieldgroups']['group_whumph_study']);
+		
+		}else{
+			$form['field_whumph_cracking']['#prefix'] = theme('advanced_help_topic', array(
+			  'module' => 'snowpilot_whumph_study',
+			  'topic' => 'whumpf-study',
+			));
+			$form['field_length_of_crack']['und'][0]['value']['#field_suffix'] =  $form['field_elevation_units']['und']['#default_value'][0];
+			$form['field_width_of_collapse']['und'][0]['value']['#field_suffix'] =  $form['field_elevation_units']['und']['#default_value'][0];
+		}
+	}
+		return $form;
+}
+
+function snowpilot_whumph_study_avscience_data_alter(&$values_list, $node ){
+	
+	if (  ($node->field_whumph_cracking['und'][0]['value']) || ($node->field_whumpf_no_cracking['und'][0]['value'] ) || ($node->field_crack_no_whumpf['und'][0]['value'] ) || 
+	($node->field_whumph_pit_near['und'][0]['value']) || ($node->field_whumph_depth_weak_layer['und'][0]['value']) || 	( $node->field_whumph_remote_avalanche['und'][0]['value'] )  ){
+		$whumpf_val = ($node->field_whumph_remote_avalanche['und'][0]['value'] * 32 )
+			+( $node->field_whumph_cracking['und'][0]['value'] * 16 )
+			+(  $node->field_whumph_no_cracking['und'][0]['value'] * 8 ) 
+			+(  $node->field_crack_no_whumpf['und'][0]['value'] * 4 ) 
+			+ ( $node->field_whumph_pit_near['und'][0]['value'] * 2 ) 
+			+ $node->field_whumph_depth_weak_layer['und'][0]['value'] ;			
+		$values_list[] = " whumpfVal = '". $whumpf_val ."' ";
+		$values_list[] = " whumpfSize = '" . $node->field_whumpf_size['und'][0]['value'] . "' ";
+		
+	}
+	return;
+	
+}
+

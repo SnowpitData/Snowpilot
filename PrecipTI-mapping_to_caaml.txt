@@ -1,0 +1,13 @@
+NO|Nil / None								Nil
+S-1|S-1 Trace to 1cm/hr			-SN
+S1|S1 1 cm/hr								-SN
+S2|S2 2 cm/hr								SN
+S5|S5 5 cm/hr								SN
+S10|S10 10 cm/hr						+SN
+GR|Graupel or Hail					GR
+RS|Mixed rain and snow			RASN
+ZR|Freezing Rain						FZRA
+RV|Very light rain - mist		-RA
+RL|Light rain < 2.5 mm/hr		-RA
+RM|Moderate Rain < 7.5 mm/hr RA
+RH|Heavy Rain > 7.5mm/hr		+RA

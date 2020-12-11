@@ -18,7 +18,7 @@ if ( ($node->field_coordinate_type['und'][0]['value'] == 'UTM') && !empty($node-
 	
 }
 
-if ( !empty($latitude) && !empty ( $longitude) ){
+if ( ($latitude) && ( $longitude) ){
 ?>
 <div id="map" style= "height: 450px; width: 600px;"></div>
     <script>
