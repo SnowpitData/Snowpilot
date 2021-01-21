@@ -352,7 +352,11 @@ function snowpilot_query_form( $form, &$form_state){
 
 			  if ( isset($form_state['values']['STATE']) && count( $form_state['values']['STATE'])) $query->fieldCondition('field_loaction', 'tid', $form_state['values']['STATE'], 'IN');
 			 	$query->fieldOrderBy('field_date_time', 'value', 'DESC' );
-				$query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');
+				
+				global $user;
+				if ($user->uid <> 1 ){
+					
+				$query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');}
 				
         $per_page = isset($form_state['values']['per_page']) ? $form_state['values']['per_page'] : 10 ;
 				$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;

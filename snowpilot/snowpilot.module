@@ -155,6 +155,8 @@ function snowpilot_organization(){
 		$result .= snowpilot_org_admin_page_links($org_admin_user->field_org_admin_groups->value() );
 	}
 	$org_admin_groups = $org_admin_user->field_org_admin_groups->value();
+	$default_org = $org_admin_user->field_org_ownership->value();
+	
 	if ( !in_array($default_org , $org_admin_groups  )){  // If this organization is not one they can manage, reset their default org to something standard.
 		
 		if ( ! isset( $org_admin_groups[0]) ) {
@@ -164,7 +166,6 @@ function snowpilot_organization(){
 		$org_admin_user->field_org_ownership->set( $org_admin_groups[0]->tid );
 		//$org_admin_user->save();
 	}	
-	$default_org = $org_admin_user->field_org_ownership->value();
 	$result .= '<h2>'. t('Snowpits for '). $default_org->name  . '</h2>'; 
 	$result .= views_embed_view( 'new_test_search' , 'page', $default_org->tid );
 	drupal_set_title ( t('Manage Organization Users and Snowpits: ').$default_org->name );
@@ -326,7 +327,9 @@ function snowpilot_add_affiliation_form_submit($form, &$form_state){
 function snowpilot_remove_affiliation_form($form, &$form_state, $account){
 	$form['#access'] = 'snowpilot_org_admin_access';
 	$form_state['storage']['account'] = $account;
-	//dsm($item);
+
+	//$account->field_org_ownership['und'][0]['tid'];
+	
 	global $user;
 	$org_admin_user = entity_metadata_wrapper('user', $user);
 	$form['submit'] = array(
@@ -335,9 +338,10 @@ function snowpilot_remove_affiliation_form($form, &$form_state, $account){
 		'#weight' => '25',
 		
 	);
+	//dsm($account->field_org_ownership);
 	$form['snowpilot_remove_affiliation'] = array(
 		'#type' => 'radios',
-		'#title' => t('Confirm removing @theuser from the group: @thegroup?', array( '@theuser' => $account->name, '@thegroup' => $org_admin_user->field_org_ownership->label() ) ),
+		'#title' => t('Confirm removing @theuser from the group: @thegroup? Default org is: @defaultorg ', array( '@theuser' => $account->name, '@thegroup' => $org_admin_user->field_org_ownership->label(), '@defaultorg' => 'whut' ) ),
 		'#description' => t(''),	
 		'#weight' => '15',
 		'#required' => TRUE,
@@ -357,33 +361,40 @@ function snowpilot_remove_affiliation_form($form, &$form_state, $account){
 function snowpilot_remove_affiliation_form_submit($form, &$form_state){
 	global $user;
 	$org_admin_user = entity_metadata_wrapper('user', $user);
-	$org_admin_info = $org_admin_user->field_org_ownership->value();
+	$org_admin_org = $org_admin_user->field_org_ownership->value();  //  this is the default org of the org admin who is removing the user
 	$user_wrapper = entity_metadata_wrapper( 'user' , $form_state['storage']['account']);
-	foreach ( $user_wrapper->field_professional_affiliation->value() as $key => $group ){ 
-		$tids[] = $group->tid;
-		if ( $group->tid == $org_admin_info->tid ) $offset_value = $key ;
-	}
-
-	if ( in_array($org_admin_info->tid , $tids ) ){
-	  $admin_email = $user->mail;
-		$user_mail = $user_wrapper->mail->value();
-		$user_name = $user_wrapper->name->value();
+	
+//	foreach ( $user_wrapper->field_professional_affiliation->value() as $key => $group ){ 
 		
-  	if ($form_state['values']['snowpilot_remove_affiliation'] == 'confirm'){
-		  $user_wrapper->field_professional_affiliation->offsetUnset( $offset_value );
-			$user_wrapper->save();
-		  $body = "<h2>The user ".$user_wrapper->label()." has been removed from ". $org_admin_user->field_org_ownership->label()." </h2> ";
-	    drupal_mail('snowpilot', 
-			  $form_state['values']['snowpilot_remove_affiliation'], // mail key equals the value of how to suspend/remove
-				'admin@snowpilot.org,'.$user_mail ,
-				user_preferred_language($user),
-				array ( 'org_admin_user' => $org_admin_user , 'user_wrapper' => $user_wrapper), 'admin@snowpilot.org' , TRUE  
-			);
-  	}
-	}else{
-	  $body = "<h2>The user ".$user_wrapper->label()." is not currently part of ". $org_admin_user->field_org_ownership->label()." </h2> ";
-  }
-	drupal_set_message($body);
+	//	if ( $user_wrapper->field_org_ownership->value()->tid == $org_admin_org->tid ) {
+	  	if ($form_state['values']['snowpilot_remove_affiliation'] == 'confirm'){
+
+			  $admin_email = $user->mail;
+				$user_mail = $user_wrapper->mail->value();
+				$user_name = $user_wrapper->name->value();	
+				// Now we seek and remove the indicated group tid
+				foreach ( $user_wrapper->field_professional_affiliation->value() as $key => $group ){
+					if ( $group->tid == $org_admin_user->field_org_ownership->value()->tid) {  // This is the org to remove the user fromm
+		        if ( $user_wrapper->field_org_ownership->value()->tid  ==  ($org_admin_user->field_org_ownership->value()->tid ) ) { // if this is also their default org ,empty that too, first
+							$user_wrapper->field_org_ownership->set(NULL);
+						}
+						$user_wrapper->field_professional_affiliation->offsetUnset( $key );  // Now it is safe to remove the prof affil
+					}
+			  }
+			
+				$user_wrapper->save();
+			  $body = "<h2>The user ".$user_wrapper->label()." has been removed from ". $org_admin_user->field_org_ownership->label()." </h2> ";
+				drupal_set_message($body);
+				
+		    drupal_mail('snowpilot', 
+				  $form_state['values']['snowpilot_remove_affiliation'], // mail key equals the value of how to suspend/remove
+					'admin@snowpilot.org,'.$user_mail ,
+					user_preferred_language($user),
+					array ( 'org_admin_user' => $org_admin_user , 'user_wrapper' => $user_wrapper), 'admin@snowpilot.org' , TRUE  
+				);
+	  	}
+			//}
+		//}
 	return;
 }
 
@@ -414,13 +425,13 @@ function snowpilot_mail( $key, &$message, $params){
 	    if (isset($params['subject'])) {
 	      $message['subject'] = $params['subject'];
 	    } else {
-	    	$message['subject'] = '[SnowPilot] User '.$user_wrapper->name->value(). ' has been removed from group '.$org_admin_user->field_professional_affiliation->label();
+	    	$message['subject'] = '[SnowPilot] User '.$user_wrapper->name->value(). ' has been removed from group '.$org_admin_user->field_org_ownership->label();
 			}
 	    $message['body'][] = 'Dear '.$user_wrapper->name->value().',
 			
-Thank you for using SnowPilot. Your group affiliation has changed from '. $org_admin_user->field_professional_affiliation->label() .' since the group\'s administrator has removed you. Your profile is still active and all your pits are still associated with you. 
+Thank you for using SnowPilot. Your group affiliation with '. $org_admin_user->field_org_ownership->label() .' has been removed. Your profile is still active and all your pits are still associated with your account. 
 
-If you chose the last group in error, you are free to select your correct group on your User Preferences page: 
+If you chose the last group in error, you can select your correct group on your User Preferences page: 
 http://snowpilot.org/user/' .$user_wrapper->uid->value(). '/edit
 
 SnowPilot Admin Team';		
@@ -430,14 +441,18 @@ SnowPilot Admin Team';
 		
 		break;
 		case 'org-admin-notify':
+	    $user_wrapper = $params['user_wrapper'];
+		  $org_admin_user = $params['org_admin_user'];
+			
       if (isset($params['subject'])) {
         $message['subject'] = $params['subject'];
       } else {
-      	$message['subject'] = '[SnowPilot] User '.$user_wrapper->name->value(). ' has joined group '.$org_admin_user->field_professional_affiliation->label();
+      	$message['subject'] = '[SnowPilot] User '.$user_wrapper->name->value(). ' has joined group '.$org_admin_user->field_org_ownership->label();
 		  }
+			
 			$message['body'][] = 'Dear '. $org_admin_user->name->value() .',
 			
-A new user '. $user_wrapper->name->value(). ' has been added to your group '.$org_admin_user->field_professional_affiliation->label().'.
+A new user '. $user_wrapper->name->value(). ' has been added to your group '.$org_admin_user->field_org_ownership->label().'.
 
 You may review this user at your organization administration page:
 http://snowpilot.org/organizations
@@ -956,13 +971,12 @@ function snowpilot_form_alter(&$form, &$form_state, $form_id){
 			$user_account = user_load($user->uid); // this could be the administrator acting on a different account
 			$account = user_load($form['#user']->uid);
 			$snowpit_unit_prefs = snowpilot_unit_prefs_get($account);  
-		  if ( is_array($snowpit_unit_prefs['field_professional_affiliation'] )){   /// 									if the user is a member of multiple orgs
-
+		  if ( is_array($snowpit_unit_prefs['field_professional_affiliation'] )){   /// if the user is a member of multiple orgs
+																																								//	then remove the ones from the 'default org' list that they are not a memberof, except for administrators
 		    foreach ( $form['field_org_ownership']['und']['#options'] as $tid => $option ){
 					
-			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation'] )  ) {	//				then remove the ones from the 'default org' list that they 
-						
-						//unset ( $form['field_org_ownership']['und']['#options'][$tid] );   //											are not a member of 
+			    if ( !in_array($tid, $snowpit_unit_prefs['field_professional_affiliation']  )  ) {	
+						unset ( $form['field_org_ownership']['und']['#options'][$tid] );   
 
 					}
 		    }
@@ -1197,6 +1211,7 @@ function snowpilot_user_profile_form_submit($form, &$form_state){
 					$tid = $group_tid['tid'];
 					//dsm($group_tid);
 					//dsm($form['field_professional_affiliation']['und']['#default_value'] );
+					
 					$user_wrapper = entity_metadata_wrapper( 'user', user_load($form_state['values']['uid']));
 			    $query = new EntityFieldQuery();
 			    $query->entityCondition('entity_type', 'user')
@@ -1215,11 +1230,7 @@ function snowpilot_user_profile_form_submit($form, &$form_state){
 								  array ( 'org_admin_user' => $org_admin_user  , 'user_wrapper' => $user_wrapper), 'admin@snowpilot.org' , TRUE  );
 						}
 					}
-					
-					
 				}
-				
-				
 			}
 	    
 			
@@ -1552,13 +1563,14 @@ function get_optgroup_by_taxonomy($taxonomy_name) {
     if (!empty($children)) {
       //PARENT
       $options[$term->name] = array();
+			$options[$term->name][$tid] = $term->name;
       foreach ($children as $child) {
         $options[$term->name][$child->tid] = $child->name;
       }
     }
     elseif (empty($parents)) {
       //PARENT WITH NO CHILDREN - LONELY PARENT
-      $options[$term->name] = array();
+      $options[$term->name] = array( $tid => $term->name );
     }
   }
   return $options;
@@ -2462,16 +2474,8 @@ function snowpilot_graintypes_tweak($element){
 }
 
 function snowpilot_field_widget_form_alter(&$element, &$form_state, $context) {
-  // Add a css class to widget form elements for all fields of type mytype.
-  if ($context['field']['type'] == 'taxonomy_term_reference' && $context['field']['field_name'] == 'field_grain_type' ) {
-		//dsm($form_state);
-		
-		
-    // Be sure not to overwrite existing attributes.
-    $element['#attributes']['class'][] = 'myclass';
-  }
+ 
 	if ($context['field']['type']  == 'datetime' ){
-		//dsm($form_state['build_info']['args']);
 		
 		//dsm($location['und'][0]['tid']);
 		if ( !empty($form_state['build_info']['args'][0]->field_loaction)  ){
@@ -3392,3 +3396,64 @@ function snowpilot_modal_data(){
 	
 }
 
+
+function _generate_specifics_string($node, &$img = NULL, $profile_lang = 'und') {
+	$black = imagecolorallocate($img, 0, 0, 0);
+	$red_layer = imagecolorallocate($img, 178, 36, 35);
+	$white = imagecolorallocate($img, 255, 255, 255);
+	
+	$included_fields = array( 'field_practice_pit', 'field_pit_dug_in_a_ski_area',  
+		'field_pit_is_representative_of_b','field_adjacent_to_avy', 'field_near_avalanche', /* a list type field, rather than boolean */
+	  'field_collapsing_widespread', 'field_collapsing_localized', 'field_cracking', 'field_recent_activity_on_similar', 'field_recent_activity_on_differe',
+		'field_instability_rapidly_rising' , 'field_ski_tracks_on_slope', 'field_we_skiied_slope', 'field_snowmobile_tracks_on_slope', 'field_we_snowmobiled_slope','field_poor_pit_location' ); // etc
+	
+		$extra_specifics = '';
+	
+	// then we loop through the array and add them each to the image
+	$text_pos = imagettftext($img, 11, 0, 14, 107, $black, LABEL_FONT, t('Specifics',array(), array( 'langcode' => $profile_lang ) ).': ');
+	$extra_specifics = '';
+	foreach($included_fields as $field){
+		
+		if (isset( $node->$field) ){
+			
+			$field_item = $node->$field;
+			if ( isset($field_item['und'][0]) && ($field_item['und'][0]['value'] != '0')){
+				$item_full = field_info_instance('node', $field, 'snowpit_profile');
+				switch ($field){
+					case 'field_adjacent_to_avy':
+  			    $specific = t($item_full['label'],array(), array( 'langcode' => $profile_lang));
+						if ( isset ( $node->field_near_avalanche[und][0]['value'] )) {
+							$specific .= ": ".t($node->field_near_avalanche[und][0]['value'] , array(),  array ( 'langcode' => $profile_lang ));
+						}					
+					break;
+					case 'field_near_avalanche':
+					$specific = '';
+					break;
+					default:
+						$specific = t($item_full['label'],array(), array( 'langcode' => $profile_lang));	
+					break;
+					
+				}
+				$text_pos_prov = imagettfbbox(9 ,0 ,LABEL_FONT, $specific);
+
+				if ( ($text_pos_prov[2] + $text_pos[2] < 915 ) && $img && $specific ){
+				  $text_pos = imagettftext($img, 9, 0, $text_pos[2], 107, $black, VALUE_FONT, $specific.'; ');
+				}elseif ( $specific <> '' ) {
+					$extra_specifics .= $specific.'; ' ;
+				}
+			}
+		}
+
+		//
+		//
+	}
+	if ( $specific && $img ) { 
+		imagefilledrectangle( $img, $text_pos[2]- 9 , 97, $text_pos[2] , 109, $white  );
+	}
+	if ( $extra_specifics && $img ) {
+		$extra_specifics = substr ( $extra_specifics, 0, -2);
+		$extra_specifics = t('Additional Pit Specifics: '  , array(),  array ( 'langcode' => $profile_lang ) ). $extra_specifics;
+    imagettftext($img, 7, 0, 870, 120 , $red_layer, LABEL_FONT, '[ '. t("More Pit Specifics below",array(), array( 'langcode' => $profile_lang )) . ' ]');		
+	}
+  return $extra_specifics;
+}

@@ -40,13 +40,16 @@
 	
 	//document.getElementById('snowpilot-map').setAttribute("style","height:370px;");
 	//document.getElementById('snowpilot-map').style.height='370px';
-  snowpilotmap.on('load', invalidateMap);
 
-function invalidateMap() {
 	setTimeout(function () {
-	  snowpilotmap.invalidateSize();
-	}, 500);
-};	 
+	  snowpilotmap.invalidateSize(); console.log('invalidated it!');
+	}, 3000); 
+	
+
+	//setTimeout(function () {
+	//   snowpilotmap.invalidateSize();
+	//}, 0);
+	
 
 function updatePosition(lat, lng ){	
 
@@ -85,10 +88,6 @@ function updatePositionlatlong(){
 	}
   console.log ( lat + ' '+ lng );
 }
-
-setTimeout(function () {
-   snowpilotmap.invalidateSize();
-}, 0);
 
 // This function updates lat/long, utm nad mgrs text boxes values when map marker has been moved 
 // It does all three just in case
