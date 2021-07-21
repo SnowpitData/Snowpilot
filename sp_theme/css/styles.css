@@ -1378,10 +1378,15 @@ a.help-link {
     width: 12px;
 }
 
-.advanced-help-topic{
+.advanced-help-topic,
+#main .item-list{
 	margin: 0.5rem 1.0rem ;
 	background: rgba(255,255,255,0.8);
 	padding: 3px;
+	padding-bottom: 3rem;
+}
+.help-navigation a {
+	font-size: larger;
 }
 
 article .field.field-name-field-images .field-items .field-item {
@@ -1766,11 +1771,12 @@ body.node-type-snowpit-profile{
 .date-selection,
 .users-orgs-selection,
 .tests-button,
-.geo-selection {
-    padding-top: 4px;
+.geo-selection,
+.researcher-query {
+    padding: 4px 4px;
     border-top: 2px solid #1e506d;
     margin-top: 4px;
-		color: #fff;
+	/*	color: #fff;*/
 }
 
 .view-snowpit-list table td > div.views-field-title,

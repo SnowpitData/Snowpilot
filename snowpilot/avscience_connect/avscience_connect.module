@@ -1,6 +1,5 @@
 <?php
 
-include_once('includes/populate_XML_field.php');
 include_once('includes/populate_pit_fields.php');
 include_once( DRUPAL_ROOT . '/sites/all/libraries/ForceUTF8/Encoding.php');
 
@@ -12,14 +11,12 @@ error_reporting(E_ALL);
 
 
 function avscience_connect_menu(){
-
-	$items['snowpilot/avscience_connect'] = array(
-		'title' => 'Review differences between the kc and live avscience dbs',
-		'page callback' => array('snowpilot_connect_page'),
-		//'page arguments' => array('snowpilot_connect_form'),
-		'access callback' =>  'snowpilot_user_has_role',
-		'access arguments' => 'administrator',
-		'type' => MENU_CALLBACK,		
+	$items['snowpilot-query'] = array(
+		'title' => 'Recent Online Snowpits query page',
+		'page callback' => array('snowpilot_query_page'),
+		'access callback' => TRUE, //'snowpilot_user_has_role',
+	//	'access arguments' => array('researcher', 'administrator','anonymous', 'authenticated'),
+		'type' => MENU_NORMAL_ITEM,	
 	);
 	$items['snowpilot-query-feed.xml'] = array(
 		'title' => 'query feed page',
@@ -28,9 +25,34 @@ function avscience_connect_menu(){
 	//	'access arguments' => array('administrator', 'researcher','anonymous', 'authenticated'),
 		'type' => MENU_CALLBACK,	
 	);
+	$items['snowpilot-query-caaml.xml'] = array(
+		'title' => 'caaml query page',
+		'page callback' => 'snowpilot_query_xml',
+		'page arguments' => array('caaml'),
+		'access callback' => TRUE, //'snowpilot_user_has_role',
+	//	'access arguments' => array('administrator', 'researcher','anonymous', 'authenticated'),
+		'type' => MENU_CALLBACK,	
+	);
 	$items['avscience-query-feed.xml'] = array(
 		'title' => 'avscience query feed page',
 		'page callback' => 'avscience_query_xml',
+		//'page arguments' => 'snowpilot',
+		'access callback' => 'snowpilot_user_has_role',
+		'access arguments' => array('administrator', 'researcher'),
+		'type' => MENU_CALLBACK,	
+	);	
+	$items['avscience-query-csv'] = array(
+		'title' => 'avscience query csv output page',
+		'page callback' => 'avscience_query_xml',
+		'page arguments' => array('csv'),
+		'access callback' => 'snowpilot_user_has_role',
+		'access arguments' => array('administrator', 'researcher'),
+		'type' => MENU_CALLBACK,	
+	);
+	$items['avscience-query-caaml.xml'] = array(
+		'title' => 'avscience query caaml output page',
+		'page callback' => 'avscience_query_xml',
+		'page arguments' => array('caaml'),
 		'access callback' => 'snowpilot_user_has_role',
 		'access arguments' => array('administrator', 'researcher'),
 		'type' => MENU_CALLBACK,	
@@ -42,19 +64,43 @@ function avscience_connect_menu(){
 		'access arguments' => array('administrator', 'researcher'),
 		'type' => MENU_NORMAL_ITEM,	
 	);
-	$items['snowpilot-query'] = array(
-		'title' => 'Recent Online Snowpits query page',
-		'page callback' => array('snowpilot_query_page'),
-		'access callback' => TRUE, //'snowpilot_user_has_role',
-	//	'access arguments' => array('researcher', 'administrator','anonymous', 'authenticated'),
-		'type' => MENU_NORMAL_ITEM,	
-	);
 	
 	return $items;
 }
 
-function avscience_query_title(){
-	return "Avscience Query MegaPage";
+function avscience_connect_cron(){
+	if ($tmp_dir = opendir(DRUPAL_ROOT.'/sites/default/files/tmp/') ) {
+    while (false !== ($entry = readdir($tmp_dir))) {
+      if ($entry != "." && $entry != "..") {
+				$info = stat(DRUPAL_ROOT.'/sites/default/files/tmp/'. $entry);
+				if ($info['mtime'] < (time() - 14*24*3600) /* 7 or 14  = days */){
+						av_connect_tmp_recursive_del( DRUPAL_ROOT.'/sites/default/files/tmp/'. $entry );
+					  watchdog('avscience_connect', 'tmp file deleted: '.$entry );
+				  }
+      }
+    }
+    closedir($tmp_dir);
+	}
+	  watchdog('avscience_connect', 'AvSci ran');
+		return;
+}
+
+function av_connect_tmp_recursive_del($full ){
+	if (is_dir( $full)){
+		$dir_handle = opendir($full );
+		while (false !== ($file = readdir($dir_handle))) {
+			if (($file != '.') && ($file != '..')) {
+		    av_connect_tmp_recursive_del( $full .'/'. $file );
+			}
+	  }
+		closedir($dir_handle);
+		
+	}else/*if ( is_dir( DRUPAL_ROOT.'/sites/default/files/tmp/'. $entry))*/{
+		unlink( $full );
+
+	}
+	rmdir( $full );
+	return;
 }
 
 function snowpilot_query_page(){
@@ -87,147 +133,6 @@ function avscience_query_page(){
 	return t($output);
 }
 
-
-
-
-
-
-function snowpilot_connect_page (){
-	global $user;
-	$account = user_load($user->uid);
-	
-	if ( !(user_has_role( 3, $account ))){ return MENU_ACCESS_DENIED ;}
-	$output = 'Introductory text';
-	$new_pits_list = array();
-	$new_pits_list = snowpilot_avscience_fetch_new_pits();
-	dsm($new_pits_list);
-
-	
-	//dsm(drupal_get_form(snowpilot_connect_form($form, $form_state)));
-	$default = implode( array_keys($new_pits_list['new_pits'] ), ',');
-	$form_output = drupal_get_form('snowpilot_connect_form',$default);
-	$output .= drupal_render($form_output);
-	return $output;
-}
-
-function snowpilot_connect_form($form, &$form_state, $default){
-	$form['snowpilot_connect_single'] = array(
-		'#type' => 'textfield',
-		'#size' => 120,
-		'#title' => t('SERIAL of snowpit to convert'  ),
-		'#description' => t('A comma separated list of SERIAL IDs to convert. Is automatically populated with this from diff between last week\'s avscience db and this week.' ),	
-		'#weight' => '15',
-		'#default_value' => $default,
-		'#required' => TRUE,
-		'#maxlength' => 8000,
-	);
-	$form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => 'Convert Snowpits',
-		'#weight' => '25',
-	);
-	
-	return $form;
-}
-
-
-function snowpilot_connect_form_submit($form, &$form_state){
-	error_reporting(E_ALL);
-	$serial_ids = $form_state['values']['snowpilot_connect_single'];
-			watchdog('avscience_connect', "Avscience connect form submission.".var_export($form_state['values']['snowpilot_connect_single'], TRUE));
-			snowpilot_connect_convert_multi($serial_ids);
-	return $form;
-}
-
-function avscience_connect_form_alter($form, &$form_state, $form_id){
-	if ( $form_id == 'snowpilot_connect_single'){
-		
-	}
-		return $form;
-}
-
-function snowpilot_connect_convert_multi($serial_ids){
-  include_once(DRUPAL_ROOT . '/sites/default/avscience_connect_db_settings');
-
-	$query1 = "SELECT * FROM PIT_TABLE WHERE SERIAL IN (".$serial_ids.") ";
-	$new_pits = $current_snowpits_link->query($query1);
-	while ( $new_pit = $new_pits->fetch_array(MYSQLI_ASSOC) ){
-		$result_codes = array();
-		$critical = FALSE;
-		unset($new_pit['PIT_DATA']);
-		unset($new_pit['RANGE']);
-		$keys = array_keys($new_pit);
-		$keys_string = "(".implode(",", $keys )  . ")";
-
-		$values_string = "('" . implode("','", $new_pit ). "')";
-		$query2 = "INSERT INTO PIT_TABLE ".$keys_string." VALUES ".$values_string;
-		if ( $snowpilot_avscience->query($query2) ){;
-		  watchdog('avscience_connect', "Successfully added: ".$new_pit['SERIAL'] . " to the avscience db.");
-		}else{
-		  watchdog('avscience_connect', "Unable to add: ".$new_pit['SERIAL'] . " to the avscience db.", array() , WATCHDOG_WARNING);
-			$critical = TRUE;
-			$result_codes[] = array( 'continue' => TRUE, 'first' => $new_pit['SERIAL'].' could not be added to the avscience db.: '.$query2);
-		}
-// 		//		We keep adding the other functions to populate avscience here:
-
-		if ( !$critical  ){		
-			$xml_result_code = snowpilot_avscience_populate_xml($new_pit['SERIAL']);
-			if ( $xml_result_code['continue'] ) {
-				$result_codes[] = $xml_result_code;
-				watchdog('avscience_connect', $xml_result_code['message'] );
-			}else { 
-				$critical = TRUE; watchdog('avscience_connect', $xml_result_code['message'] , array() , WATCHDOG_WARNING);
-			}
-		}		
-		
-		if ( !$critical ){	
-			$image_result_code = populate_snowpit_image($new_pit['SERIAL']);
-			if ( $image_result_code['continue'] ) {
-				$result_codes[] = $image_result_code;
-				watchdog('avscience_connect', $image_result_code['message'] );
-			}	else{
-				$critical = TRUE; watchdog('avscience_connect', $image_result_code['message'] , array() , WATCHDOG_WARNING);
-			}
-		}
-	
-// /*		
-		if ( !$critical ){		
-			$pit_fields_result_code = snowpilot_avscience_populate_pit_fields($new_pit['SERIAL']);
-			if ( $pit_fields_result_code['continue'] ) {
-				$result_codes[] = $pit_fields_result_code;
-				watchdog('avscience_connect', $pit_fields_result_code['message'] );
-			}else { 
-				$critical = TRUE; watchdog('avscience_connect', $pit_fields_result_code['message'] , array() , WATCHDOG_WARNING);
-			}
-		}		
-		
-		if ( !$critical ){
-		  $layers_result_code = populate_layers_table($new_pit['SERIAL']);
-			if ( $layers_result_code['continue']){
-				$result_codes[] = $layers_result_code;
-				watchdog('avscience_connect', $layers_result_code['message'] );			
-			}else{
-				$critical = TRUE; watchdog('avscience_connect', $layers_result_code['message'] , array() , WATCHDOG_WARNING);
-			}
-		}
-		if ( !$critical){
-			$tests_result_code = populate_shear_tests_table($new_pit['SERIAL']);
-			if ($tests_result_code['continue']){
-				$result_codes[] = $tests_result_code;
-				watchdog('avscience_connect', $tests_result_code['message'] );			
-			}else{
-				$critical = TRUE; watchdog('avscience_connect', $tests_result_code['message'] , array() , WATCHDOG_WARNING);
-			}  
-		}
-//		*/
-		if ( $critical ) dsm( $result_codes);
-		
-		///
-		
-	}
-	return $result_codes;
-}
-
 function snowpilot_query_form( $form, &$form_state){
 
 	$regions_list = get_optgroup_by_taxonomy('geographical_location');
@@ -255,6 +160,14 @@ function snowpilot_query_form( $form, &$form_state){
 		'#size' => 12,
 		'#default_value' => $form_state['values']['STATE'],
 	);
+	$form['recent_dates'] = array(
+	      '#type' => 'select',
+	      '#title' => t('Filter by only recent dates'),
+				'#options' => array('0' => 'none' ,'7' => '1 week', '14'=> '2 weeks', '21' => '3 weeks', '30' => '1 month', '60'=>'2 months', '90'=>'3 months', '182'=> '6 months'),
+				
+	      '#weight' => 19,
+				'#default_value' => $form_state['values']['recent_dates'],
+	    );
 	$form['min_max_dates'] = array(
 	      '#type' => 'fieldset',
 	      '#title' => t('Filter by Date Range'),
@@ -323,10 +236,14 @@ function snowpilot_query_form( $form, &$form_state){
 	);
 	$form['xml_feed'] = array(
 		'#type' => 'submit',
-		'#value' => 'XML Feed Output',
+		'#value' => 'SnowPilot XML Output',
 		'#weight' => '34',
 	);
-	
+	$form['caaml_feed'] = array(
+		'#type' => 'submit',
+		'#value' => 'CAAML XML Output',
+		'#weight' => '35',
+	);
 
 	
          // not shown - use $selected_value to do whatever it was you were
@@ -336,9 +253,9 @@ function snowpilot_query_form( $form, &$form_state){
 			 	  ->entityCondition('bundle', 'snowpit_profile')
 			 	  ->propertyCondition('status', NODE_PUBLISHED);
 					
-			 	if ( isset( $form_state['values']['OBS_DATE_MIN'] ) )$query->fieldCondition('field_date_time', 'value', $form_state['values']['OBS_DATE_MIN'], '>');
+			 	if ( isset( $form_state['values']['OBS_DATE_MIN'] ) ) $query->fieldCondition('field_date_time', 'value', $form_state['values']['OBS_DATE_MIN'], '>');
 			 	if ( isset( $form_state['values']['OBS_DATE_MAX'])) $query->fieldCondition('field_date_time', 'value', $form_state['values']['OBS_DATE_MAX'], '<');
-			 	//$query->propertyCondition('uid',  $form_state['values']['USERNAME'] , '='); // Equal to 
+        if ( isset( $form_state['values']['recent_dates']) && $form_state['values']['recent_dates'] <> '0' ) $query->fieldCondition('field_date_time', 'value', date( 'Y-m-d',time() - 3600 *24*$form_state['values']['recent_dates']), '>');
 
 			 	if ( isset ( $form_state['values']['PIT_NAME']))  $query->propertyCondition('title', '%'.$form_state['values']['PIT_NAME'].'%' , 'like');
 				if ( isset ( $form_state['values']['USERNAME'] ) &&  $form_state['values']['USERNAME'] <> '') {
@@ -351,12 +268,14 @@ function snowpilot_query_form( $form, &$form_state){
 				if ( count($form_state['values']['AFFIL']) && $form_state['values']['AFFIL'] <> 'none' )  $query->fieldCondition('field_org_ownership', 'tid', $form_state['values']['AFFIL']  ,'=');
 
 			  if ( isset($form_state['values']['STATE']) && count( $form_state['values']['STATE'])) $query->fieldCondition('field_loaction', 'tid', $form_state['values']['STATE'], 'IN');
-			 	$query->fieldOrderBy('field_date_time', 'value', 'DESC' );
+			 	//This put them in the order by date of SUBMISSION, not date of entry
+				$query->fieldOrderBy('field_date_time', 'value', 'DESC' );
 				
-				global $user;
-				if ($user->uid <> 1 ){
+				global $user; // 
+				if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){
 					
-				$query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');}
+				  $query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');
+			  }
 				
         $per_page = isset($form_state['values']['per_page']) ? $form_state['values']['per_page'] : 10 ;
 				$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
@@ -403,10 +322,13 @@ function snowpilot_query_form( $form, &$form_state){
 
 function snowpilot_query_form_submit( $form, &$form_state){
 
-	if ( $form_state['clicked_button']['#value'] == 'XML Feed Output'){
+	if ( $form_state['clicked_button']['#value'] == 'SnowPilot XML Output'){
 		//dsm($form_state['values']);
 		$form_state['redirect'] = array('snowpilot-query-feed.xml', array( 'query' => snowpilot_xml_link($form_state['values'])));
-	}else{
+	}elseif( $form_state['clicked_button']['#value'] == 'CAAML XML Output' ){
+		$form_state['redirect'] = array('snowpilot-query-caaml.xml', array( 'query' => snowpilot_xml_link($form_state['values'])));
+		
+	} else{
 		$form_state['redirect'] = current_path() . '/' . $form_state['values']['snowpilot_query_form'];
 		$form_state['rebuild'] = TRUE;
 		
@@ -456,66 +378,6 @@ function snowpilot_query_theme_output($snowpits_nids){
 	
 }
 //
-// Tests to see if the pit was generated by drupal or not
-//  if so, it returns the nid of the pit with said serial.
-// the SERIAL in this case is the avscience serial number
-// could technically work again any of the avscience dbs, but here it is 
-// the main avscience db
-function avscience_is_drupal_pit($SERIAL){
-  include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
-	Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
-
-	db_set_active('avscience_db');
-  $query = 'SELECT LOCAL_SERIAL FROM PIT_TABLE WHERE SERIAL = '.$SERIAL;
-  $local_serial = db_query($query)->fetchField();
-  db_set_active();
-	if ( $local_serial ){ 
-		preg_match( '/drupal-nid-(\d*)/' , $local_serial, $match);
-		return $match[1] ;
-	}else{
-		return 0;
-	}
-}
-
-function snowpilot_avscience_fetch_new_pits(){
-  include_once(DRUPAL_ROOT . '/sites/default/avscience_connect_db_settings');
-	
-	$query1 = 'SELECT MAX(`SERIAL`) FROM `PIT_TABLE`';
-	
-	$first_results = $older_snowpits_link->query($query1)->fetch_row()[0];
-
-	$query2 = 'SELECT `SERIAL`, `LOCAL_SERIAL`, `OBS_DATE` from `PIT_TABLE` where `SERIAL` > '. $first_results. '' ; //' AND OBS_DATE > "'. date( 'Y-m-d' , time() - 60*60*24*7*4).'"' ; // thereby only fetching new pits in the last four weeks, I want to avoid giant regurgitation!
-	
-	// Temporarily include all pits no matter the obs date, so to include the drupal nodes 
-	$new_pits_result = $current_snowpits_link->query($query2);
-	//dsm($new_pits_result);
-	
-	while ( $new_pit = $new_pits_result->fetch_array(MYSQLI_ASSOC) ){
-    $all_pits_list[$new_pit['SERIAL']] = $new_pit;
-		//  This query looks for existing pits in the final avscience db with the same local serial as this pit
-		// unless the pit is originally from drupal database, then we allow updating it. 
-		$query3 = "SELECT COUNT(`SERIAL`) FROM `PIT_TABLE` WHERE `LOCAL_SERIAL` = '". $new_pit['LOCAL_SERIAL']."'";  
-		
-		$existing_pit_check = $snowpilot_avscience->query($query3) or die(mysqli_error());
-		$existing_pit = $existing_pit_check->fetch_row()[0];
-		
-		if (  $existing_pit == 0){
-			//echo "Genuinely new pit: ". " : ". $new_pit['LOCAL_SERIAL']. " : ".$new_pit['OBS_DATE'] ."<br />";
-			$new_pits[$new_pit['SERIAL']] = $new_pit;
-		}else{
-
-			//echo $existing_pit['SERIAL'] . " : ". $new_pit['LOCAL_SERIAL']. " : ".$new_pit['OBS_DATE'] ."<br />";
-			$dupe_pits[$new_pit['SERIAL']] = $new_pit;
-		}
-		//mysqli_free_result($existing_pit_check);
-		
-	}
-		//
-	
-	
-	return array( 'all_pits' => $all_pits_list, 'dupe_pits' => $dupe_pits, 'new_pits' => $new_pits);
-}
-
 
 
 function avscience_query_output(){
@@ -546,9 +408,8 @@ function avscience_query_output(){
 	$unique_states = "SELECT distinct ( STATE ) FROM `PIT_TABLE` ORDER BY length(STATE) , STATE"; 
 	$states_list = db_query($unique_states);
 	while ( $states = $states_list->fetch() )	{
-		$selected = ($states->STATE == $state) ? ' selected' : '';
-	  $state_options .=  "<option value ='" . $states->STATE . "'". $selected ."  > ". $states->STATE ."</option>
-			" ;
+		$selected = (preg_replace('/[^(\x20-\x7F)]*/','', $states->STATE)  == $state) ? ' selected' : '';
+	  $state_options .=  "<option value ='" . preg_replace('/[^(\x20-\x7F)]*/','', $states->STATE) . "'". $selected ."  > ". $states->STATE ."</option>\r\n" ;
 	}
 
 	if (isset( $_GET['MTN_RANGE']) && count( $_GET['MTN_RANGE'] )  ){
@@ -580,14 +441,19 @@ function avscience_query_output(){
 	    $where_clause .=  " AND OBS_DATE < :OBS_DATE_MAX " ; $query_args[':OBS_DATE_MAX'] = $_GET['OBS_DATE_MAX'];
 			$obsdatemax = $_GET['OBS_DATE_MAX'];
 	}
-
+	if (isset( $_GET['recent_dates']) && $_GET['recent_dates'] <> ''  && $_GET['recent_dates'] <> '0'){
+			$recent_dates = date ( 'Y-m-d', time() - $_GET['recent_dates']*3600*24);
+			$query_args[':RECENT_DATES'] = $recent_dates;
+			$where_clause .= ' AND OBS_DATE > :RECENT_DATES ';
+			$recent_days_count = $_GET['recent_dates'];
+	}
+	
 
 	if (isset( $_GET['USERNAME']) && $_GET['USERNAME'] <> ''  ){
 	    $where_clause .=  " AND USERNAME LIKE :USERNAME " ;
 			$query_args[':USERNAME'] = $username = '%'.$_GET['USERNAME'].'%';
 	}
-
-
+	
 	if (isset( $_GET['PIT_NAME']) && $_GET['PIT_NAME'] <> ''  ){
 	    $where_clause .=  " AND PIT_NAME LIKE :PIT_NAME " ;
 			$query_args[':PIT_NAME'] = $loc_name = $_GET['PIT_NAME'];
@@ -610,11 +476,17 @@ function avscience_query_output(){
 			$query_args[':AFFIL'] = "%affil~1" .  $_GET['AFFIL']."%" ; $affil = $_GET['AFFIL'];
 	}
 
-/*	if ( isset( $_GET['ADV_WHERE_QUERY']) && $_GET['ADV_WHERE_QUERY'] <>''){
-		$where_clause .=  " AND :ADV_WHERE_QUERY ";
-		$query_args[':ADV_WHERE_QUERY'] = $adv_where_query = $_GET['ADV_WHERE_QUERY'];
+	
+	if (isset( $_GET['per_page']) && $_GET['per_page'] <> ''  ){
+			 $per_page = $_GET['per_page'];
+	}else { $per_page = 10 ;}
+
+	if ( isset( $_GET['ADV_WHERE_QUERY']) && $_GET['ADV_WHERE_QUERY'] <>''){
+		$where_clause .=  " AND ".$_GET['ADV_WHERE_QUERY']." ";
+		/*$query_args[':ADV_WHERE_QUERY'] =*/ $adv_where_query = $_GET['ADV_WHERE_QUERY'];
 	}
-*/
+
+
 	$output .='
 	<div class = "view-snowpit-list">
 		<div class= "views-exposed-form">
@@ -626,7 +498,7 @@ function avscience_query_output(){
 	  	</div>
 	    <div style = "display: inline-block; width : 160px; vertical-align: top;">
 	  	State/Province/Country<br />
-		  <select type = "select" name = "STATE" id = "STATE" value ="'. $state .'">
+		  <select type = "select" name = "STATE" id = "STATE" >
 	  	  '.$state_options.'
 	    </select>
 	    </div>
@@ -640,18 +512,36 @@ function avscience_query_output(){
 				Observation Date<br />
 			  <div style ="display: inline-block;">minimum: <br /><input type = "date" name = "OBS_DATE_MIN" value= "' .$obsdatemin .'" /> </div>
 			  <div style ="display: inline-block;">maximum: <br /><input type = "date" name = "OBS_DATE_MAX" value= "'. $obsdatemax .'" /> </div>
+			  <div style ="display: inline-block;">recent dates: <br /><select name = "recent_dates" />
+				<option value="0">-none-</option>
+          <option value="7" '.( $recent_days_count == '7' ? ' selected="true" ' : '')  .'>1 week</option>				
+				  <option value="14" '.( $recent_days_count == '14' ? ' selected="true" ' : '')  .'>2 weeks</option>
+					<option value="21" '.( $recent_days_count == '21' ? ' selected="true" ' : '')  .'>3 weeks</option>
+					<option value="30" '.( $recent_days_count == '30' ? ' selected="true" ' : '')  .'>1 month</option>
+					<option value="61" '.( $recent_days_count == '61' ? ' selected="true" ' : '')  .'>2 months</option>
+					<option value="92" '.( $recent_days_count == '92' ? ' selected="true" ' : '')  .'>3 months</option>
+					<option value="183" '.( $recent_days_count == '183' ? ' selected="true" ' : '')  .'>6 months</option>
+				
+				
+				
+				</select>
+				 </div>
+				
 			</div>
 			<div class = "users-orgs-selection"  style = "display: inline-block; vertical-align: top;" >
 				<div >Username \'contains\': <br /><input type = "text" name = "USERNAME" value= "'. $username. '" /> </div>
 			  <div >Affiliation \'contains\' : <br /><input type = "text" name = "AFFIL" value= "'. $affil. '" /> </div>
 			</div>
+			<div class = "per_page_selection"  style = "display: inline-block; vertical-align: top;" >
+				<div >Snowpits per page ( or output ) <select type = "select" name = "per_page" id= "per_page" ><option value = "10">10</option><option value = "50">50</option><option value = "200">200</option><option value = "500">500</option><option value = "1000">1000</option> </select></div>
+			</div>
 	  </div>
 		<div class = "researcher-query">
 	';		
 	
-		/*	if ( in_array('administrator' , $user->roles ) || in_array('researcher' , $user->roles ) ){
-			 $output .= ' 	<div style ="display: inline-block;">Advanced WHERE query : <input type = "text" name = "ADV_WHERE_QUERY" value= "' . $adv_where_query . '" /></div>';
-			}*/
+			if ( in_array('administrator' , $user->roles ) || in_array('researcher' , $user->roles ) ){
+			 $output .= ' 	<div style ="display: inline-block;">Advanced WHERE query: <textarea type = "textarea" name = "ADV_WHERE_QUERY" cols =  "80" rows = "4" >'.$adv_where_query.'</textarea></div>';
+			}
 $output .=
 		'</div>
 		<div class = "tests-button">
@@ -662,15 +552,15 @@ $output .=
 
 	</form>
 	</div>';
-
-	  $per_page = 10;
-		$where_clause .= " AND SHARE = '1' ";
+	$output .= avscience_xml_link('avscience-query-feed.xml','Snowpilot XML feed Link') ;
+	$output .= avscience_xml_link('avscience-query-caaml.xml', 'CAAML download link') ;
+	$output .= avscience_xml_link('avscience-query-csv', 'CSV download, gzipped') ;
 
 		//
 		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
-		$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL, LOCAL_SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
+		$query = "SELECT node_id, SERIAL, MTN_RANGE,STATE, OBS_DATE, USERNAME , PIT_NAME FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
 		$query2 = "SELECT count(SERIAL) FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause ;
-
+		//dsm( $query ); dsm( $recent_days_count );// exit();
 	  $results = db_query($query,$query_args);
 		$count_results = db_query($query2,$query_args)->fetchField(); 
 		db_set_active();
@@ -679,25 +569,11 @@ $output .=
 		$rows = array();
 	  while ( $record = $results->fetch() )	{
 			$x = 1;
-			$pre_img_url = '/sites/default/files/avscience-profiles/graph-serial-'.$record->SERIAL. '.jpg';
-			$layers_image = '/sites/default/files/avscience-profiles/layers/layers-serial-'.$record->SERIAL. '.jpg';
+			$thousands = !empty(substr($record->node_id, 0, -3 )) ? substr($record->node_id, 0, -3 ) : '0' ;
+			$pre_img_url = '/sites/default/files/snowpit-profiles/'. $thousands .'/graph/graph-'.$record->node_id. '.jpg';
+			$layers_image = '/sites/default/files/snowpit-profiles/'. $thousands .'/layers/layers-'.$record->node_id. '.png';
 		
-			if( !file_exists( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/layers/layers-serial-'.$record->SERIAL. '.jpg' )){
-				if( !file_exists( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/graph-serial-'.$record->SERIAL. '.jpg' )){
-				
-					$kc_img_src = file_get_contents( "http://www.kahrlconsulting.com:8084/avscience/PitServlet?TYPE=PITIMAGE&SERIAL=".$record->SERIAL );
-					$local_image = fopen( DRUPAL_ROOT.'/sites/default/files/avscience-profiles/graph-serial-'.$record->SERIAL. '.jpg' , 'w');
-					fwrite($local_image, $kc_img_src);
-					fclose($local_image);
-					sleep(1);
-				}
-				$pre_img = imagecreatefromjpeg( DRUPAL_ROOT.$pre_img_url);
-				$new_img = imagecreatetruecolor(466,613);
-				$result = imagecopy($new_img, $pre_img, 0,0, 14,140,466,613 );
-						
-				imagejpeg( $new_img , DRUPAL_ROOT. $layers_image );
-			
-			}
+		
 		
 			//
 			//
@@ -717,8 +593,6 @@ $output .=
 				<span class="date-display-single" property="dc:date"  >'. $record->OBS_DATE .' </span>
 				<span>'. theme('ctools_dropdown', array('title' => t('Download Snowpit'), 'links' => $links)) .'</span>
 				</div> </div>';
-		
-		
 		
 				$rows[$x][1] .= $this_item ;
 		
@@ -750,12 +624,8 @@ $output .=
 															$output .= '<div class = "view-content">' . theme('table', array('header' => $header, 'rows' => $rows /*$chunks[$current_page]*/ ));
 															// Show the pager
 															$output .= theme('pager', array('quantity',$count_results)). '</div></div>';
-				
-	
-														
-														$output .= avscience_xml_link('avscience-query-feed.xml') . '</div>' ;
-														
-															return $output;
+
+															return $output. '</div>';
 		
 }
 
@@ -792,6 +662,57 @@ function avscience_pit_xml_doc($serials ){
   '.$data.'
   </Pit_Data>';
 }
+
+function avscience_pit_caaml_doc($serials ){
+	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+	global $user;
+	if ( count ( $serials  ) == 0) return;
+	
+	$dir_name = $user->name.'-snowpits-'.date('y-m-d-h-i');
+	$dir_results = mkdir( DRUPAL_ROOT.'/sites/default/files/tmp/'.$dir_name );
+	foreach ( $serials as $node_id => $serial ){
+	  $node = node_load( $node_id );
+		$node_caaml = snowpilot_node_write_caaml( $node );
+		$caaml_file = fopen( DRUPAL_ROOT.'/sites/default/files/tmp/'.$dir_name.'/snowpits-'.$node_id.'-caaml.xml', 'w');
+		fwrite($caaml_file , $node_caaml );
+		fclose( $caaml_file );
+	}
+	exec( 'cd '.DRUPAL_ROOT.'/sites/default/files/tmp; tar -czf '.$dir_name.'.tar.gz '.$dir_name );
+  return $dir_name; // print _r gzipped doc of snowpits
+}
+
+function avscience_pit_csv_doc($serials ){
+	global $user;
+	if ( count ( $serials  ) == 0) return;
+	
+	$file_name = $user->name.'-snowpits-'.date('y-m-d-h-i').'.csv';
+	
+	csv_avscience_sql($serials, $file_name);
+	
+	$end_file = gzCompressFile( $file_name, 9);
+	
+	
+	return $end_file;
+}
+
+function csv_avscience_sql( $serials, $file_name ){
+	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
+	$query = CSVQUERYHEAD. ' AND SERIAL IN ( '. implode( ',' ,$serials ) .') '. 
+"GROUP BY pt.SERIAL
+INTO OUTFILE '/var/lib/mysql-files/$file_name'
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '". '"' . "'
+LINES TERMINATED BY '\n';";  //  
+db_set_active('avscience_db');
+$results = db_query($query);
+sleep(3);
+db_set_active();
+
+
+return; 
+}
+
+
 //
 //  Returns an array based on form_state[$values];
 //
@@ -805,7 +726,7 @@ function snowpilot_xml_link($form_state_values){
 	return $return_array;
 }
 
-function  avscience_xml_link($url)  {
+function  avscience_xml_link($url, $name)  {
 	$query_array = array();
 	//unset($_GET['q']);
 	//unset($_GET['page']);
@@ -821,10 +742,10 @@ function  avscience_xml_link($url)  {
       }
 		}
 	$query_string = '?' . implode($query_array , '&' );
-	return  '<div style = "text-align:center;"><a href ="/'.$url.$query_string.'" style ="color: #00f;"><img src="/misc/feed.png"  /> XML feed link</a>';
+	return  '<div style = "text-align:center;"><a href ="/'.$url.$query_string.'" style ="color: #00f;"><img src="/misc/feed.png"  />'. $name .'</a>';
 }
 	
-function snowpilot_query_xml(){
+function snowpilot_query_xml($format = 'xml'){  // could be xml or caaml
 	global $user;
 	$account = user_load($user->uid);
 	
@@ -851,6 +772,10 @@ function snowpilot_query_xml(){
 			$obsdatemax = $_GET['OBS_DATE_MAX'];
 		  $query->fieldCondition('field_date_time', 'value', $obsdatemax, '<');
 	}
+	if (isset( $_GET['recent_dates']) && $_GET['recent_dates'] <> ''   && $_GET['recent_dates'] <> '0' ){
+			$recent_dates = date ( 'Y-m-d', time() - $_GET['recent_dates']*3600*24);
+		  $query->fieldCondition('field_date_time', 'value', $recent_dates, '>');
+	}
 
 	if ( isset ( $_GET['USERNAME'] ) &&  $_GET['USERNAME'] <> '') {
 		$account = user_load_by_name ($_GET['USERNAME']);
@@ -873,22 +798,42 @@ function snowpilot_query_xml(){
 			$affil = $_GET['AFFIL'];
 			$query->fieldCondition('field_org_ownership', 'tid', $affil  ,'=');
 	}
-	$query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');
 	
+	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) )){ 
+	  $query->fieldCondition('field_snowpit_visibility', 'value', 'public' ,'=');
+  }  
 	$per_page = (isset($_GET['per_page']) && $_GET['per_page'] > 0) ? $_GET['per_page'] : 10 ;
 	if ( $per_page > 500 ) $per_page = 500; // limiting to select 100 items
 	$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
 
 	$query->range($per_page * $page_num, $per_page);
 	$query->fieldOrderBy('field_date_time', 'value', 'DESC' );
-
 	$result = $query->execute();
 	//dsm( $query_count->__toString() );
 	
 	if (isset($result['node'])) {
 	  $snowpit_nids = array_keys($result['node']);
 		//dsm(snowpilot_pit_xml_doc($snowpit_nids ));
-	  $output =  snowpilot_pit_xml_doc($snowpit_nids );
+		switch ( $format ){
+			case 'xml':
+	    $output =  snowpilot_pit_xml_doc($snowpit_nids );
+			break;
+			case 'caaml':
+
+		  // this function avscience_pit_caaml_doc($serials ) expects $serials to actually be like [ node_id 1=> serial num1, node_id2 => serial_num2, etc] 
+			// since the function doesn't actually use the serial number, the values of the array, just the node_ids, so we can send it $results['node'],
+			
+			$dir_name = avscience_pit_caaml_doc($result['node'] );
+			header('Content-type: application/gzip');
+		  header('Content-Disposition: attachment; filename="'. $dir_name .'_caaml.tar.gz"');
+			$output = file_get_contents(  DRUPAL_ROOT. '/sites/default/files/tmp/'. $dir_name  . '.tar.gz');
+			
+			
+			
+			
+			
+			break;
+		}
 		//dsm($output);
 		print_r( $output );
 		exit();
@@ -897,20 +842,19 @@ function snowpilot_query_xml(){
 	return "<h2>No Data was returned by the query</h2>";
 }
 
-function avscience_query_xml(){
+function avscience_query_xml($format = 'snowpilot' ){
 	global $user;
 	$account = user_load($user->uid);
 	
 	if ( !(user_has_role( 3, $account )) && !(user_has_role( 5, $account ) ) ){ return MENU_ACCESS_DENIED ;}
-	header('Content-type: application/xml');
-  //header('Content-Disposition: attachment; filename="avscience-query-results.xml"');
+
 	
 	include_once (DRUPAL_ROOT.'/sites/default/db_settings.php' );
 	global $user;
 		Database::addConnectionInfo('avscience_db', 'default', $test_db );// $avsci_db_info
 	
 		db_set_active('avscience_db');
-	$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ";
+	$query = "";
 	$query_args = array();
 	$where_clause = '';
 	$output = '';
@@ -954,32 +898,32 @@ function avscience_query_xml(){
 
 	if (isset( $_GET['OBS_DATE_MIN']) && $_GET['OBS_DATE_MIN'] <> ''  ){
 	    $where_clause .=  " AND OBS_DATE > :OBS_DATE_MIN " ; $query_args[':OBS_DATE_MIN'] = $_GET['OBS_DATE_MIN'];
-			$obsdatemin = $_GET['OBS_DATE_MIN'];
 	}
 
 
 	if (isset( $_GET['OBS_DATE_MAX']) && $_GET['OBS_DATE_MAX'] <> ''  ){
 	    $where_clause .=  " AND OBS_DATE < :OBS_DATE_MAX " ; $query_args[':OBS_DATE_MAX'] = $_GET['OBS_DATE_MAX'];
-			$obsdatemax = $_GET['OBS_DATE_MAX'];
 	}
-
+	
+	if (isset( $_GET['recent_dates']) && $_GET['recent_dates'] <> ''  && $_GET['recent_dates'] <> '0'){
+			$recent_dates = date ( 'Y-m-d', time() - $_GET['recent_dates']*3600*24);
+			$query_args[':RECENT_DATES'] = $recent_dates;
+			$where_clause .= ' AND OBS_DATE > :RECENT_DATES ';
+	}
 
 	if (isset( $_GET['USERNAME']) && $_GET['USERNAME'] <> ''  ){
 	    $where_clause .=  " AND USERNAME LIKE :USERNAME " ;
-			$query_args[':USERNAME'] = $username = '%'.$_GET['USERNAME'].'%';
+			$query_args[':USERNAME'] = '%'.$_GET['USERNAME'].'%';
 	}
 
 
 	if (isset( $_GET['PIT_NAME']) && $_GET['PIT_NAME'] <> ''  ){
 	    $where_clause .=  " AND PIT_NAME LIKE :PIT_NAME " ;
-			$query_args[':PIT_NAME'] = $loc_name = $_GET['PIT_NAME'];
+			$query_args[':PIT_NAME'] = $_GET['PIT_NAME'];
 	}
 
 	if ( !isset($_GET['testpit']) || $_GET['testpit'] <> '1'  ){
-	    $where_clause .=  " AND TEST_PIT != 1 " ;
-			
-	}else{
-		$test_pit_checked = ' checked';
+	    $where_clause .=  " AND TEST_PIT != 1 " ;	
 	}
 
 	if (isset( $_GET['SERIAL']) && $_GET['SERIAL'] <> ''  ){
@@ -992,28 +936,208 @@ function avscience_query_xml(){
 			$query_args[':AFFIL'] = "%affil~1" .  $_GET['AFFIL']."%" ; $affil = $_GET['AFFIL'];
 	}
 	
-	$per_page = (isset($_GET['per_page']) && $_GET['per_page'] > 0) ? $_GET['per_page'] : 10 ;
-	if ( $per_page > 100 ) $per_page = 100; // limiting to select 100 items
-
-		$where_clause .= " AND SHARE = '1' ";
-
-		//
-		$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
-		$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
-		
-		$query2 = "SELECT count(SERIAL) FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause ;
-
-	  $results = db_query($query,$query_args);
-		$count_results = db_query($query2,$query_args)->fetchField(); 
-		db_set_active();
+	if ( isset( $_GET['ADV_WHERE_QUERY']) && $_GET['ADV_WHERE_QUERY'] <>''){
+		$where_clause .=  " AND ".$_GET['ADV_WHERE_QUERY']." ";
+		/*$query_args[':ADV_WHERE_QUERY'] =*/ $adv_where_query = $_GET['ADV_WHERE_QUERY'];
+	}
 	
-		//$records = array();
-		$rows = array();
+	$per_page = (isset($_GET['per_page']) && $_GET['per_page'] > 0) ? $_GET['per_page'] : 10 ;
+	if ( $per_page > 10000 ) $per_page = 10000; // limiting to select 100 items
+
+	//$where_clause .= " AND SHARE = '1' ";
+
+	//
+	$page_num = isset ($_GET['page']) ? $_GET['page'] : '0' ;
+	$query = "SELECT PIT_NAME, OBS_DATE, USERNAME, STATE, MTN_RANGE, SERIAL, node_id FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause . " ORDER BY OBS_DATE DESC LIMIT " . $page_num * $per_page ."," . $per_page;
+	
+	$query2 = "SELECT count(SERIAL) FROM `PIT_TABLE` WHERE SERIAL > 0  ". $where_clause ;
+
+  $results = db_query($query,$query_args);
+	$count_results = db_query($query2,$query_args)->fetchField(); 
+	db_set_active();
+
+	//$records = array();
+	$rows = array();
+  
+
+	if ( $format == 'caaml'){ 
 	  while ( $record = $results->fetch() )	{
-	  	$serials[] = $record->SERIAL;			
+			if ( $record->node_id <> 0 ){  // WE can only make caaml output from website snowpits, not legacy snowpits
+	    	$serials[ $record->node_id ] = $record->SERIAL;			
+			}
 	  }
-	 print_r(avscience_pit_xml_doc($serials ));
-	 exit();
+		$dir_name = avscience_pit_caaml_doc($serials );
+		header('Content-type: application/gzip');
+	  header('Content-Disposition: attachment; filename="'. $dir_name .'_caaml.tar.gz"');
+		print_r (file_get_contents(  DRUPAL_ROOT. '/sites/default/files/tmp/'. $dir_name  . '.tar.gz'));
+		//print_r ( DRUPAL_ROOT. '/sites/default/files/tmp/'.  avscience_pit_caaml_doc($serials ) . '.tar.gz');
+	}elseif(  $format == 'csv'  ){
+	  while ( $record = $results->fetch() )	{
+	    $serials[ $record->node_id ] = $record->SERIAL;			
+	  }
+		$gz_file_name = avscience_pit_csv_doc( $serials );
+		header('Content-type: application/gzip');
+  	//header('Content-Encoding: gzip'); 
+	  header('Content-Disposition: attachment; filename="'. substr($gz_file_name, strrpos($gz_file_name, '/' ) + 1  ) );
+		print_r (file_get_contents( $gz_file_name));
+		
+	}else{
+	  
+		header('Content-type: application/xml');
+	  print_r(avscience_pit_xml_doc($serials ));
+  }
+	exit();
 	return ;
 }	
 
+define ('CSVQUERYHEAD',  "SELECT 'PIT_NAME', 'USERNAME', 'Organization', 'OBS_DATE', 'SHARE', 'STATE', 'MTN_RANGE', 'ELEVATION', 'LAT', 'LONGITUDE', 'ASPECT', 'INCLINE', 'STABILITY', 'ACTIVITIES', 'WINDLOAD', 'PRECIP', 'SKY_COVER', 'WIND_SPEED', 'WIND_DIR', 'STABILITY', 'skiAreaPit', 'bcPit', 'TEST_PIT' ,'node_id', 'measureFrom', 'heightOfSnowpack', 'calculatedHoS', 'boot Penetration', 'ski Penetration' ,'SERIAL', 'Depth Units', 'Elevation Units', 'temp Units','Layer of concern #', 'Layer of concern depth' ,'Whumpf Val', 'Whumpf Size', 'AviPit', 'AviLoc', 'Pit Notes', 'surface Grain Type', 'Surface Grain Size'
+,'Layer 1 startDepth', 'Layer 1 endDepth', 'Layer 1 layerNumber', 'Layer 1 grainType1', 'Layer 1 grainType2', 'Layer 1 Water content' ,'Layer 1 grainSize1', 'Layer 1 grainSize2', 'Layer 1 hardness1', 'Layer 1 hardness2', 'Layer 1 iDepth'
+,'Layer 2 startDepth', 'Layer 2 endDepth', 'Layer 2 layerNumber', 'Layer 2 grainType1', 'Layer 2 grainType2', 'Layer 2 Water content' ,'Layer 2 grainSize1', 'Layer 2 grainSize2', 'Layer 2 hardness1', 'Layer 2 hardness2', 'Layer 2 iDepth'
+,'Layer 3 startDepth', 'Layer 3 endDepth', 'Layer 3 layerNumber', 'Layer 3 grainType1', 'Layer 3 grainType2', 'Layer 3 Water content' ,'Layer 3 grainSize1', 'Layer 3 grainSize2', 'Layer 3 hardness1', 'Layer 3 hardness2', 'Layer 3 iDepth'
+,'Layer 4 startDepth', 'Layer 4 endDepth', 'Layer 4 layerNumber', 'Layer 4 grainType1', 'Layer 4 grainType2', 'Layer 4 Water content' ,'Layer 4 grainSize1', 'Layer 4 grainSize2', 'Layer 4 hardness1', 'Layer 4 hardness2', 'Layer 4 iDepth'
+,'Layer 5 startDepth', 'Layer 5 endDepth', 'Layer 5 layerNumber', 'Layer 5 grainType1', 'Layer 5 grainType2', 'Layer 5 Water content' ,'Layer 5 grainSize1', 'Layer 5 grainSize2', 'Layer 5 hardness1', 'Layer 5 hardness2', 'Layer 5 iDepth'
+,'Layer 6 startDepth', 'Layer 6 endDepth', 'Layer 6 layerNumber', 'Layer 6 grainType1', 'Layer 6 grainType2', 'Layer 6 Water content' ,'Layer 6 grainSize1', 'Layer 6 grainSize2', 'Layer 6 hardness1', 'Layer 6 hardness2', 'Layer 6 iDepth'
+,'Layer 7 startDepth', 'Layer 7 endDepth', 'Layer 7 layerNumber', 'Layer 7 grainType1', 'Layer 7 grainType2', 'Layer 7 Water content' ,'Layer 7 grainSize1', 'Layer 7 grainSize2', 'Layer 7 hardness1', 'Layer 7 hardness2', 'Layer 7 iDepth'
+,'Layer 8 startDepth', 'Layer 8 endDepth', 'Layer 8 layerNumber', 'Layer 8 grainType1', 'Layer 8 grainType2', 'Layer 8 Water content' ,'Layer 8 grainSize1', 'Layer 8 grainSize2', 'Layer 8 hardness1', 'Layer 8 hardness2', 'Layer 8 iDepth'
+,'Layer 9 startDepth', 'Layer 9 endDepth', 'Layer 9 layerNumber', 'Layer 9 grainType1', 'Layer 9 grainType2', 'Layer 9 Water content' ,'Layer 9 grainSize1', 'Layer 9 grainSize2', 'Layer 9 hardness1', 'Layer 9 hardness2', 'Layer 9 iDepth'
+,'Layer 10 startDepth', 'Layer 10 endDepth', 'Layer 10 layerNumber', 'Layer 10 grainType1', 'Layer 10 grainType2', 'Layer 10 Water content' ,'Layer 10 grainSize1', 'Layer 10 grainSize2', 'Layer 10 hardness1', 'Layer 10 hardness2', 'Layer 10 iDepth'
+,'Layer 11 startDepth', 'Layer 11 endDepth', 'Layer 11 layerNumber', 'Layer 11 grainType1', 'Layer 11 grainType2', 'Layer 11 Water content' ,'Layer 11 grainSize1', 'Layer 11 grainSize2', 'Layer 11 hardness1', 'Layer 11 hardness2', 'Layer 11 iDepth'
+,'Layer 12 startDepth', 'Layer 12 endDepth', 'Layer 12 layerNumber', 'Layer 12 grainType1', 'Layer 12 grainType2', 'Layer 12 Water content' ,'Layer 12 grainSize1', 'Layer 12 grainSize2', 'Layer 12 hardness1', 'Layer 12 hardness2', 'Layer 12 iDepth'
+,'Layer 13 startDepth', 'Layer 13 endDepth', 'Layer 13 layerNumber', 'Layer 13 grainType1', 'Layer 13 grainType2', 'Layer 13 Water content' ,'Layer 13 grainSize1', 'Layer 13 grainSize2', 'Layer 13 hardness1', 'Layer 13 hardness2', 'Layer 13 iDepth'
+,'Layer 14 startDepth', 'Layer 14 endDepth', 'Layer 14 layerNumber', 'Layer 14 grainType1', 'Layer 14 grainType2', 'Layer 14 Water content' ,'Layer 14 grainSize1', 'Layer 14 grainSize2', 'Layer 14 hardness1', 'Layer 14 hardness2', 'Layer 14 iDepth'
+,'Layer 15 startDepth', 'Layer 15 endDepth', 'Layer 15 layerNumber', 'Layer 15 grainType1', 'Layer 15 grainType2', 'Layer 15 Water content' ,'Layer 15 grainSize1', 'Layer 15 grainSize2', 'Layer 15 hardness1', 'Layer 15 hardness2', 'Layer 15 iDepth'
+,'Layer 16 startDepth', 'Layer 16 endDepth', 'Layer 16 layerNumber', 'Layer 16 grainType1', 'Layer 16 grainType2', 'Layer 16 Water content' ,'Layer 16 grainSize1', 'Layer 16 grainSize2', 'Layer 16 hardness1', 'Layer 16 hardness2', 'Layer 16 iDepth'
+,'Layer 17 startDepth', 'Layer 17 endDepth', 'Layer 17 layerNumber', 'Layer 17 grainType1', 'Layer 17 grainType2', 'Layer 17 Water content' ,'Layer 17 grainSize1', 'Layer 17 grainSize2', 'Layer 17 hardness1', 'Layer 17 hardness2', 'Layer 17 iDepth'
+,'Layer 18 startDepth', 'Layer 18 endDepth', 'Layer 18 layerNumber', 'Layer 18 grainType1', 'Layer 18 grainType2', 'Layer 18 Water content' ,'Layer 18 grainSize1', 'Layer 18 grainSize2', 'Layer 18 hardness1', 'Layer 18 hardness2', 'Layer 18 iDepth'
+,'Layer 19 startDepth', 'Layer 19 endDepth', 'Layer 19 layerNumber', 'Layer 19 grainType1', 'Layer 19 grainType2', 'Layer 19 Water content' ,'Layer 19 grainSize1', 'Layer 19 grainSize2', 'Layer 19 hardness1', 'Layer 19 hardness2', 'Layer 19 iDepth'
+,'Layer 20 startDepth', 'Layer 20 endDepth', 'Layer 20 layerNumber', 'Layer 20 grainType1', 'Layer 20 grainType2', 'Layer 20 Water content' ,'Layer 20 grainSize1', 'Layer 20 grainSize2', 'Layer 20 hardness1', 'Layer 20 hardness2', 'Layer 20 iDepth'
+,'Layer 21 startDepth', 'Layer 21 endDepth', 'Layer 21 layerNumber', 'Layer 21 grainType1', 'Layer 21 grainType2', 'Layer 21 Water content' ,'Layer 21 grainSize1', 'Layer 21 grainSize2', 'Layer 21 hardness1', 'Layer 21 hardness2', 'Layer 21 iDepth'
+,'Layer 22 startDepth', 'Layer 22 endDepth', 'Layer 22 layerNumber', 'Layer 22 grainType1', 'Layer 22 grainType2', 'Layer 22 Water content' ,'Layer 22 grainSize1', 'Layer 22 grainSize2', 'Layer 22 hardness1', 'Layer 22 hardness2', 'Layer 22 iDepth'
+,'Layer 23 startDepth', 'Layer 23 endDepth', 'Layer 23 layerNumber', 'Layer 23 grainType1', 'Layer 23 grainType2', 'Layer 23 Water content' ,'Layer 23 grainSize1', 'Layer 23 grainSize2', 'Layer 23 hardness1', 'Layer 23 hardness2', 'Layer 23 iDepth'
+
+,'ECT1-id', 'ECT1-score', 'ECT1-ecScore', 'ECT1-sdepth', 'ECT-1 fracture character', 'ECT-1 fracture quality', 'ECT-1 fracture category', 'ECT-1 comments',
+'ECT2-id', 'ECT2-score', 'ECT2-ecScore', 'ECT2-sdepth',  'ECT-2 fracture character', 'ECT-2 fracture quality', 'ECT-2 fracture category', 'ECT-2 comments',
+'ECT3-id', 'ECT3-score', 'ECT3-ecScore', 'ECT3-sdepth',  'ECT-3 fracture character', 'ECT-3 fracture quality', 'ECT-3 fracture category', 'ECT-3 comments',
+
+'CT1_id', 'CT1_score', 'CT1_ctScore', 'CT1_sdepth', 'CT1_fractureCat', 'CT1_quality', 'CT1_fractureCharacter', 'CT-1 comments',
+'CT2_id', 'CT2_score', 'CT2_ctScore', 'CT2_sdepth', 'CT2_fractureCat', 'CT2_quality', 'CT2_fractureCharacter', 'CT-2 comments',
+'CT3_id', 'CT3_score', 'CT3_ctScore', 'CT3_sdepth', 'CT3_fractureCat', 'CT3_quality', 'CT3_fractureCharacter', 'CT-3 comments',
+
+'PST1_id', 'PST1_score', 'PST1_lengthOfColumn' , 'PST1_lengthOfCut' , 'PST1_sdepth', 'PST-1 comments',
+'PST2_id', 'PST2_score', 'PST2_lengthOfColumn' , 'PST2_lengthOfCut' , 'PST1_sdepth', 'PST-2 comments',
+'PST3_id', 'PST3_score', 'PST3_lengthOfColumn' , 'PST3_lengthOfCut' , 'PST3_sdepth', 'PST-3 comments' 
+
+ UNION
+
+SELECT pt.PIT_NAME, pt.USERNAME, pt.Organization ,pt.OBS_DATE, pt.SHARE, pt.STATE, pt.MTN_RANGE, pt.ELEVATION, pt.LAT, pt.LONGITUDE, pt.ASPECT, pt.INCLINE, pt.STABILITY, pt.ACTIVITIES, pt.WINDLOAD, pt.PRECIP, pt.SKY_COVER, pt.WIND_SPEED, pt.WIND_DIR, pt.STABILITY, pt.skiAreaPit, pt.bcPit, pt.TEST_PIT ,pt.node_id, pt.measureFrom, pt.heightOfSnowpack, pt.calculatedHoS, pt.bootPen, pt.skiPen,  pt.SERIAL, pt.depthUnits, pt.elvUnits, pt.tempUnits, pt.iLayerNumber, pt.iDepth, pt.whumpfVal, pt.whumpfSize, pt.aviPit, pt.aviLoc, pt.pitNotes, pt.surfGrainType, pt.surfGrainSize
+,l1.startDepth, l1.endDepth, l1.layerNumber, l1.grainType1, l1.grainType2, l1.waterContent, l1.grainSize1, l1.grainSize2, l1.hardness1, l1.hardness2, l1.iDepth
+,l2.startDepth, l2.endDepth, l2.layerNumber, l2.grainType1, l2.grainType2, l2.waterContent, l2.grainSize1, l2.grainSize2, l2.hardness1, l2.hardness2, l2.iDepth
+,l3.startDepth, l3.endDepth, l3.layerNumber, l3.grainType1, l3.grainType2, l3.waterContent, l3.grainSize1, l3.grainSize2, l3.hardness1, l3.hardness2, l3.iDepth
+,l4.startDepth, l4.endDepth, l4.layerNumber, l4.grainType1, l4.grainType2, l4.waterContent, l4.grainSize1, l4.grainSize2, l4.hardness1, l4.hardness2, l4.iDepth
+,l5.startDepth, l5.endDepth, l5.layerNumber, l5.grainType1, l5.grainType2, l5.waterContent, l5.grainSize1, l5.grainSize2, l5.hardness1, l5.hardness2, l5.iDepth
+,l6.startDepth, l6.endDepth, l6.layerNumber, l6.grainType1, l6.grainType2, l6.waterContent, l6.grainSize1, l6.grainSize2, l6.hardness1, l6.hardness2, l6.iDepth
+,l7.startDepth, l7.endDepth, l7.layerNumber, l7.grainType1, l7.grainType2, l7.waterContent, l7.grainSize1, l7.grainSize2, l7.hardness1, l7.hardness2, l7.iDepth
+,l8.startDepth, l8.endDepth, l8.layerNumber, l8.grainType1, l8.grainType2, l8.waterContent, l8.grainSize1, l8.grainSize2, l8.hardness1, l8.hardness2, l8.iDepth
+,l9.startDepth, l9.endDepth, l9.layerNumber, l9.grainType1, l9.grainType2, l9.waterContent, l9.grainSize1, l9.grainSize2, l9.hardness1, l9.hardness2, l9.iDepth
+,l10.startDepth, l10.endDepth, l10.layerNumber, l10.grainType1, l10.grainType2, l10.waterContent, l10.grainSize1, l10.grainSize2, l10.hardness1, l10.hardness2, l10.iDepth
+,l11.startDepth, l11.endDepth, l11.layerNumber, l11.grainType1, l11.grainType2, l11.waterContent, l11.grainSize1, l11.grainSize2, l11.hardness1, l11.hardness2, l11.iDepth
+,l12.startDepth, l12.endDepth, l12.layerNumber, l12.grainType1, l12.grainType2, l12.waterContent, l12.grainSize1, l12.grainSize2, l12.hardness1, l12.hardness2, l12.iDepth
+,l13.startDepth, l13.endDepth, l13.layerNumber, l13.grainType1, l13.grainType2, l13.waterContent, l13.grainSize1, l13.grainSize2, l13.hardness1, l13.hardness2, l13.iDepth
+,l14.startDepth, l14.endDepth, l14.layerNumber, l14.grainType1, l14.grainType2, l14.waterContent, l14.grainSize1, l14.grainSize2, l14.hardness1, l14.hardness2, l14.iDepth
+,l15.startDepth, l15.endDepth, l15.layerNumber, l15.grainType1, l15.grainType2, l15.waterContent, l15.grainSize1, l15.grainSize2, l15.hardness1, l15.hardness2, l15.iDepth
+,l16.startDepth, l16.endDepth, l16.layerNumber, l16.grainType1, l16.grainType2, l16.waterContent, l16.grainSize1, l16.grainSize2, l16.hardness1, l16.hardness2, l16.iDepth
+,l17.startDepth, l17.endDepth, l17.layerNumber, l17.grainType1, l17.grainType2, l17.waterContent, l17.grainSize1, l17.grainSize2, l17.hardness1, l17.hardness2, l17.iDepth
+,l18.startDepth, l18.endDepth, l18.layerNumber, l18.grainType1, l18.grainType2, l18.waterContent, l18.grainSize1, l18.grainSize2, l18.hardness1, l18.hardness2, l18.iDepth
+,l19.startDepth, l19.endDepth, l19.layerNumber, l19.grainType1, l19.grainType2, l19.waterContent, l19.grainSize1, l19.grainSize2, l19.hardness1, l19.hardness2, l19.iDepth
+,l20.startDepth, l20.endDepth, l20.layerNumber, l20.grainType1, l20.grainType2, l20.waterContent, l20.grainSize1, l20.grainSize2, l20.hardness1, l20.hardness2, l20.iDepth
+,l21.startDepth, l21.endDepth, l21.layerNumber, l21.grainType1, l21.grainType2, l21.waterContent, l21.grainSize1, l21.grainSize2, l21.hardness1, l21.hardness2, l21.iDepth
+,l22.startDepth, l22.endDepth, l22.layerNumber, l22.grainType1, l22.grainType2, l22.waterContent, l22.grainSize1, l22.grainSize2, l22.hardness1, l22.hardness2, l22.iDepth
+,l23.startDepth, l23.endDepth, l23.layerNumber, l23.grainType1, l23.grainType2, l23.waterContent, l23.grainSize1, l23.grainSize2, l23.hardness1, l23.hardness2, l23.iDepth
+
+,ste1.id, ste1.score, ste1.ecScore, ste1.sdepth, ste1.fractureCharacter, ste1.quality, ste1.fractureCat, ste1.comments,
+ste2.id, ste2.score, ste2.ecScore, ste2.sdepth, ste2.fractureCharacter, ste2.quality, ste2.fractureCat, ste2.comments,
+ste3.id, ste3.score, ste3.ecScore, ste3.sdepth, ste3.fractureCharacter, ste3.quality, ste3.fractureCat, ste3.comments,
+
+ct1.id, ct1.score, ct1.ctScore, ct1.sdepth, ct1.fractureCat, ct1.quality, ct1.fractureCharacter, ct1.comments,
+ct2.id, ct2.score, ct2.ctScore, ct2.sdepth, ct2.fractureCat, ct2.quality, ct2.fractureCharacter, ct2.comments,
+ct3.id, ct3.score, ct3.ctScore, ct3.sdepth, ct3.fractureCat, ct3.quality, ct3.fractureCharacter, ct3.comments,
+
+pst1.id, pst1.score, pst1.lengthOfColumn , pst1.lengthOfCut , pst1.sdepth, pst1.comments,
+pst2.id, pst2.score, pst2.lengthOfColumn , pst2.lengthOfCut , pst1.sdepth, pst2.comments,
+pst3.id, pst3.score, pst3.lengthOfColumn , pst3.lengthOfCut , pst3.sdepth, pst3.comments
+
+FROM `PIT_TABLE` pt 
+LEFT JOIN layers l1 ON ( l1.pid = pt.SERIAL AND l1.layerNumber = 1 )
+LEFT JOIN layers l2 ON ( l2.pid = pt.SERIAL AND l2.layerNumber = 2 )
+LEFT JOIN layers l3 ON ( l3.pid = pt.SERIAL AND l3.layerNumber = 3 )
+LEFT JOIN layers l4 ON ( l4.pid = pt.SERIAL AND l4.layerNumber = 4 )
+LEFT JOIN layers l5 ON ( l5.pid = pt.SERIAL AND l5.layerNumber = 5 )
+LEFT JOIN layers l6 ON ( l6.pid = pt.SERIAL AND l6.layerNumber = 6 )
+LEFT JOIN layers l7 ON ( l7.pid = pt.SERIAL AND l7.layerNumber = 7 )
+LEFT JOIN layers l8 ON ( l8.pid = pt.SERIAL AND l8.layerNumber = 8 )
+LEFT JOIN layers l9 ON ( l9.pid = pt.SERIAL AND l9.layerNumber = 9 )
+LEFT JOIN layers l10 ON ( l10.pid = pt.SERIAL AND l10.layerNumber = 10 )
+LEFT JOIN layers l11 ON ( l11.pid = pt.SERIAL AND l11.layerNumber = 11 )
+LEFT JOIN layers l12 ON ( l12.pid = pt.SERIAL AND l12.layerNumber = 12 )
+LEFT JOIN layers l13 ON ( l13.pid = pt.SERIAL AND l13.layerNumber = 13 )
+LEFT JOIN layers l14 ON ( l14.pid = pt.SERIAL AND l14.layerNumber = 14 )
+LEFT JOIN layers l15 ON ( l15.pid = pt.SERIAL AND l15.layerNumber = 15 )
+LEFT JOIN layers l16 ON ( l16.pid = pt.SERIAL AND l16.layerNumber = 16 )
+LEFT JOIN layers l17 ON ( l17.pid = pt.SERIAL AND l17.layerNumber = 17 )
+LEFT JOIN layers l18 ON ( l18.pid = pt.SERIAL AND l18.layerNumber = 18 )
+LEFT JOIN layers l19 ON ( l19.pid = pt.SERIAL AND l19.layerNumber = 19 )
+LEFT JOIN layers l20 ON ( l20.pid = pt.SERIAL AND l20.layerNumber = 20 )
+LEFT JOIN layers l21 ON ( l21.pid = pt.SERIAL AND l21.layerNumber = 21 )
+LEFT JOIN layers l22 ON ( l22.pid = pt.SERIAL AND l22.layerNumber = 22 )
+LEFT JOIN layers l23 ON ( l23.pid = pt.SERIAL AND l23.layerNumber = 23 )
+
+LEFT JOIN shear_tests ste1 ON ( ste1.pid = pt.SERIAL AND ste1.code = 'ECT')
+LEFT JOIN shear_tests ste2 ON ( ste2.pid = pt.SERIAL AND ste2.code = 'ECT' AND ste1.id <> ste2.id)
+LEFT JOIN shear_tests ste3 ON ( ste3.pid = pt.SERIAL AND ste3.code = 'ECT' AND ste3.id <> ste1.id AND ste3.id <> ste2.id )
+
+LEFT JOIN shear_tests ct1 ON (ct1.pid = pt.SERIAL AND ct1.code = 'CT')
+LEFT JOIN shear_tests ct2 ON (ct2.pid = pt.SERIAL AND ct2.code = 'CT'	AND	(ct1.id <> ct2.id))
+LEFT JOIN shear_tests ct3 ON (	(ct3.pid = pt.SERIAL AND ct3.code = 'CT')	AND	(ct1.id <> ct3.id) AND (ct2.id <> ct3.id) )
+
+LEFT JOIN shear_tests pst1 ON (pst1.pid = pt.SERIAL AND pst1.code = 'PST')
+LEFT JOIN shear_tests pst2 ON ((pst2.pid = pt.SERIAL AND pst2.code = 'PST') AND (pst1.id <> pst2.id))
+LEFT JOIN shear_tests pst3 ON ((pst3.pid = pt.SERIAL AND pst3.code = 'PST') AND (pst1.id <> pst3.id)	AND	(pst2.id <> pst3.id))
+
+
+WHERE pt.TEST_PIT <> 1
+AND( (  pt.skiAreaPit IS NULL ) OR ( pt.skiAreaPit = 0 )  OR  ( pt.bcPit = 1 ) )
+" );
+
+/**
+ * GZIPs a file on disk (appending .gz to the name)
+ *
+ * From http://stackoverflow.com/questions/6073397/how-do-you-create-a-gz-file-using-php
+ * Based on function by Kioob at:
+ * http://www.php.net/manual/en/function.gzwrite.php#34955
+ * 
+ * @param string $source Path to file that should be compressed
+ * @param integer $level GZIP compression level (default: 9)
+ * @return string New filename (with .gz appended) if success, or false if operation fails
+ */
+function gzCompressFile($file_name, $level = 9){ 
+    $source = '/var/lib/mysql-files/'. $file_name;	
+    $dest = DRUPAL_ROOT. '/sites/default/files/tmp/'. $file_name . '.gz'; 
+    $mode = 'wb' . $level; 
+    $error = false; 
+    if ($fp_out = gzopen($dest, $mode)) { 
+        if ($fp_in = fopen($source,'rb')) { 
+            while (!feof($fp_in)) 
+                gzwrite($fp_out, fread($fp_in, 1024 * 512)); 
+            fclose($fp_in); 
+        } else {
+            $error = true; 
+        }
+        gzclose($fp_out); 
+    } else {
+        $error = true; 
+    }
+    if ($error)
+        return false; 
+    else
+        return $dest; 
+} 

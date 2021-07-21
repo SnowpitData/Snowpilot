@@ -1,0 +1,14 @@
+<h2>Three types of output currently available: SnowPilot XML, CAAML, and CSV</h2>
+<ul>
+	<li>SnowPilot XML is the original output format. It is a simple xml format to understand, but limited in scope and usage. You can see this format in action by going to any snowpit page and 'Downloading' the pit, and choosing SnowPilot XML format.
+	<li><a href ="https://caaml.org" target  = "_blank"> CAAML (Canadian Avalanche Association Markup Language)</a> is a more widely used format supported by applications such as SNOWPACK. It integrates other namespace declarations such as GML for Geographic Markup Language. 
+		<p>CAAML uses much more nested element format than SnowPilot XML, making it potentially more difficult to unpack. It is <a href = "http://caaml.org/Schemas/SnowProfileIACS/v6.0.3/" target = "_blank">well documented here</a>, including an .xsd Schema Definition file.
+		<p>Batches of caaml formatted files exported from the Avscience Query page are placed in a folder with the username of the requestor and the date and timestamp, and tarred and gzipped for download.
+		<p>
+	<li>CSV format, Comma Separated Values. This is a very intuitive and transportable format; but it results in a very wide table, with around 350 columns of data, many of which are Null. Data included:
+		<ul>
+			<li>Core snowpit fields, including observer, weather, geographic info, (in)stability observations, etc. Columns A - AP, about 40 columns.
+			<li>Layers data for up to 23 layers: grain types and sizes, moisture, density, and hardness; a total of 11 data fields. AQ - KI, 253 columns.
+			<li>Test Results Data for up to 9 tests: 3 Extended Column Tests, 3 Compression Tests and 3 Propagation Saw Tests. The test result fields vary according to the test, columns KJ - MW , about 60 columns.
+		</ul>
+</ul>

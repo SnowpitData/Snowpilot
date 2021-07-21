@@ -146,21 +146,18 @@ function snowpilot_node_write_pitxml($node, $format = 'restricted', $regenerate_
 		//
 		// skiBoot   - Surface Penetration  
 		// set whether dki or boot penetration is used; and identify the value of each
-		$skiBoot = $snowpilot_xmldoc->createAttribute("skiBoot");
-		$surfacePen = $snowpilot_xmldoc->createAttribute("surfacePen");
-		if ( !isset($node->field_surface_penetration['und'][0]['value']) ){
-			$skiBoot->value = '';
-		}elseif($node->field_surface_penetration['und'][0]['value'] == 'boot' ){
-			$skiBoot->value = 'boot';
-			$surfacePen->value = isset($node->field_boot_penetration_depth['und'][0]['value']  ) ?
-				$node->field_boot_penetration_depth['und'][0]['value'] : '' ;
-		}else{
-			$skiBoot->value = 'ski';
-			$surfacePen->value = isset($node->field_ski_penetration['und'][0]['value']  ) ?
-				$node->field_ski_penetration['und'][0]['value'] : '' ;
+
+		if(isset($node->field_ski_penetration['und'][0]['value']) ){
+			$skiPen = $snowpilot_xmldoc->createAttribute("skiPen");
+			$skiPen->value = $node->field_ski_penetration['und'][0]['value'] ;
+			$snowpilot_PitCore->appendChild($skiPen);
+			
 		}
-		$snowpilot_PitCore->appendChild($skiBoot);
-		$snowpilot_PitCore->appendChild($surfacePen);
+		if ( isset ( $node->field_boot_penetration_depth['und'][0]['value'])){
+			$bootPen = $snowpilot_xmldoc->createAttribute("bootPen");
+			$bootPen->value = $node->field_boot_penetration_depth['und'][0]['value'];
+			$snowpilot_PitCore->appendChild($bootPen);
+		}
 		
 		// surface Grain type and size
 		if ( isset( $node->field_surface_grain_type['und'][0]['tid'] )){
@@ -733,7 +730,39 @@ function snowpilot_node_write_caaml($node){
 	$snowpilot_snowProfileResultsOf = $snowpilot_caaml->createElement('snowProfileResultsOf'); 
 	//
 	$SPmetaData = $snowpilot_caaml->createElement('metaData'); $snowpilot_SnowProfile->appendChild($SPmetaData);
+	$SPcustomData = $snowpilot_caaml->createElement('customData'); $SPmetaData->appendChild($SPcustomData);
 	if ( isset ( $node->body['und'][0]['value'] )){	$SPmetaData->appendChild($snowpilot_caaml->createElement('comment',  $node->body['und'][0]['safe_value']));}
+	
+	
+	if (	 ( $node->field_whumph_cracking['und'][0]['value'] == '1' ) ||
+		  ( $node->field_whumpf_no_cracking['und'][0]['value']  == '1' ) ||
+		  ( $node->field_crack_no_whumpf['und'][0]['value']  == '1' ) ||
+			( $node->field_whumph_pit_near['und'][0]['value'] == '1'  ) ||
+			( $node->field_whumph_depth_weak_layer['und'][0]['value'] == '1'  ) ||
+	 		( $node->field_whumpf_remote_avalanche['und'][0]['value'] == '1'  ) ||
+	 	 	( $node->field_whumpf_size['und'][0]['value'] )
+	){
+		$SPcustomwhumpf = $snowpilot_caaml->createElement('snowpilot:whumpfData');$SPcustomData->appendChild( $SPcustomwhumpf );
+			
+		$SPcustomwhumpf->appendChild($snowpilot_caaml->createElement('whumpfCracking', $node->field_whumph_cracking['und'][0]['value'] == '1' ? 'true': 'false' ));
+		$SPcustomwhumpf->appendChild($snowpilot_caaml->createElement('whumpfNoCracking', $node->field_whumpf_no_cracking['und'][0]['value'] == '1' ? 'true': 'false' ));
+		$SPcustomwhumpf->appendChild($snowpilot_caaml->createElement('crackingNoWhumpf', $node->field_crack_no_whumpf['und'][0]['value'] == '1' ? 'true': 'false' ));
+		$SPcustomwhumpf->appendChild($snowpilot_caaml->createElement('whumpfNearPit', $node->field_whumph_pit_near['und'][0]['value'] == '1' ? 'true': 'false' ));
+		$SPcustomwhumpf->appendChild($snowpilot_caaml->createElement('whumpfDepthWeakLayer', $node->field_whumph_depth_weak_layer['und'][0]['value'] == '1' ? 'true': 'false' ));
+		$SPcustomwhumpf->appendChild($snowpilot_caaml->createElement('whumpfTriggeredRemoteAva', $node->field_whumpf_remote_avalanche['und'][0]['value'] == '1' ? 'true': 'false' ));
+		$SPcustomwhumpf->appendChild($snowpilot_caaml->createElement('whumpfSize', isset($node->field_whumpf_size['und'][0]['value']  )  ? $node->field_whumpf_size['und'][0]['value'] : '' ));
+	}
+
+  if ( $node->field_adjacent_to_avy['und'][0]['value'] == '1'){
+		$SPcustomNearAvalanche = $snowpilot_caaml->createElement('snowpilot:pitNearAvalanche', 'true') ;
+		if ( isset ( $node->field_near_avalanche['und'][0]['value'] ) ) $SPcustomNearAvalanche->setAttribute( 'location', $node->field_near_avalanche['und'][0]['value'] );
+  	$SPcustomData->appendChild( $SPcustomNearAvalanche );
+  }	
+	
+		
+		
+		
+	
 	
 	$timeRef = $snowpilot_caaml->createElement('timeRef'); $snowpilot_SnowProfile->appendChild($timeRef);
 	$srcRef = $snowpilot_caaml->createElement('srcRef'); 	$snowpilot_SnowProfile->appendChild($srcRef);
@@ -750,11 +779,12 @@ function snowpilot_node_write_caaml($node){
 		
 	    $TimeInstant = $snowpilot_caaml->createElement('TimeInstant');
 		  $recordTime->appendChild($TimeInstant); 
-		  $TimeInstant->appendChild($snowpilot_caaml->createElement('timePosition',  date( 'Y-m-d\TH:i:sP' ,strtotime($node->field_date_time['und'][0]['value']))) ); 
+			// $node_tz = $account->timezone;
+			// dsm($node->field_date_time['und'][0]['value']); // this appears to not include tz info
+		  $TimeInstant->appendChild($snowpilot_caaml->createElement('timePosition', str_replace ( ' ', 'T', $node->field_date_time['und'][0]['value'] )) ); 
  	$timeRef->appendChild($snowpilot_caaml->createElement('dateTimeReport', date ( 'Y-m-d\TH:i:sP', $node->created)));
 	
 	$timeRef->appendChild($snowpilot_caaml->createElement('dateTimeLastEdit', date( 'Y-m-d\TH:i:sP' , $node->changed)));
-		
 	if ( isset($node->field_org_ownership['und'][0]['tid']) ){
 		$Operation = $snowpilot_caaml->createElement('Operation');
 		$affil_name = $snowpilot_caaml->createElement('name', taxonomy_term_load($node->field_org_ownership['und'][0]['tid'])->name);
@@ -816,6 +846,23 @@ function snowpilot_node_write_caaml($node){
 		$pointLocation->appendChild($gmlPoint);
 		$snowpilot_locRef->appendChild($pointLocation);
 	}
+	//
+	// Adding country and region here
+	//
+	if ( isset ( $node->field_loaction[und][0]['tid'])){
+		$country = taxonomy_term_load( $node->field_loaction[und][0]['tid'] );
+		$country_code = $country->field_country_code['und'][0]['value'];
+		$snowpilot_locRef->appendChild($snowpilot_caaml->createElement( 'country',    $country_code  ));
+		if ( in_array ($country_code , ['US', 'CA' ]) ){
+			$region_name = $country->name;
+			$snowpilot_locRef->appendChild($snowpilot_caaml->createElement( 'region', $region_name  ));
+		}elseif ( isset ( $node->field_loaction[und][1]['tid'] ) ){
+			$region_term = taxonomy_term_load( $node->field_loaction[und][1]['tid'] );
+			$region_name = $region_term->name;
+			$snowpilot_locRef->appendChild($snowpilot_caaml->createElement( 'region', $region_name  ));			
+		}
+	}
+	
 	//
 	// End Location Reference
 	// Beginning snow Profile resultsof
@@ -972,7 +1019,7 @@ function snowpilot_node_write_caaml($node){
 			
 			if ($layer->field_this_is_my_layer_of_greate['und'][0]['value'] == '1') {
 				$LOC_value = $layer_counter;
-				
+				$LOC_part = $layer->field_concern['und'][0]['value'];
 			}
 			if ( isset($layer->field_grain_type['und'])){
 			  $Layer->appendChild($snowpilot_caaml->createElement('grainFormPrimary' , taxonomy_term_load($layer->field_grain_type['und'][0]['tid'])->description) );  // this needs to be changed to description as soon as the particle abbreviations are populated into the grain types taxonomy 'description' field. IT also breaks whenever there is a & in a name
@@ -1012,9 +1059,11 @@ function snowpilot_node_write_caaml($node){
 			  $Layer->appendChild($lwc = $snowpilot_caaml->createElement('wetness', $layer->field_water_content['und'][0]['value']));
 				$lwc->setAttribute('uom', '');
 			}
-			
-			
-			
+			if ( isset( $layer->field_comments['und'][0]['value'] )){
+				$LayermetaData = $snowpilot_caaml->createElement('metaData'); $Layer->appendChild($LayermetaData);
+			  $LayermetaData->appendChild($snowpilot_caaml->createElement('comment',  $layer->field_comments['und'][0]['value']));
+			}
+      $layer_counter++ ;
 			$stratProfile->appendChild($Layer);
 		}
 		
@@ -1023,6 +1072,9 @@ function snowpilot_node_write_caaml($node){
 		
 		if ( isset( $LOC_value )){
   		$custom_strat_data->appendChild( $snowpilot_caaml->createElement('snowpilot:layerOfConcern', $LOC_value) );
+			if (isset( $LOC_part ) && $LOC_part <> '' ){
+				$custom_strat_data->appendChild( $snowpilot_caaml->createElement('snowpilot:concerningPartOfLayer', $LOC_part) );
+			}
 		}
 		
 		//
@@ -1117,8 +1169,7 @@ function snowpilot_node_write_caaml($node){
 					$Results = $snowpilot_caaml->createElement('Results');
 					if ( isset( $shear_test->field_fracture_character['und'] )){
 						$Results->appendChild($snowpilot_caaml->createElement('fractureCharacter', $shear_test->field_fracture_character['und'][0]['value']  ));
-					}
-					if ( isset( $shear_test->field_shear_quality['und'] )){
+					}elseif ( isset( $shear_test->field_shear_quality['und'] )){
 						$Results->appendChild($snowpilot_caaml->createElement('fractureCharacter', $shear_test->field_shear_quality['und'][0]['value']  ));
 					}
 					if ( isset( $shear_test->field_ct_score['und'] )){ // if there is a numerical value
@@ -1139,7 +1190,7 @@ function snowpilot_node_write_caaml($node){
 				break;
 				case 'ECT':
 				  $ExtColumnTest = $snowpilot_caaml->createElement('ExtColumnTest');
-					  if ( $shear_test->field_stability_test_score['und'][0]['value'] <> 'ECTX'){
+					if ( $shear_test->field_stability_test_score['und'][0]['value'] <> 'ECTX'){
 				  	  $failedOn = $snowpilot_caaml->createElement('failedOn') ;
 			  			  $Layer = $snowpilot_caaml->createElement('Layer');
 								if ( ( $unit_prefs['field_depth_0_from'] == 'top' ) ){
@@ -1151,10 +1202,10 @@ function snowpilot_node_write_caaml($node){
 						  	$depthTop->setAttribute('uom' , 'cm');
 					  	  $failedOn->appendChild($Layer);
 				  			$Results = $snowpilot_caaml->createElement('Results');
-								if ( isset( $shear_test->field_ec_score['und'] )){
+								if ( isset( $shear_test->field_ec_score['und'] ) ){
 									$Results->appendChild($snowpilot_caaml->createElement('testScore', $shear_test->field_stability_test_score_ect['und'][0]['value'].$shear_test->field_ec_score['und'][0]['value']  ));
 								}else{
-									$Results->appendChild($snowpilot_caaml->createElement('testScore', $shear_test->field_stability_test_score_ect['und'][0]['value']  ));
+									$Results->appendChild($snowpilot_caaml->createElement('testScore', $shear_test->field_stability_test_score_ect['und'][0]['value'] ));
 								}
 						  $failedOn->appendChild($Results);
 						
@@ -1168,15 +1219,69 @@ function snowpilot_node_write_caaml($node){
 					}
 					$stbTests->appendChild($ExtColumnTest);
 				break;
+				case 'RB':
+				  $RBlockTest = $snowpilot_caaml->createElement('RBlockTest');
+					if ( $shear_test->field_stability_test_score['und'][0]['value'] <> 'RB7'){
+			  	  $failedOn = $snowpilot_caaml->createElement('failedOn') ;
+		  			$Layer = $snowpilot_caaml->createElement('Layer');
+						if ( ( $unit_prefs['field_depth_0_from'] == 'top' ) ){
+							$depthTop = $snowpilot_caaml->createElement('depthTop', $shear_test->field_depth['und'][0]['value']* $scale_depth);
+						}else{
+							$depthTop= $snowpilot_caaml->createElement('depthTop', $profile_depth - $shear_test->field_depth['und'][0]['value']* $scale_depth);
+						}
+				    $Layer->appendChild( $depthTop);
+				  	$depthTop->setAttribute('uom' , 'cm');
+			  	  $failedOn->appendChild($Layer);
+		  			$Results = $snowpilot_caaml->createElement('Results');
+						if ( isset ( $shear_test->field_fracture_character['und'] )){
+							$Results->appendChild( $snowpilot_caaml->createElement( 'fractureCharacter' , $shear_test->field_fracture_character['und'][0]['value'])  );
+						}elseif( isset ( $shear_test->field_shear_quality['und'] )){
+							$Results->appendChild( $snowpilot_caaml->createElement( 'fractureCharacter' , $shear_test->field_shear_quality['und'][0]['value'])  );
+						}
+						if ( isset ( $shear_test->field_release_type['und'] )) $Results->appendChild( $snowpilot_caaml->createElement( 'releaseType' , $shear_test->field_release_type['und'][0]['value'])  );
+						$Results->appendChild($snowpilot_caaml->createElement('testScore', $shear_test->field_stability_test_score_rb['und'][0]['value'] ));
+						
+						$failedOn->appendChild($Results);
+						$RBlockTest->appendChild($failedOn);
+					}else{
+						$RBlockTest->appendChild($snowpilot_caaml->createElement('noFailure'));
+					}
+					$stbTests->appendChild($RBlockTest);
+				break;
+				case 'PST':
+				  $PSTest = $snowpilot_caaml->createElement('PropSawTest');
+		  	  
+					$failedOn = $snowpilot_caaml->createElement('failedOn') ; $PSTest->appendChild($failedOn);
+	  			$Layer = $snowpilot_caaml->createElement('Layer'); $failedOn->appendChild($Layer);
+					$depthTop = ( $unit_prefs['field_depth_0_from'] == 'top' ) ? $snowpilot_caaml->createElement('depthTop', $shear_test->field_depth['und'][0]['value']* $scale_depth) : $snowpilot_caaml->createElement('depthTop', $profile_depth - $shear_test->field_depth['und'][0]['value']* $scale_depth);
+
+			    $Layer->appendChild( $depthTop);
+					$Results = $snowpilot_caaml->createElement('Results');$failedOn->appendChild($Results);
+					
+					$fracture_prop = $snowpilot_caaml->createElement('fracturePropagation', $shear_test->field_data_code_pst['und'][0]['value'] );
+					$Results->appendChild($fracture_prop);
+					$cutLength = $snowpilot_caaml->createElement('cutLength', $shear_test->field_length_of_saw_cut['und'][0]['value'] );
+					$cutLength->setAttribute( 'uom', 'cm');
+					$Results->appendChild($cutLength);
+					$length_iso_col = $snowpilot_caaml->createElement('columnLength', $shear_test->field_length_of_isolated_col_pst['und'][0]['value'] ) ;
+					$length_iso_col->setAttribute('uom', 'cm');
+					$Results->appendChild($length_iso_col);	
+					
+					$stbTests->appendChild($PSTest);
+				break;
 			}
 			
-			
+			if ( isset ( $shear_test->field_stability_comments['und'][0]['value']) ){
+				$stab_test_layer_metadata = $snowpilot_caaml->createElement('metaData') ; $Layer->appendChild($stab_test_layer_metadata);
+        $stab_test_layer_metadata->appendChild($snowpilot_caaml->createElement('comment', $shear_test->field_stability_comments['und'][0]['value'] ) );
+			}
 			
 		}
 		$SnowProfileMeasurements->appendChild($stbTests);
 	
 	$snowpilot_snowProfileResultsOf->appendChild($SnowProfileMeasurements);
-	
+	$snowpilot_SnowProfile->appendChild($snowpilot_caaml->createElement('application', 'SnowPilot' ));
+	$snowpilot_SnowProfile->appendChild($snowpilot_caaml->createElement('applicationVersion', VERSION.'-0.1' ));
 	
 	
 	$outXML = $snowpilot_caaml->saveXML();

@@ -518,38 +518,75 @@ function _set_stability_test_pixel_depths(&$test_results, $pit_depth, $measure_f
 			){ 		// so the two tests ARE exactly alike for those previous fields; how about for test-specific fields?
 
  			 switch ($test->field_stability_test_type['und'][0]['value']){
- 				  case 'ECT':
- 					  if (( $test->field_ec_score == $test_compare->field_ec_score) &&
-							  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
-								( $test->field_fracture_character == $test_compare->field_fracture_character)
- 						) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0; unset($test_compare); continue 3;	}
- 					break;
+				  case 'ECT':
+					  if (( $test->field_ec_score == $test_compare->field_ec_score) &&
+						  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
+							( $test->field_fracture_character == $test_compare->field_fracture_character)
+						) {
+						$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ 
+						if ( !empty ( $test_results[$y]->field_stability_comments['und'][0]['value'] )&&
+						 empty ( $test->field_stability_comments['und'][0]['value'] )){
+						  $test->field_stability_comments['und'][0]['value'] = $test_results[$y]->field_stability_comments['und'][0]['value'];
+					  }
+						$test_results[$y]->multiple = 0; 
+						unset($test_compare); 
+						continue 3;	
+					}
+					break;
 					case 'CT':
 				  
 					if (( $test->field_ct_score == $test_compare->field_ct_score) &&
 						  ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_fracture_character == $test_compare->field_fracture_character)
 					) {
-						$test->multiple += $test_compare->multiple; /* Add the old multiple value onto this one */ 
-						$test_results[$y]->multiple = 0;  
+						$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ 
+						if ( !empty ( $test_results[$y]->field_stability_comments['und'][0]['value'] )&&
+						 empty ( $test->field_stability_comments['und'][0]['value'] )){
+						  $test->field_stability_comments['und'][0]['value'] = $test_results[$y]->field_stability_comments['und'][0]['value'];
+					  }
+						$test_results[$y]->multiple = 0; 
 						unset($test_compare); 
-						continue 3;	}
+						continue 3;	
+							}
 					break;
 					case 'PST':
 				  if (( $test->field_length_of_isolated_col_pst == $test_compare->field_length_of_isolated_col_pst) &&
 						  ( $test->field_length_of_saw_cut == $test_compare->field_length_of_saw_cut) &&
 							( $test->field_data_code_pst == $test_compare->field_data_code_pst)
-					) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	}
+					) {
+						$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ 
+						if ( !empty ( $test_results[$y]->field_stability_comments['und'][0]['value'] )&&
+						 empty ( $test->field_stability_comments['und'][0]['value'] )){
+						  $test->field_stability_comments['und'][0]['value'] = $test_results[$y]->field_stability_comments['und'][0]['value'];
+					  }
+						$test_results[$y]->multiple = 0; 
+						unset($test_compare); 
+						continue 3;	
+					}
 					break;
 					case 'RB':
 				  if (( $test->field_stability_test_score_rb == $test_compare->field_stability_test_score_rb) &&  
 					    ( $test->field_shear_quality == $test_compare->field_shear_quality) &&
 							( $test->field_release_type == $test_compare->field_release_type)
-					) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	}				
+					) {$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ 
+						if ( !empty ( $test_results[$y]->field_stability_comments['und'][0]['value'] )&&
+						  empty ( $test->field_stability_comments['und'][0]['value'] )){
+						  $test->field_stability_comments['und'][0]['value'] = $test_results[$y]->field_stability_comments['und'][0]['value'];
+					  }
+						$test_results[$y]->multiple = 0; 
+						unset($test_compare); 
+						continue 3;		}				
 					break;
 					case 'ST':
 					case 'SB':
-					  $test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ $test_results[$y]->multiple = 0;  unset($test_compare); continue 3;	
+						$test->multiple += $test_results[$y]->multiple; /* Add the old multiple value onto this one */ 
+						if ( !empty ( $test_results[$y]->field_stability_comments['und'][0]['value'] )&&
+						  empty ( $test->field_stability_comments['und'][0]['value'] )){
+						  $test->field_stability_comments['und'][0]['value'] = $test_results[$y]->field_stability_comments['und'][0]['value'];
+					  }
+						$test_results[$y]->multiple = 0; 
+						unset($test_compare); 
+					continue 3;		
 					break;
 				} 
 			} // end of "yes, this could be a repeated test" processing
