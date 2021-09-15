@@ -754,7 +754,7 @@ imagefill($img, 0, 0, $white);
 			$text_pos = imagettftext($img, 11, 0, 444, 17, $black, LABEL_FONT, t('Stability',array(), array( 'langcode' => $profile_lang )). ': ');
 			if(isset($node->field_stability_on_similar_slope['und'])){
 				$similar_stability = field_view_field('node', $node, 'field_stability_on_similar_slope') ;
-				imagettftext($img, 11, 0, $text_pos[2], 17, $black, VALUE_FONT, t($similar_stability['#items'][0]['value'] ,array(), array( 'langcode' => $profile_lang ) ) );
+				imagettftext($img, 11, 0, $text_pos[2], 17, $black, VALUE_FONT, t($similar_stability[0]['#markup'] ,array(), array( 'langcode' => $profile_lang ) ) );
 			}
 			$text_pos  = imagettftext($img, 11, 0, 444, 35, $black, LABEL_FONT, t('Air Temperature',array(), array( 'langcode' => $profile_lang )). ': ');
 			if(isset($node->field_air_temp['und'])){

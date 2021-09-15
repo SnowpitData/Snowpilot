@@ -29,7 +29,7 @@ function populate_shear_tests_table($SERIAL){
 
 	
 		while($row = $result->fetch() ) {
-			dsm($row);
+			//dsm($row);
 			$doc = new DOMDocument();
 		
 			$corrected_encoding = Encoding::toUTF8($row->PIT_XML);

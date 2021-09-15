@@ -147,7 +147,8 @@ function updatePositionUtm(){
 	var utm_zone = parseFloat(document.getElementById('edit-field-utm-zone-und').value);
 	
 	if ( east && north && utm_zone) {
-	  utm_pos = new Utm(utm_zone, 'north', east, north );
+		var hemisphere = (utm_zone.substring( 2,3 ) > 'M' ) ? 'north' : 'south';
+	  utm_pos = new Utm(utm_zone, hemisphere, east, north );
 		var lat_long_pos = utm_pos.toLatLonE();
 		
 		var lat_long_string = utm_pos.toLatLonE().toString('d',6);

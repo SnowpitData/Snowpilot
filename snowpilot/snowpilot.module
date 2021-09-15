@@ -1508,11 +1508,11 @@ function snowpilot_snowpit_profile_after_build($form, &$form_state){
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/geo_utils/mgrs.js',
 		);		
-		$form['#attached']['js'][] = array(
+	/*	$form['#attached']['js'][] = array(
 			'type' => 'file',
 			'data' => drupal_get_path('module', 'snowpilot'). '/js/geographic-scripts.js',
 		);		
-		
+	*/	
 		$layer_num = count ($form_state['values']['field_layer']['und']) - 2;
 		
 		foreach ( $form_state['values']['field_layer']['und'] as $key => $layer ){
@@ -3270,15 +3270,19 @@ function ToLL($north, $east, $utmZone)
 	// From: http://stackoverflow.com/questions/9203295/open-source-php-function-for-converting-utm-coordinates-to-latitude-and-longtitu
 	//
   // This is the lambda knot value in the reference
-  $LngOrigin = Deg2Rad($utmZone * 6 - 183);
+	$utmZone_digits = (int) substr($utmZone, 0,1);
+	$utmZone_letter = substr( $utmZone, -1 );
+  $LngOrigin = Deg2Rad($utmZone_digits * 6 - 183);
 
   // The following set of class constants define characteristics of the
   // ellipsoid, as defined my the WGS84 datum.  These values need to be
   // changed if a different dataum is used.    
 
   $FalseNorth = 0;   // South or North?
+	$FalseNorth = ( $utmZone_letter > 'M' ) ? 0 : 10000000;
   //if (lat < 0.) FalseNorth = 10000000.  // South or North?
-  //else          FalseNorth = 0.   
+  //else          FalseNorth = 0.  
+	 
 
   $Ecc = 0.081819190842622;       // Eccentricity
   $EccSq = $Ecc * $Ecc;
