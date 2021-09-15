@@ -89,9 +89,9 @@ if (empty($dateErr)){
 					  "observer_group"=>utf8_encode($observerParam),
 					  "show_avs"=>utf8_encode($show_avs));
 	updateSessionVars($params);
-	$command = "python draw_map.py " . "-p " . json_encode($params);
+	$command = "python3 /home/ron/scripts/realtime-tools/src/draw_map.py " . "-p " . json_encode($params);
     $result = shell_exec($command ." 2>&1");
-  echo $command . "<br>";
+  //echo $command . "<br>";
   //echo $result . "<BR>";
   //echo gethostname();
   echo "<br>";
@@ -100,21 +100,37 @@ if (empty($dateErr)){
 	
 }
 
+
 ?>
+
 
 <!DOCTYPE html>
 
 <head>    
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 	<style>
-		a.read_me:link {font-size: 20px}
-	</style>
+     a.read_me:link {
+                     font-size: 16px;
+                    }
+     h1 {
+          font-weight: bold;
+          font-size: 26px;
+        }
+     form {
+           font-size: 12px;
+          }
+    //body {
+    //   transform: scale(0.95);
+    //   transform-origin: 0 0;
+      //}	
+  </style>
 </head>
 <body>
-    <a class="read_me" href="src/ReadMe.pdf" target="_blank">Read Me</a>
+  <a class="read_me" href="src/ReadMe.pdf" target="_blank">Read Me</a>
+	<div style = "float: right; display: inline-block;">You are <?php echo $user_msg;  ?></div>
 	<h1 align="center"><b> Snow Pit Viewer</b></h1>
 
-	<form action="SnowPitOnMap.php" method="post">
+	<form action="realtime-map.php" method="post">
 	  <label form="Start Date">Start Date:</label>
 	  <input type="date" value="<?php echo $_SESSION["start_date"]; ?>" id="Start_Date" name="Start_Date">
 	  &nbsp
@@ -164,7 +180,7 @@ if (empty($dateErr)){
 		  <option value="MT">MT</option>
 		</select>
 	  &nbsp
-	  <label for="show_avs">Avalanches display method:</label>
+	  <label for="show_avs">Avalanches:</label>
 		<select name="show_avs" id="show_avs">
 		  <option value="<?php echo $_SESSION["show_avs"]; ?>"  selected><?php echo $_SESSION["show_avs"]; ?></option>
 		  <option value="Daily count mean">Daily count mean</option>
@@ -176,7 +192,15 @@ if (empty($dateErr)){
 	</form>
 	
 	<hr style="height:5px;border-width:0;color:gray;background-color:gray">
-    <iframe align="center" src="<?php echo $result; ?>" width=100% height=83%  style="border:1px solid black;"></iframe>
+	<?php
+	
+	if ($user->uid ){
+		//var_dump($user);
+	?>
+    <iframe align="center" src="<?php echo $result; ?>" width=100% height=80%  style="border:1px solid black;"></iframe>
+		<?php
+			}			
+		?>
 </body>
 
 </html>
