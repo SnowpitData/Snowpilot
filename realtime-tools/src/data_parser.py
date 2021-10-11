@@ -61,12 +61,10 @@ def get_ect_results(pit):
                        'ECTP3':  'poor', 'ECTP4':  'poor', 'ECTP5':  'poor',
                        'ECTP6':  'poor', 'ECTP7':  'poor', 'ECTP8':  'poor',
                        'ECTP9':  'poor', 'ECTP10': 'poor', 'ECTP11': 'poor',
-                       'ECTP12': 'poor', 'ECTP13': 'poor',
-                       'ECTP14': 'poor to fair', 'ECTP15': 'poor to fair',
-                       'ECTP16': 'poor to fair', 'ECTP17': 'poor to fair',
-                       'ECTP18': 'poor to fair', 'ECTP19': 'poor to fair',
-                       'ECTP20': 'poor to fair', 'ECTP21': 'poor to fair',
-                       'ECTP22': 'poor to fair', 'ECTP23': 'poor to fair',
+                       'ECTP12': 'poor', 'ECTP13': 'poor', 'ECTP14': 'poor', 
+                       'ECTP15': 'poor', 'ECTP16': 'poor', 'ECTP17': 'poor',
+                       'ECTP18': 'poor', 'ECTP19': 'poor', 'ECTP20': 'poor', 
+                       'ECTP21': 'poor', 'ECTP22': 'poor', 'ECTP23': 'poor',
                        'ECTP24': 'fair', 'ECTP25': 'fair', 'ECTP26': 'fair',
                        'ECTP27': 'fair', 'ECTP28': 'fair', 'ECTP29': 'fair',
                        'ECTN1':  'fair', 'ECTN2':  'fair', 'ECTN3':  'fair',
@@ -79,13 +77,11 @@ def get_ect_results(pit):
                        'ECTN22': 'good', 'ECTN23': 'good', 'ECTN24': 'good',
                        'ECTN25': 'good', 'ECTN26': 'good', 'ECTN27': 'good',
                        'ECTN28': 'good', 'ECTN29': 'good', 'ECTN30': 'good',
-                       'ECTX':   'ECTX', np.infty: 'no test'}
+                       'ECTX':   'good', np.infty: 'no test'}
     
-    ECT_res2color = {'good':         'darkblue',
-                     'fair':         'lightblue',
-                     'poor to fair': 'red',
-                     'poor':         'darkred',
-                     'ECTX':         'white',
+    ECT_res2color = {'good':         'green',
+                     'fair':         'yellow',
+                     'poor':         'red',
                      'no test':      'gray'}
     
     score = ''
@@ -385,31 +381,42 @@ def parse_pits_data(xml,
                 # Snow height
                 if dot_color_param=='HS':
                     dot_param =  float(p.attrib['heightOfSnowpack'])
+                if line_color_param=='HS':
+                    line_param = float(p.attrib['heightOfSnowpack'])
                 tooltip_lst.append(f'Hight of snow: {int(p.attrib["heightOfSnowpack"])} cm')
                 # ECT:
                 score, taps, color = get_ect_results(p)
                 tooltip_lst.append(f'ECT results: {score}{taps if taps <=30 else ""}')
                 if dot_color_param=='ECT':
                     dot_param = color
+                if line_color_param=='ECT':
+                    line_param = color
                 # LEMONS:
                 color, lemon_count = count_pit_lemons(p)
                 tooltip_lst.append(f'Number of lemons: {lemon_count}')
                 if dot_color_param=='LEMONS':
                     dot_param = color
+                if line_color_param=='LEMONS':
+                    line_param = color
                 # signs of instability    
                 color, tooltip = get_activity(p)
                 tooltip_lst.append('Signs of instability: ' + tooltip)
                 if dot_color_param == 'ACTIVITY':
                     dot_param = color
+                if line_color_param == 'ACTIVITY':
+                    line_param = color
                 tooltip = '<br>'.join(tooltip_lst)    
-                    
+                '''    
                 # Set line color
+                if line_color_param=='ECT':
+                    _, _, line_param= get_ect_results(p)
                 if line_color_param=='HS':
                     line_param = float(p.attrib['heightOfSnowpack'])
                 if line_color_param=='LEMONS':
                     line_param, _ = count_pit_lemons(p)
                 if line_color_param == 'ACTIVITY':
                     line_param, _ = get_activity(p)
+                '''
             except:
                 continue
             data.append(dict(lat=lat, long=long, nid=nid,
