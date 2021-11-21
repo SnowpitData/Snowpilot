@@ -61,12 +61,10 @@ def get_ect_results(pit):
                        'ECTP3':  'poor', 'ECTP4':  'poor', 'ECTP5':  'poor',
                        'ECTP6':  'poor', 'ECTP7':  'poor', 'ECTP8':  'poor',
                        'ECTP9':  'poor', 'ECTP10': 'poor', 'ECTP11': 'poor',
-                       'ECTP12': 'poor', 'ECTP13': 'poor',
-                       'ECTP14': 'poor to fair', 'ECTP15': 'poor to fair',
-                       'ECTP16': 'poor to fair', 'ECTP17': 'poor to fair',
-                       'ECTP18': 'poor to fair', 'ECTP19': 'poor to fair',
-                       'ECTP20': 'poor to fair', 'ECTP21': 'poor to fair',
-                       'ECTP22': 'poor to fair', 'ECTP23': 'poor to fair',
+                       'ECTP12': 'poor', 'ECTP13': 'poor', 'ECTP14': 'poor',
+                       'ECTP15': 'poor', 'ECTP16': 'poor', 'ECTP17': 'poor',
+                       'ECTP18': 'poor', 'ECTP19': 'poor', 'ECTP20': 'poor',
+                       'ECTP21': 'poor', 'ECTP22': 'poor', 'ECTP23': 'poor',
                        'ECTP24': 'fair', 'ECTP25': 'fair', 'ECTP26': 'fair',
                        'ECTP27': 'fair', 'ECTP28': 'fair', 'ECTP29': 'fair',
                        'ECTN1':  'fair', 'ECTN2':  'fair', 'ECTN3':  'fair',
@@ -79,23 +77,28 @@ def get_ect_results(pit):
                        'ECTN22': 'good', 'ECTN23': 'good', 'ECTN24': 'good',
                        'ECTN25': 'good', 'ECTN26': 'good', 'ECTN27': 'good',
                        'ECTN28': 'good', 'ECTN29': 'good', 'ECTN30': 'good',
-                       'ECTX':   'ECTX', np.infty: 'no test'}
+                       'ECTX':   'good', np.infty: 'no test'}
     
-    ECT_res2color = {'good':         'darkblue',
-                     'fair':         'lightblue',
-                     'poor to fair': 'red',
-                     'poor':         'darkred',
-                     'ECTX':         'white',
+    ECT_res2color = {'good':         'green',
+                     'fair':         'yellow',
+                     'poor':         'red',
                      'no test':      'gray'}
-    
+        
     score = ''
     ecScore = np.infty
+    ecScores = []
     for t in pit.findall('Shear_Test_Result'):
         if t.attrib['score'] in ECT_score:
-            if ECT_score[t.attrib['score']] < ECT_score[score]:
+            if ECT_score[t.attrib['score']] <= ECT_score[score]:
+                if ECT_score[t.attrib['score']] < ECT_score[score]:
+                   ecScores = [] 
                 score = t.attrib['score']
                 if t.attrib['ecScore'] != '':
-                    ecScore = min(int(t.attrib['ecScore']), ecScore)
+                    ecScores.append(int(t.attrib['ecScore']))
+    try:
+        ecScore = min(ecScores)
+    except ValueError:
+        ecScore = np.infty
     ect2stability = ECT_score_grade.get(f'{score}{ecScore if ecScore <= 31 else ""}', 'N/A')
     return score, ecScore, ECT_res2color[ect2stability]
 
