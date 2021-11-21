@@ -14,12 +14,14 @@ if HOST_NAME=='DNRAICDEN0188': # Name of localhost - change this depends on your
     PITS_PATH = os.path.join(PARENT_DIR, 'data', 'snowpits')
     GEODATA_PATH = os.path.join(PARENT_DIR, 'data', 'geodata')
     AVALANCHES_PATH = os.path.join(PARENT_DIR, 'data', 'avalanches')
+    STATES_DATA_PATH = os.path.join(PARENT_DIR, 'data', 'states_data.json')
 if HOST_NAME=='caic1.localdomain':
     PARENT_DIR = '/home/www/html/SnowpackViewerTool'
     LOG_DIR = os.path.join('/var/www/SnowpackViewerTool', 'LOGS')
     PITS_PATH = os.path.join('/var/www/SnowpackViewerTool', 'data', 'snowpits')
     GEODATA_PATH = os.path.join('/var/www/SnowpackViewerTool', 'data', 'geodata')
     AVALANCHES_PATH = os.path.join('/var/www/SnowpackViewerTool', 'data', 'avalanches')
+    STATES_DATA_PATH = os.path.join('/var/www/SnowpackViewerTool', 'data', 'states_data.json')
 if HOST_NAME=='linode1':
     PARENT_DIR = '/var/www/html/linode1.snowpilot.org/public_html/realtime-tools/'
     SRC_DIR = '/home/ron/scripts/realtime-tools/'
@@ -27,6 +29,7 @@ if HOST_NAME=='linode1':
     PITS_PATH = os.path.join(SRC_DIR, 'data', 'snowpits')
     GEODATA_PATH = os.path.join(SRC_DIR, 'data', 'geodata')
     AVALANCHES_PATH = os.path.join(SRC_DIR, 'data', 'avalanches')
+    STATES_DATA_PATH = os.path.join(SRC_DIR, 'data', 'states_data.json')
     
 DEFAULT_MAP = '_base_pit_map.html'
 LEGEND_PATH = os.path.join('data', 'legends')
