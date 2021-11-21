@@ -1,0 +1,11 @@
+{
+	"UT": {"location": [40, -111.7], "id": 11, "zoom": 7},
+	"ID": {"location": [44.5, -114], "id": 6, "zoom": 7},
+	"AK": {"location": [60.8, -149.3], "id": 3, "zoom": 7},
+	"WY": {"location": [43.5, -109], "id": 14, "zoom": 7},
+	"WA": {"location": [47.3, -120], "id": 13, "zoom": 7},
+	"OR": {"location": [44, -120.5], "id": 10, "zoom": 7},
+	"CA": {"location": [38.7, -120.8], "id": 5, "zoom": 7},
+	"CO": {"location": [39, -106.2], "id": 2, "zoom": 7},
+	"MT": {"location": [45.5, -111], "id": 1, "zoom": 7}
+}
